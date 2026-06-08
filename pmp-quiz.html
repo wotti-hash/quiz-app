@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMP試験対策クイズ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; color: #fff; transition: background 0.5s; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 0 12px 48px; position: relative; z-index: 1; }
+.bg-grid { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.bg-grid div { position: absolute; width: 100%; height: 100%; }
+.card { border-radius: 16px; padding: 20px 18px; margin-top: 14px; box-shadow: 0 4px 24px #00000040; }
+button { font-family: inherit; cursor: pointer; transition: all 0.2s; }
+.btn-fill { border: none; color: #fff; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 10px; }
+.btn-outline { background: transparent; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 10px; border-width: 2px; border-style: solid; }
+.opt-btn { width: 100%; padding: 12px 14px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 13px; text-align: left; margin-bottom: 8px; border: 1.5px solid #ffffff20; background: #ffffff10; line-height:1.5; }
+.opt-btn.correct { background: #22c55e; border-color: #22c55e; cursor: default; }
+.opt-btn.wrong   { background: #ef4444; border-color: #ef4444; cursor: default; }
+.opt-btn.dim     { cursor: default; opacity: 0.5; }
+.opt-lbl { opacity: 0.5; margin-right: 8px; font-size:12px; }
+.progress-bar { height: 4px; background: #ffffff15; border-radius: 2px; margin-bottom: 14px; }
+.progress-fill { height: 4px; border-radius: 2px; transition: width 0.5s; }
+.badge { font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+.hint-box { font-size: 13px; opacity: 0.7; background: #ffffff10; border-radius: 8px; padding: 8px 14px; text-align: center; margin-top: 10px; line-height:1.6; }
+.exp-box { border-radius: 16px; padding: 16px 18px; margin-top: 12px; border-width: 1px; border-style: solid; }
+.cat-btn { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.perfect-banner { margin-top: 12px; background: #ffd70030; border: 1.5px solid #ffd700; border-radius: 10px; padding: 10px 16px; font-size: 14px; color: #ffd700; text-align: center; }
+.cat-bar-wrap { margin-bottom: 8px; }
+.cat-bar-track { height: 6px; background: #ffffff15; border-radius: 3px; }
+.cat-bar-fill { height: 6px; border-radius: 3px; transition: width 1s; }
+.log-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #ffffff10; font-size: 12px; line-height:1.5; }
+.log-ans { font-size: 11px; opacity: 0.5; margin-left: auto; white-space: nowrap; padding-left:8px; }
+.result-btns { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 0; }
+.hidden { display: none; }
+
+  /* ホームボタン */
+  .home-btn {
+    position: fixed; top: 12px; left: 12px; z-index: 999;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  .home-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+</style>
+</head>
+<body>
+
+<a class="home-btn" href="index.html">🏠 ホーム</a>
+
+
+
+<div class="bg-grid" id="bgGrid"></div>
+
+<!-- ホーム画面 -->
+<div class="wrap" id="homeScreen">
+  <div style="text-align:center;padding:32px 0 16px">
+    <div style="font-size:48px">📋</div>
+    <h1 style="font-size:24px;font-weight:900;letter-spacing:2px;margin:8px 0 4px;color:#60a5fa">PMP試験対策クイズ</h1>
+    <p style="font-size:12px;opacity:0.5">Project Management Professional</p>
+  </div>
+  <div class="card" id="homeCard">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:8px">🏷️ カテゴリ</p>
+    <div id="catButtons" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+    <div style="text-align:center;padding:10px 0 4px;opacity:0.5;font-size:13px">
+      出題数: <strong id="qCount" style="font-weight:900"></strong> 問
+    </div>
+    <div id="weakSection" class="hidden" style="margin:10px 0 4px">
+      <p style="font-size:13px;opacity:0.6;margin-bottom:8px">🔥 苦手ジャンル（正答率の低い順）</p>
+      <div id="weakCatList" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-fill" id="startBtn" onclick="startQuiz()" style="flex:1;padding:14px;font-size:16px">スタート 🚀</button>
+      <button class="btn-outline" id="weakBtn" onclick="startWeakMode()" style="padding:14px;font-size:13px;white-space:nowrap" title="苦手ジャンルを優先出題">🔥 苦手優先</button>
+    </div>
+  </div>
+</div>
+
+<!-- クイズ画面 -->
+<div class="wrap hidden" id="quizScreen">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 4px 8px">
+    <div id="qIndex" style="font-size:13px;opacity:0.5"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="streakBadge" style="font-size:13px;color:#f97316;font-weight:700;display:none"></span>
+      <span id="scoreDisp" style="font-size:15px;font-weight:700"></span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="card" id="quizCard">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <span class="badge" id="qCategory"></span>
+      <span style="font-size:12px;opacity:0.5" id="qDifficulty"></span>
+    </div>
+    <div style="font-size:36px;text-align:center;margin-bottom:10px" id="qEmoji"></div>
+    <p style="font-size:15px;font-weight:700;text-align:center;line-height:1.7;margin-bottom:16px" id="qText"></p>
+    <div id="optButtons"></div>
+  </div>
+  <div id="hintArea" style="text-align:center;margin-top:10px"></div>
+  <div class="exp-box hidden" id="expBox">
+    <p style="font-size:12px;margin-bottom:6px" id="expLabel">📖 解説</p>
+    <div id="expContent" style="font-size:13px;line-height:1.7"></div>
+  </div>
+  <button class="btn-fill hidden" id="nextBtn" onclick="nextQuestion()" style="display:block;width:100%;padding:14px;font-size:16px;margin-top:14px"></button>
+</div>
+
+<!-- 結果画面 -->
+<div class="wrap hidden" id="resultScreen">
+  <div style="text-align:center;padding:32px 0 16px">
+    <div style="font-size:56px" id="resultEmoji"></div>
+    <h2 style="margin:8px 0 4px;font-size:24px;color:#60a5fa">結果発表</h2>
+    <div style="font-size:40px;font-weight:900" id="resultScore"></div>
+    <div style="opacity:0.6;font-size:14px" id="resultSub"></div>
+    <div class="perfect-banner hidden" id="perfectBanner">🎉 全問正解！パーフェクト！</div>
+  </div>
+  <div class="card" id="catStatsCard">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:10px">📊 カテゴリ別正答率</p>
+    <div id="catStats"></div>
+  </div>
+  <div class="card" id="logCard" style="margin-top:14px">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:10px">📋 解答ログ</p>
+    <div id="answerLog"></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-fill hidden" id="retryWrongBtn" onclick="retryWrong()" style="width:100%;padding:14px;font-size:15px;background:#ef4444;border:none"></button>
+    <button class="btn-outline" id="restartBtn" onclick="showHome()" style="width:100%;padding:14px;font-size:16px;color:#60a5fa;border-color:#60a5fa">🏠 トップに戻る</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  問題データ
+// ══════════════════════════════════════════════════════
+const QUESTIONS = [
+
+  // ── プロジェクト統合マネジメント ──
+  { id:1, category:"統合マネジメント", difficulty:"易", question:"プロジェクト憲章を作成するプロセスが属するプロセス群はどれか？", options:["計画","実行","立上げ","監視・コントロール"], answer:2, emoji:"📜", hint:"プロジェクトの正式な承認を与える文書", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"プロジェクト憲章の作成は「立上げ」プロセス群に属する。プロジェクトの正式な承認を与え、PMに権限を付与する重要文書。", explanation_wrong:"プロジェクト憲章は「立上げ」プロセス群で作成する。計画でも実行でもない点に注意。" },
+
+  { id:2, category:"統合マネジメント", difficulty:"中", question:"変更要求が承認された後、PMが最初に行うべきことは何か？", options:["スポンサーへの報告","プロジェクト文書の更新","変更要求の記録","チームメンバーへの通知"], answer:1, emoji:"🔄", hint:"承認された変更はまず文書に反映する", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"承認された変更はまずプロジェクト計画書・文書を更新する。文書の整合性を保つことがPMの責任。", explanation_wrong:"承認後は「プロジェクト文書の更新」が最優先。スポンサーへの報告より文書更新が先。" },
+
+  { id:3, category:"統合マネジメント", difficulty:"中", question:"統合変更管理プロセスの主な目的はどれか？", options:["コストの削減","変更の一元管理と影響評価","スケジュールの短縮","品質基準の設定"], answer:1, emoji:"🎛️", hint:"すべての変更要求を一か所で管理する", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"統合変更管理は変更要求を一元管理し、すべての変更の影響を評価・承認・追跡するプロセス。プロジェクト全体への影響を考慮する。", explanation_wrong:"統合変更管理の目的は「変更の一元管理と影響評価」。コスト削減や品質設定は目的ではない。" },
+
+  { id:4, category:"統合マネジメント", difficulty:"難", question:"プロジェクト終結時に作成する「教訓リポジトリ」の主な目的は何か？", options:["監査への対応","将来のプロジェクトへの知識移転","スポンサーへの最終報告","チームの評価記録"], answer:1, emoji:"📚", hint:"組織の知識資産として将来に活かす", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"教訓リポジトリは成功・失敗の経験を組織の知識資産として蓄積し、将来のプロジェクトに活かすための文書。組織プロセス資産の一つ。", explanation_wrong:"教訓リポジトリの目的は「将来のプロジェクトへの知識移転」。監査対応や評価記録ではない。" },
+
+  { id:5, category:"統合マネジメント", difficulty:"難", question:"プロジェクトマネジメント計画書と「プロジェクト文書」の違いとして正しいのはどれか？", options:["プロジェクト文書はPMが単独で作成する","プロジェクトマネジメント計画書は変更管理の対象だがプロジェクト文書は対象外","プロジェクト文書にはリスク登録簿などが含まれる","プロジェクトマネジメント計画書は実行フェーズでのみ使用される"], answer:2, emoji:"📁", hint:"リスク登録簿・課題ログなどを思い浮かべよう", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"プロジェクト文書にはリスク登録簿・課題ログ・ステークホルダー登録簿などが含まれる。PM計画書とは別に管理される。", explanation_wrong:"プロジェクト文書（リスク登録簿など）はPM計画書とは別物。PM計画書も変更管理の対象。" },
+
+  // ── スコープマネジメント ──
+  { id:6, category:"スコープマネジメント", difficulty:"易", question:"WBS（作業分解構造図）の最下位レベルの要素を何と呼ぶか？", options:["マイルストーン","ワークパッケージ","アクティビティ","デリバラブル"], answer:1, emoji:"🗂️", hint:"コスト・時間・資源の見積もりができる最小単位", link:"https://ja.wikipedia.org/wiki/作業分解構造", explanation_correct:"WBSの最下位レベルはワークパッケージ。ここでコスト・期間・担当者の見積もりが可能になる。アクティビティはワークパッケージをさらに分解したもの。", explanation_wrong:"WBSの最下位レベルは「ワークパッケージ」。アクティビティはスケジュール管理で使う概念。" },
+
+  { id:7, category:"スコープマネジメント", difficulty:"中", question:"スコープクリープを防ぐために最も効果的な手法はどれか？", options:["スコープの拡大を常に許可する","変更管理プロセスを厳格に適用する","プロジェクトチームを増員する","スケジュールに余裕を持たせる"], answer:1, emoji:"🚧", hint:"承認されていない変更を防ぐプロセスが鍵", link:"https://ja.wikipedia.org/wiki/スコープクリープ", explanation_correct:"スコープクリープは承認なくスコープが拡大する現象。変更管理プロセスを厳格に適用し、すべての変更を正式に評価・承認することで防ぐ。", explanation_wrong:"スコープクリープ防止には「変更管理プロセスの厳格な適用」が最も効果的。チーム増員では解決しない。" },
+
+  { id:8, category:"スコープマネジメント", difficulty:"中", question:"「スコープの妥当性確認」プロセスの主な成果物はどれか？", options:["WBS","承認済みデリバラブル","スコープ記述書","要求事項トレーサビリティマトリックス"], answer:1, emoji:"✅", hint:"ステークホルダーが成果物を正式に受け入れるプロセス", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"スコープの妥当性確認では顧客・スポンサーがデリバラブルを検査し、正式に承認する。成果物は「承認済みデリバラブル」。", explanation_wrong:"スコープ妥当性確認の主な成果物は「承認済みデリバラブル」。WBSは計画プロセスで作成する。" },
+
+  { id:9, category:"スコープマネジメント", difficulty:"難", question:"要求事項収集の手法として「名目集団法」の特徴はどれか？", options:["参加者が匿名で意見を出す","個人で考えた後に集団で優先順位付けする","専門家に繰り返しアンケートを行う","少人数で自由に議論する"], answer:1, emoji:"🗳️", hint:"個人作業とグループ投票を組み合わせた手法", link:"https://ja.wikipedia.org/wiki/名目集団技法", explanation_correct:"名目集団法は参加者が個別にアイデアを考え、その後グループで議論・投票して優先順位を決める手法。沈黙の時間を設けて支配的な発言を防ぐ。", explanation_wrong:"名目集団法は「個人で考えた後に集団で優先順位付け」する手法。匿名はデルファイ法の特徴。" },
+
+  { id:10, category:"スコープマネジメント", difficulty:"難", question:"プロダクトスコープとプロジェクトスコープの関係として正しいのはどれか？", options:["プロダクトスコープはプロジェクトスコープの一部","プロジェクトスコープはプロダクトスコープを達成するために必要な作業","両者は同じ概念の言い換え","プロダクトスコープはPMが単独で決定する"], answer:1, emoji:"🔍", hint:"「何を作るか」と「何をするか」の違い", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"プロダクトスコープは成果物の特性・機能。プロジェクトスコープはそれを達成するための作業。プロジェクトスコープはプロダクトスコープを実現するために定義される。", explanation_wrong:"プロジェクトスコープは「プロダクトスコープを達成するための作業」。別の概念で混同に注意。" },
+
+  // ── スケジュールマネジメント ──
+  { id:11, category:"スケジュールマネジメント", difficulty:"易", question:"クリティカルパスとは何か？", options:["最も費用がかかる経路","プロジェクト完了までの最長経路","リスクが最も高い経路","最も人員が必要な経路"], answer:1, emoji:"🛣️", hint:"この経路が遅れるとプロジェクト全体が遅れる", link:"https://ja.wikipedia.org/wiki/クリティカルパス法", explanation_correct:"クリティカルパスはネットワーク図上の最長経路で、プロジェクトの最短完了期間を決める。この経路上のアクティビティにはフロートがゼロ。", explanation_wrong:"クリティカルパスは「プロジェクト完了までの最長経路」。コストや人員とは無関係。" },
+
+  { id:12, category:"スケジュールマネジメント", difficulty:"中", question:"「ファストトラッキング」の説明として正しいのはどれか？", options:["アクティビティを省略してスケジュールを短縮する","本来順番に行う作業を並行して実施する","コストを追加してスピードを上げる","スコープを削減して期間を短縮する"], answer:1, emoji:"⚡", hint:"並列実行でスケジュールを圧縮する手法", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"ファストトラッキングは本来順次実施すべき作業を並行して行うことでスケジュールを短縮する手法。リスクが増加する可能性がある。", explanation_wrong:"ファストトラッキングは「並行実施」によるスケジュール圧縮。コスト追加はクラッシングの手法。" },
+
+  { id:13, category:"スケジュールマネジメント", difficulty:"中", question:"PERT（三点見積もり）でアクティビティ期間を計算する公式はどれか？", options:["(O + M + P) / 3","(O + 4M + P) / 6","(O + 2M + P) / 4","(O + P) / 2"], answer:1, emoji:"📐", hint:"最楽観・最可能性・最悲観の加重平均", link:"https://ja.wikipedia.org/wiki/PERT", explanation_correct:"PERT公式は(O + 4M + P) / 6。O=楽観値、M=最可能性値、P=悲観値。最可能性値を4倍に重み付けした加重平均。", explanation_wrong:"PERT（三点見積もり）の公式は (O + 4M + P) / 6。最可能性値に4倍の重みをかける点が特徴。" },
+
+  { id:14, category:"スケジュールマネジメント", difficulty:"難", question:"スケジュールのSPI（スケジュール効率指数）が0.8を示す場合、どのような状況か？", options:["予定より20%進んでいる","予定より20%遅れている","コストが20%超過している","品質が20%低下している"], answer:1, emoji:"📉", hint:"SPI = EV / PV、1より小さければ遅延", link:"https://ja.wikipedia.org/wiki/アーンドバリュー管理", explanation_correct:"SPI = EV（出来高）÷ PV（計画値）。SPI 0.8は計画の80%しか進んでいないことを意味し、20%の遅延。SPI > 1が前倒し。", explanation_wrong:"SPI 0.8は「予定より20%遅れている」状態。SPI = EV / PVで、1未満は遅延を示す。" },
+
+  { id:15, category:"スケジュールマネジメント", difficulty:"難", question:"フロート（余裕時間）がゼロのアクティビティが遅延した場合の影響は？", options:["コストが増加する","プロジェクト完了日が遅延する","品質が低下する","リソースが不足する"], answer:1, emoji:"⏰", hint:"フロートゼロ＝クリティカルパス上のアクティビティ", link:"https://ja.wikipedia.org/wiki/クリティカルパス法", explanation_correct:"フロートゼロはクリティカルパス上のアクティビティを意味する。1日遅延するとプロジェクト完了日がそのまま1日遅延する。", explanation_wrong:"フロートゼロのアクティビティ遅延は「プロジェクト完了日の遅延」を直接引き起こす。コスト増とは別問題。" },
+
+  // ── コストマネジメント ──
+  { id:16, category:"コストマネジメント", difficulty:"易", question:"EVM（アーンドバリューマネジメント）においてCPI（コスト効率指数）の計算式はどれか？", options:["AC / EV","EV / AC","PV / EV","EV / PV"], answer:1, emoji:"💰", hint:"EV÷ACで、1以上なら予算内", link:"https://ja.wikipedia.org/wiki/アーンドバリュー管理", explanation_correct:"CPI = EV（出来高） ÷ AC（実コスト）。CPI > 1はコスト効率が良い（予算内）、CPI < 1はコスト超過を示す。", explanation_wrong:"CPI = EV / AC。AC/EVは逆。SPI = EV/PV。混同しないよう注意。" },
+
+  { id:17, category:"コストマネジメント", difficulty:"中", question:"コンティンジェンシー予備と管理予備の違いとして正しいのはどれか？", options:["コンティンジェンシー予備はPMが管理し既知のリスク向け、管理予備は経営層が管理し未知リスク向け","管理予備はPMが自由に使える資金","コンティンジェンシー予備はすべてのリスクに使える","管理予備はベースラインに含まれる"], answer:0, emoji:"🏦", hint:"既知リスク対PMの予備 vs 未知リスク対経営層の予備", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"コンティンジェンシー予備はPMが管理し特定の（既知）リスク対応用。管理予備は経営層が管理し未知リスク（unknowns）対応用。管理予備はコストベースラインに含まれない。", explanation_wrong:"コンティンジェンシー予備＝PM管理・既知リスク向け。管理予備＝経営層管理・未知リスク向け。" },
+
+  { id:18, category:"コストマネジメント", difficulty:"中", question:"ETC（残作業コスト見積もり）の計算式で「CPI一定と仮定する場合」はどれか？", options:["BAC − EV","(BAC − EV) / CPI","EAC − AC","BAC / CPI"], answer:1, emoji:"🧮", hint:"残りの予算を現在の効率で割る", link:"https://ja.wikipedia.org/wiki/アーンドバリュー管理", explanation_correct:"CPI一定と仮定する場合のETC = (BAC − EV) / CPI。残作業量（BAC−EV）を現在のコスト効率（CPI）で割って実コストを見積もる。", explanation_wrong:"CPI一定仮定のETC = (BAC − EV) / CPI。BAC − EVはEV単位の残作業量で、実コストに換算するにはCPIで割る。" },
+
+  { id:19, category:"コストマネジメント", difficulty:"難", question:"VAC（完了時差異）がマイナスの場合に意味することは？", options:["プロジェクトは予算内で完了する見込み","プロジェクトは予算超過で完了する見込み","スケジュールが前倒しである","品質目標を達成できない"], answer:1, emoji:"📊", hint:"VAC = BAC − EAC、マイナスは超過", link:"https://ja.wikipedia.org/wiki/アーンドバリュー管理", explanation_correct:"VAC = BAC − EAC。VAC < 0はEAC > BACを意味し、完了時に予算超過になる見込み。VAC > 0なら予算内完了の見込み。", explanation_wrong:"VAC（完了時差異）がマイナス＝「予算超過で完了する見込み」。VAC = BAC − EAC で覚える。" },
+
+  { id:20, category:"コストマネジメント", difficulty:"難", question:"「ボトムアップ見積もり」の特徴として正しいのはどれか？", options:["過去の類似プロジェクトデータを使用する","WBSの最下位レベルから積み上げて見積もる","専門家の経験に依存する","プロジェクト初期段階で最も適している"], answer:1, emoji:"🔢", hint:"ワークパッケージ単位で積み上げる最も精度の高い方法", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"ボトムアップ見積もりはWBSの最下位レベル（ワークパッケージ）ごとにコストを見積もり積み上げる手法。時間はかかるが最も精度が高い。", explanation_wrong:"ボトムアップ見積もりは「WBSの最下位から積み上げ」。類似過去データはアナロジー見積もりの特徴。" },
+
+  // ── 品質マネジメント ──
+  { id:21, category:"品質マネジメント", difficulty:"易", question:"品質の「予防コスト」に含まれるものはどれか？", options:["欠陥品の廃棄費用","トレーニングや品質計画の費用","保証修理費用","検査・テスト費用"], answer:1, emoji:"🛡️", hint:"欠陥を未然に防ぐためのコスト", link:"https://ja.wikipedia.org/wiki/品質コスト", explanation_correct:"予防コストは欠陥を未然に防ぐためのコスト（トレーニング・品質計画・プロセス設計など）。検査は評価コスト、廃棄・修理は失敗コストに分類される。", explanation_wrong:"予防コストは「トレーニングや品質計画」。検査・テストは評価コスト、廃棄・修理は失敗コスト。" },
+
+  { id:22, category:"品質マネジメント", difficulty:"中", question:"管理図（コントロールチャート）において「管理限界線」を超えた点が示すことは？", options:["正常な変動範囲内","プロセスが統計的に管理外れの状態","目標値を達成している","サンプル数が不足している"], answer:1, emoji:"📈", hint:"管理限界線を超えると特別原因による変動を疑う", link:"https://ja.wikipedia.org/wiki/管理図", explanation_correct:"管理限界線（±3σ）を超えた点は特別原因による異常変動を示す。プロセスが管理外れの状態であり、原因の調査と是正が必要。", explanation_wrong:"管理限界線を超えた点は「プロセスが統計的に管理外れ」。特別原因の変動として調査が必要。" },
+
+  { id:23, category:"品質マネジメント", difficulty:"中", question:"「品質保証（QA）」と「品質コントロール（QC）」の違いとして正しいのはどれか？", options:["QAは成果物の検査、QCはプロセスの監査","QAはプロセスの監査・改善、QCは成果物の検査・測定","両者は同じ活動","QCはプロジェクト開始時にのみ実施する"], answer:1, emoji:"🔬", hint:"QA＝プロセス重視、QC＝成果物重視", link:"https://ja.wikipedia.org/wiki/品質管理", explanation_correct:"QA（品質保証）はプロセスが適切に実施されているかを監査・改善する。QC（品質コントロール）は成果物を検査・測定して欠陥を発見する。", explanation_wrong:"QA＝プロセスの監査・改善、QC＝成果物の検査・測定。逆の記述は誤り。" },
+
+  { id:24, category:"品質マネジメント", difficulty:"難", question:"「フィッシュボーン図（特性要因図）」の主な用途はどれか？", options:["スケジュールの進捗管理","問題の根本原因の特定","コスト超過の予測","リスクの定量的分析"], answer:1, emoji:"🐟", hint:"石川馨が考案した問題解決ツール", link:"https://ja.wikipedia.org/wiki/特性要因図", explanation_correct:"フィッシュボーン図（石川図・特性要因図）は問題の根本原因を魚の骨のような形で視覚化するツール。6M（Man・Machine・Method・Material・Measurement・Mother nature）で分類することが多い。", explanation_wrong:"フィッシュボーン図（特性要因図）は「根本原因の特定」に使う。スケジュール管理やリスク定量分析には別のツールを使う。" },
+
+  { id:25, category:"品質マネジメント", difficulty:"難", question:"シックスシグマにおける「DMAIC」の正しい順序はどれか？", options:["Define→Measure→Analyze→Improve→Control","Design→Measure→Assess→Implement→Check","Define→Monitor→Analyze→Improve→Close","Document→Measure→Analyze→Improve→Control"], answer:0, emoji:"⚙️", hint:"定義・測定・分析・改善・管理の頭文字", link:"https://ja.wikipedia.org/wiki/シックス・シグマ", explanation_correct:"DMAICはDefine（定義）→Measure（測定）→Analyze（分析）→Improve（改善）→Control（管理）。既存プロセスの改善に使うシックスシグマの手法。", explanation_wrong:"DMAICはDefine→Measure→Analyze→Improve→Control。既存プロセス改善のためのシックスシグマ手法。" },
+
+  // ── リスクマネジメント ──
+  { id:26, category:"リスクマネジメント", difficulty:"易", question:"定性的リスク分析で使用される「確率・影響マトリクス」の目的はどれか？", options:["リスクの金銭的影響を算出する","リスクの優先順位を決める","リスクへの対応策を立案する","リスクを完全に排除する"], answer:1, emoji:"🎲", hint:"確率と影響の組み合わせで優先度を評価する", link:"https://ja.wikipedia.org/wiki/リスクマネジメント", explanation_correct:"確率・影響マトリクスはリスクの発生確率と影響度を組み合わせて重要度を評価し、対応すべきリスクの優先順位を決める定性的分析ツール。", explanation_wrong:"確率・影響マトリクスは「リスクの優先順位を決める」定性的ツール。金銭的影響の算出は定量的分析。" },
+
+  { id:27, category:"リスクマネジメント", difficulty:"中", question:"リスク対応戦略で「転嫁（Transfer）」の例として最も適切なのはどれか？", options:["リスク発生原因を取り除く","保険に加入してリスクの財務的影響を第三者に移す","リスクが起きた際の対応計画を準備する","リスクを受け入れて変更しない"], answer:1, emoji:"📄", hint:"保険や外部委託でリスクを第三者に移す", link:"https://ja.wikipedia.org/wiki/リスクマネジメント", explanation_correct:"転嫁はリスクの影響や責任を第三者（保険会社・外部委託先など）に移す戦略。リスク自体はなくならないが財務的影響を移転する。", explanation_wrong:"転嫁（Transfer）は「保険加入など第三者への財務的影響の移転」。回避は原因除去、軽減は確率/影響を下げる。" },
+
+  { id:28, category:"リスクマネジメント", difficulty:"中", question:"「残留リスク」と「二次リスク」の違いとして正しいのはどれか？", options:["残留リスクは新しく発見されたリスク","二次リスクはリスク対応策の実施によって生じる新たなリスク","両者は同じ意味","残留リスクは対応不要と判断されたリスク"], answer:1, emoji:"⚠️", hint:"対応後に残るリスク vs 対応策が生むリスク", link:"https://ja.wikipedia.org/wiki/リスクマネジメント", explanation_correct:"残留リスクは対応策を講じた後も残るリスク。二次リスクはリスク対応策の実施によって新たに生じるリスク（例：消火器設置という対応が漏洩リスクを生む）。", explanation_wrong:"二次リスクは「リスク対応策の実施によって生じる新たなリスク」。残留リスクは対応後も残るリスク。" },
+
+  { id:29, category:"リスクマネジメント", difficulty:"難", question:"定量的リスク分析の手法として「モンテカルロシミュレーション」の特徴はどれか？", options:["専門家へのインタビューで確率を決める","コンピュータによる大量の乱数シミュレーションでリスクの分布を求める","プロジェクトのネットワーク図を用いる","過去データとの比較で確率を推定する"], answer:1, emoji:"🎰", hint:"乱数を使って何千回もシミュレーションする", link:"https://ja.wikipedia.org/wiki/モンテカルロ法", explanation_correct:"モンテカルロシミュレーションはコンピュータで乱数を用いた大量の反復計算を行い、コストやスケジュールの完了確率分布を求める定量的リスク分析手法。", explanation_wrong:"モンテカルロシミュレーションは「コンピュータによる大量の乱数シミュレーション」。専門家判断はデルファイ法。" },
+
+  { id:30, category:"リスクマネジメント", difficulty:"難", question:"プロジェクトのリスクにおける「脅威」への対応戦略として正しい組み合わせはどれか？", options:["回避・軽減・転嫁・受容","共有・強化・活用・受容","回避・共有・軽減・活用","転嫁・強化・回避・活用"], answer:0, emoji:"🛡️", hint:"機会への対応とは異なる戦略を使う", link:"https://ja.wikipedia.org/wiki/リスクマネジメント", explanation_correct:"脅威への対応戦略は回避（Avoid）・軽減（Mitigate）・転嫁（Transfer）・受容（Accept）の4つ。機会への対応は活用・強化・共有・受容。", explanation_wrong:"脅威への対応は「回避・軽減・転嫁・受容」の4つ。活用・強化・共有は機会（好機）への対応戦略。" },
+
+  // ── ステークホルダーマネジメント ──
+  { id:31, category:"ステークホルダーマネジメント", difficulty:"易", question:"ステークホルダー分析の「権力/関心マトリクス」において、権力が高く関心が低いステークホルダーへの対応は？", options:["詳細情報を定期的に提供する","満足を保つよう最小限の情報を提供する","緊密に管理して協力を得る","最低限の監視のみ行う"], answer:1, emoji:"👔", hint:"影響力が高いが関心は低い層への対応", link:"https://ja.wikipedia.org/wiki/ステークホルダー管理", explanation_correct:"権力高・関心低のステークホルダーは「満足させる（Keep Satisfied）」戦略。過度な情報提供は不要だが、重要な意思決定には関与させる必要がある。", explanation_wrong:"権力高・関心低は「満足を保つ（Keep Satisfied）」戦略。詳細報告は権力高・関心高（緊密管理）への対応。" },
+
+  { id:32, category:"ステークホルダーマネジメント", difficulty:"中", question:"ステークホルダーのエンゲージメントレベルで「抵抗」から「支持」へ変化させる際、PMが取るべき行動として最も適切なのはどれか？", options:["そのステークホルダーを無視する","ニーズと懸念を理解し積極的にコミュニケーションを取る","プロジェクトスポンサーに対処を依頼する","変更管理プロセスを通じてスコープを縮小する"], answer:1, emoji:"🤝", hint:"エンゲージメント向上にはコミュニケーションが鍵", link:"https://ja.wikipedia.org/wiki/ステークホルダー管理", explanation_correct:"抵抗ステークホルダーへの最善策はニーズと懸念を理解し積極的にコミュニケーションを取ること。無視や回避は関係悪化を招く。", explanation_wrong:"抵抗→支持への変化には「ニーズ理解と積極的コミュニケーション」が最も効果的。無視は逆効果。" },
+
+  { id:33, category:"ステークホルダーマネジメント", difficulty:"難", question:"ステークホルダーの「顕著性モデル（Salience Model）」で使用する3つの属性はどれか？", options:["権力・関心・影響","権力・正当性・緊急性","影響・関心・可視性","権力・知識・態度"], answer:1, emoji:"🔭", hint:"PMBOKで紹介される3属性モデル", link:"https://ja.wikipedia.org/wiki/ステークホルダー管理", explanation_correct:"顕著性モデルは権力（Power）・正当性（Legitimacy）・緊急性（Urgency）の3属性でステークホルダーの重要度を評価する。3属性すべて持つ者が最重要。", explanation_wrong:"顕著性モデルの3属性は「権力・正当性・緊急性」。関心グリッドとは異なる分析フレームワーク。" },
+
+  // ── コミュニケーションマネジメント ──
+  { id:34, category:"コミュニケーションマネジメント", difficulty:"易", question:"プロジェクトのコミュニケーションチャネル数の計算式はどれか（n＝参加者数）？", options:["n × (n-1)","n × (n-1) / 2","n²","n + (n-1)"], answer:1, emoji:"📡", hint:"10人なら45チャネル", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"コミュニケーションチャネル数 = n(n-1)/2。例：10人なら10×9/2 = 45チャネル。メンバー増加で急増するため、大規模プロジェクトほどコミュニケーション管理が重要。", explanation_wrong:"チャネル数の公式は n(n-1)/2。10人なら45チャネルになる。n²は誤り。" },
+
+  { id:35, category:"コミュニケーションマネジメント", difficulty:"中", question:"「プッシュ型コミュニケーション」の例として適切なのはどれか？", options:["プロジェクト情報をWebポータルに掲載する","週次ステータスレポートをメールで送付する","会議を開催して参加者を招集する","図書館にドキュメントを保管する"], answer:1, emoji:"📧", hint:"受信者が情報にアクセスするのではなく送信者が届ける", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"プッシュ型は特定の受信者に積極的に情報を送る方式（メール・FAX・レポート送付など）。プル型はWebポータルや共有フォルダのように受信者がアクセスする方式。", explanation_wrong:"プッシュ型は「メールで送付」のように送信者側から届ける方式。ポータル掲載はプル型の例。" },
+
+  // ── 調達マネジメント ──
+  { id:36, category:"調達マネジメント", difficulty:"易", question:"「固定価格契約（FFP）」でベンダーが負うリスクはどれか？", options:["買主がコスト超過リスクを負う","ベンダーがコスト超過リスクを負う","両者が均等にリスクを分担する","政府機関のみがリスクを負う"], answer:1, emoji:"📝", hint:"価格が固定されているためコスト超過は誰が負う？", link:"https://ja.wikipedia.org/wiki/固定価格契約", explanation_correct:"FFP（確定固定価格契約）では価格が固定されるため、コストが超過してもベンダーが差額を負担する。買主にとって最もリスクが低い契約形態。", explanation_wrong:"FFP（固定価格契約）ではコスト超過リスクはベンダーが負う。買主には最もリスクが低い。" },
+
+  { id:37, category:"調達マネジメント", difficulty:"中", question:"「実費精算契約（CPFF）」の特徴として正しいのはどれか？", options:["ベンダーは実費＋固定フィーを受け取る","ベンダーは固定価格のみを受け取る","買主がすべてのリスクを排除できる","ベンダーのパフォーマンスに応じてフィーが変動する"], answer:0, emoji:"🧾", hint:"実費（Cost）＋固定フィー（Fixed Fee）", link:"https://ja.wikipedia.org/wiki/コスト・プラス契約", explanation_correct:"CPFF（実費精算固定フィー契約）はベンダーが実際のコストに加え固定フィーを受け取る契約。フィーは固定でパフォーマンスに連動しない。買主がコストリスクを負う。", explanation_wrong:"CPFFはベンダーが「実費＋固定フィー」を受け取る契約。フィーが変動するのはCPIF（インセンティブフィー）。" },
+
+  { id:38, category:"調達マネジメント", difficulty:"難", question:"「入札者会議（Bidders Conference）」の主な目的はどれか？", options:["ベンダーを選定するための面接","すべてのベンダーが同等の情報を得られるようにする","契約条件を交渉する","ベンダーのパフォーマンスを評価する"], answer:1, emoji:"🏛️", hint:"公平性と透明性の確保が目的", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"入札者会議はすべての潜在的ベンダーが同じ情報を同時に得られるようにするための会議。不公平な情報格差をなくし調達プロセスの公平性・透明性を確保する。", explanation_wrong:"入札者会議の目的は「全ベンダーへの同等な情報提供」。ベンダー選定や交渉はその後のプロセス。" },
+
+  // ── 資源マネジメント ──
+  { id:39, category:"資源マネジメント", difficulty:"易", question:"「RAM（責任分担マトリクス）」のRACIの「A」が意味するのはどれか？", options:["Authorized（承認者）","Accountable（説明責任者）","Assigned（担当者）","Advisor（顧問）"], answer:1, emoji:"👥", hint:"最終的な意思決定と承認の責任を持つ一人", link:"https://ja.wikipedia.org/wiki/RACI", explanation_correct:"RACIのA = Accountable（説明責任者）。その作業の最終責任を持つ人で、各タスクに必ず一人だけ設定する。R=Responsible（実行者）、C=Consulted（相談先）、I=Informed（通知先）。", explanation_wrong:"RACIのAはAccountable（説明責任者）。最終承認権を持ち、各タスクに一人のみ設定するルール。" },
+
+  { id:40, category:"資源マネジメント", difficulty:"中", question:"「マズローの欲求5段階説」でプロジェクトチームの動機付けに活用する場合、最上位の欲求はどれか？", options:["安全の欲求","社会的欲求","承認の欲求","自己実現の欲求"], answer:3, emoji:"🏔️", hint:"ピラミッドの頂点に位置する欲求", link:"https://ja.wikipedia.org/wiki/マズローの欲求5段階説", explanation_correct:"マズローの欲求5段階の最上位は「自己実現の欲求」。生理的→安全→社会的→承認→自己実現の順で高次化する。PMはチームメンバーがどの段階にあるかを理解して動機付けを行う。", explanation_wrong:"マズローの最上位は「自己実現の欲求」。生理的・安全・社会的・承認は下位の欲求。" },
+
+  { id:41, category:"資源マネジメント", difficulty:"中", question:"チームの発達段階「タックマンモデル」の正しい順序はどれか？", options:["形成→嵐→規範→実行→解散","規範→形成→嵐→実行→解散","形成→実行→嵐→規範→解散","嵐→形成→規範→実行→解散"], answer:0, emoji:"🌱", hint:"Forming→Storming→Norming→Performing→Adjourning", link:"https://ja.wikipedia.org/wiki/タックマンモデル", explanation_correct:"タックマンモデルは形成（Forming）→嵐（Storming）→規範（Norming）→実行（Performing）→解散（Adjourning）の5段階。チームが高パフォーマンスに達するまでのプロセスを示す。", explanation_wrong:"タックマンモデルは「形成→嵐→規範→実行→解散」の順。Storming（嵐）はFormingの次に来る。" },
+
+  { id:42, category:"資源マネジメント", difficulty:"難", question:"「ハーズバーグの動機付け・衛生理論」で「動機付け要因」に該当するのはどれか？", options:["給与水準","作業環境の改善","達成感や承認","会社の方針"], answer:2, emoji:"💡", hint:"これが満たされると積極的に動機付けられる要因", link:"https://ja.wikipedia.org/wiki/動機づけ・衛生理論", explanation_correct:"ハーズバーグの動機付け要因（モチベーター）は達成・承認・仕事の充実・責任・成長など。給与・環境・方針は衛生要因で、不足すると不満だが充足しても動機付けにならない。", explanation_wrong:"ハーズバーグの動機付け要因は「達成感や承認」。給与・環境・方針は衛生要因（不満防止にはなるが動機付けにはならない）。" },
+
+  // ── アジャイル・ハイブリッド ──
+  { id:43, category:"アジャイル", difficulty:"易", question:"スクラムにおける「スプリント」の一般的な期間はどれか？", options:["1〜4週間","3〜6ヶ月","1日","1年"], answer:0, emoji:"🏃", hint:"タイムボックスで固定された短い反復サイクル", link:"https://ja.wikipedia.org/wiki/スクラム_(ソフトウェア開発)", explanation_correct:"スクラムのスプリントは1〜4週間の固定されたタイムボックス。通常2週間が多い。スプリント内でデモ可能な成果物を完成させることを目指す。", explanation_wrong:"スプリントは「1〜4週間」の短い反復。3〜6ヶ月はウォーターフォールのフェーズに近い期間。" },
+
+  { id:44, category:"アジャイル", difficulty:"中", question:"アジャイルにおける「ベロシティ」とは何か？", options:["プロジェクトの総コスト","チームが1スプリントで完了できる作業量","リリースまでの残り日数","バグの修正件数"], answer:1, emoji:"🚀", hint:"スプリントごとの実績値から将来を予測する指標", link:"https://ja.wikipedia.org/wiki/スクラム_(ソフトウェア開発)", explanation_correct:"ベロシティはチームが1スプリントで完了したストーリーポイントの合計。過去の実績から将来のスプリント計画やリリース予測に活用する。", explanation_wrong:"ベロシティは「チームが1スプリントで完了できる作業量」（ストーリーポイント）。コストや日数ではない。" },
+
+  { id:45, category:"アジャイル", difficulty:"中", question:"スクラムの「デイリースクラム」で扱う3つの質問として正しいのはどれか？", options:["昨日やったこと・今日やること・障害はあるか","予算は足りているか・スケジュールは合っているか・品質は良いか","スプリントゴールは達成できるか・メンバーは満足しているか・顧客は喜んでいるか","リスクは何か・コストは何か・スコープは何か"], answer:0, emoji:"🕐", hint:"毎日15分で行う同期のための短い会議", link:"https://ja.wikipedia.org/wiki/スクラム_(ソフトウェア開発)", explanation_correct:"デイリースクラムの3つの質問：①昨日スプリントゴールに向けて何をしたか、②今日スプリントゴールに向けて何をするか、③障害になっているものはあるか。", explanation_wrong:"デイリースクラムは「昨日やったこと・今日やること・障害はあるか」の3つ。15分以内のタイムボックスで実施。" },
+
+  { id:46, category:"アジャイル", difficulty:"難", question:"「カンバン」手法において「WIP制限」を設ける主な目的は何か？", options:["チームメンバーの残業を防ぐ","同時進行の作業数を制限してフローを最適化する","スプリントの計画を立てやすくする","顧客への報告頻度を上げる"], answer:1, emoji:"📌", hint:"仕掛かり中（Work In Progress）の量を絞る", link:"https://ja.wikipedia.org/wiki/カンバン_(ソフトウェア開発)", explanation_correct:"WIP制限（Work In Progress Limit）は同時に進行する作業数を制限することでボトルネックを可視化し、フローを最適化してリードタイムを短縮する。", explanation_wrong:"WIP制限の目的は「同時進行の作業数を制限してフローを最適化」すること。残業防止が主目的ではない。" },
+
+  { id:47, category:"アジャイル", difficulty:"難", question:"「プロダクトバックログリファインメント」の説明として正しいのはどれか？", options:["スプリントの終わりに成果物をレビューする会議","バックログアイテムを詳細化・見積もり・優先順位付けする継続的な活動","プロジェクトの振り返りを行うセレモニー","スプリントゴールを設定する会議"], answer:1, emoji:"🗃️", hint:"バックログを継続的に整備・精緻化する活動", link:"https://ja.wikipedia.org/wiki/スクラム_(ソフトウェア開発)", explanation_correct:"プロダクトバックログリファインメント（グルーミング）はバックログアイテムを詳細化・分割・見積もり・優先順位付けする継続的な活動。スクラムの公式イベントではないが推奨される。", explanation_wrong:"リファインメントは「バックログの詳細化・見積もり・優先順位付け」。スプリントレビューとスプリントレトロスペクティブは別のイベント。" },
+
+  // ── PMBOKの基礎知識 ──
+  { id:48, category:"PMBOK基礎", difficulty:"易", question:"PMBOKガイド第7版で定義されるプロジェクトマネジメントの「原則」の数はいくつか？", options:["5つ","10つ","12の原則","49のプロセス"], answer:2, emoji:"📖", hint:"第7版では原則ベースに大きく変わった", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント知識体系", explanation_correct:"PMBOK第7版では12の原則が定義された。第6版の5つのプロセス群・10の知識エリア・49のプロセスから原則ベースのフレームワークへ大きく変更された。", explanation_wrong:"PMBOK第7版の原則は「12の原則」。49のプロセスは第6版の構成。第7版で大きくリニューアルされた。" },
+
+  { id:49, category:"PMBOK基礎", difficulty:"中", question:"プロジェクトの「制約の三角形（トリプルコンストレイント）」の3要素はどれか？", options:["スコープ・品質・リスク","スコープ・コスト・スケジュール","リスク・資源・コミュニケーション","品質・調達・ステークホルダー"], answer:1, emoji:"⚖️", hint:"どれか一つを変えると他の二つに影響する", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"制約の三角形（トリプルコンストレイント）はスコープ・コスト・スケジュールの3要素。一つを変えると他の要素に影響する相互依存関係にある。品質はこれら3要素の結果として表れる。", explanation_wrong:"トリプルコンストレイントは「スコープ・コスト・スケジュール」の3つ。品質はこれらの結果として現れる要素。" },
+
+  { id:50, category:"PMBOK基礎", difficulty:"難", question:"「組織プロセス資産（OPA）」に含まれないものはどれか？", options:["過去のプロジェクトの教訓","組織の標準プロセスとテンプレート","業界標準や規制（外部から課される）","組織内の知識ベースと情報リポジトリ"], answer:2, emoji:"🏢", hint:"外部から課されるものは別の概念", link:"https://ja.wikipedia.org/wiki/プロジェクトマネジメント", explanation_correct:"OPAは組織内部の資産（教訓・テンプレート・プロセス・知識ベースなど）。業界標準・規制・市場状況など外部から課されるものは「企業環境要因（EEF）」に分類される。", explanation_wrong:"業界標準や外部規制はOPA（組織プロセス資産）ではなくEEF（企業環境要因）。OPAは組織内部の資産。" },
+];
+
+// ── カテゴリ一覧 ──
+const CATEGORIES = ["すべて","統合マネジメント","スコープマネジメント","スケジュールマネジメント","コストマネジメント","品質マネジメント","リスクマネジメント","ステークホルダーマネジメント","コミュニケーションマネジメント","調達マネジメント","資源マネジメント","アジャイル","PMBOK基礎"];
+
+// ── テーマカラー ──
+const COLOR = { bg:"#0a0f1e", accent:"#60a5fa", card:"#0f1f3d", badge:"#60a5fa22" };
+
+// ── カテゴリ別累積正誤 ──
+const catStatsGlobal = {};
+function getCatRank() {
+  return Object.entries(catStatsGlobal)
+    .filter(([, s]) => s.total >= 3)
+    .sort(([, a], [, b]) => (a.ok / a.total) - (b.ok / b.total))
+    .map(([cat, s]) => ({ cat, rate: Math.round(s.ok / s.total * 100), total: s.total }));
+}
+function recordAnswer(category, isCorrect) {
+  if (!catStatsGlobal[category]) catStatsGlobal[category] = { ok: 0, total: 0 };
+  catStatsGlobal[category].total++;
+  if (isCorrect) catStatsGlobal[category].ok++;
+}
+
+// ── 状態管理 ──
+let state = {
+  cat: "すべて", weakMode: false,
+  questions: [], current: 0,
+  score: 0, streak: 0, maxStreak: 0,
+  selected: null, hintUsed: false,
+  answers: [], wrongQuestions: [],
+  seenIds: new Set(),
+};
+
+// ── 解説 ──
+function getExplanation(q, selectedIdx, isCorrect) {
+  if (isCorrect) return "✅ " + q.explanation_correct;
+  return "💡 正解は「" + q.options[q.answer] + "」。" + q.explanation_wrong;
+}
+
+// ── 未出題優先シャッフル ──
+function weightedShuffle(pool, seenIds) {
+  const weighted = [];
+  pool.forEach(q => {
+    const w = seenIds.has(q.id) ? 1 : 3;
+    for (let i = 0; i < w; i++) weighted.push(q);
+  });
+  const shuffled = weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set(); const result = [];
+  for (const q of shuffled) {
+    if (!seen.has(q.id)) { seen.add(q.id); result.push(q); }
+    if (result.length >= 20) break;
+  }
+  return result;
+}
+
+// ── 背景グリッド ──
+function renderBg() {
+  const grid = document.getElementById("bgGrid");
+  grid.innerHTML = "";
+  for (let i = 0; i < 12; i++) {
+    const d = document.createElement("div");
+    d.style.cssText = `border:1px solid ${COLOR.accent}10;transform:rotate(${i*15}deg) scale(${1+i*0.15})`;
+    grid.appendChild(d);
+  }
+}
+
+// ── ホーム画面 ──
+function renderHome() {
+  const c = COLOR;
+  document.body.style.background = c.bg;
+  document.getElementById("homeCard").style.background = c.card;
+  document.getElementById("startBtn").style.background = c.accent;
+  document.getElementById("weakBtn").style.color = c.accent;
+  document.getElementById("weakBtn").style.borderColor = c.accent;
+
+  const pool = state.cat === "すべて" ? QUESTIONS : QUESTIONS.filter(q => q.category === state.cat);
+  const count = pool.length;
+  const qCountEl = document.getElementById("qCount");
+  qCountEl.style.color = c.accent;
+  qCountEl.textContent = count <= 20 ? count : `20（全${count}問中）`;
+
+  // カテゴリボタン
+  const catBtns = document.getElementById("catButtons");
+  catBtns.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.textContent = cat;
+    btn.className = "cat-btn";
+    if (cat === state.cat) {
+      btn.style.cssText = `padding:6px 12px;border-radius:10px;font-size:11px;font-weight:700;background:${c.accent};border:none;color:#fff;`;
+    } else {
+      btn.style.cssText = `padding:6px 12px;border-radius:10px;font-size:11px;font-weight:700;color:${c.accent};border:2px solid ${c.accent};background:transparent;`;
+    }
+    btn.onclick = () => { state.cat = cat; renderHome(); };
+    catBtns.appendChild(btn);
+  });
+
+  // 苦手ジャンル
+  const ranks = getCatRank();
+  const weakSection = document.getElementById("weakSection");
+  const weakList = document.getElementById("weakCatList");
+  if (ranks.length === 0) {
+    weakSection.classList.add("hidden");
+  } else {
+    weakSection.classList.remove("hidden");
+    weakList.innerHTML = ranks.slice(0, 5).map(({ cat, rate, total }) => {
+      const bar = `<div style="height:4px;background:#ffffff15;border-radius:2px;margin-top:4px"><div style="height:4px;background:${c.accent};border-radius:2px;width:${rate}%"></div></div>`;
+      const label = rate <= 40 ? "😣" : rate <= 60 ? "😅" : "😊";
+      return `<div style="background:#ffffff08;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #ffffff15"
+        onclick="startWeakCat('${cat}')"
+        onmouseover="this.style.borderColor='${c.accent}'" onmouseout="this.style.borderColor='#ffffff15'">
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span>${label} ${cat}</span>
+          <span style="color:${rate<=40?'#ef4444':rate<=60?'#f97316':c.accent}">${rate}% (${total}問)</span>
+        </div>${bar}
+      </div>`;
+    }).join("");
+  }
+}
+
+function showHome() {
+  document.getElementById("homeScreen").classList.remove("hidden");
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  renderHome();
+}
+
+// ── クイズ開始 ──
+function startQuiz(questions) {
+  let pool;
+  if (questions) {
+    pool = questions.slice(0, 20);
+    state.questions = [...pool].sort(() => Math.random() - 0.5);
+  } else {
+    const base = state.cat === "すべて" ? QUESTIONS : QUESTIONS.filter(q => q.category === state.cat);
+    state.questions = weightedShuffle(base, state.seenIds);
+  }
+  state.questions.forEach(q => state.seenIds.add(q.id));
+  state.current = 0; state.score = 0; state.streak = 0; state.maxStreak = 0;
+  state.selected = null; state.hintUsed = false; state.answers = []; state.wrongQuestions = [];
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("quizScreen").classList.remove("hidden");
+  renderQuiz();
+}
+
+function retryWrong() { startQuiz(state.wrongQuestions); }
+
+function startWeakMode() {
+  const ranks = getCatRank();
+  if (ranks.length === 0) { alert("まだデータが不足しています。\n先にいくつか問題を解いてください！"); return; }
+  const weakCats = new Set(ranks.map(r => r.cat));
+  const weighted = [];
+  QUESTIONS.forEach(q => {
+    const w = weakCats.has(q.category) ? 3 : 1;
+    for (let i = 0; i < w; i++) weighted.push(q);
+  });
+  const shuffled = weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set(); const pool = [];
+  for (const q of shuffled) {
+    if (!seen.has(q.id)) { seen.add(q.id); pool.push(q); }
+    if (pool.length >= 20) break;
+  }
+  startQuiz(pool);
+}
+
+function startWeakCat(cat) {
+  const pool = QUESTIONS.filter(q => q.category === cat);
+  if (pool.length === 0) return;
+  state.cat = cat;
+  startQuiz(pool);
+}
+
+// ── クイズ描画 ──
+function renderQuiz() {
+  const { questions, current, score, streak } = state;
+  const q = questions[current];
+  const c = COLOR;
+  document.body.style.background = c.bg;
+  document.getElementById("qIndex").textContent = `${current + 1} / ${questions.length}`;
+  const scoreDisp = document.getElementById("scoreDisp");
+  scoreDisp.textContent = `${score} pt`; scoreDisp.style.color = c.accent;
+  const streakBadge = document.getElementById("streakBadge");
+  if (streak >= 2) { streakBadge.style.display = ""; streakBadge.textContent = `🔥 ${streak}連続`; }
+  else { streakBadge.style.display = "none"; }
+  const fill = document.getElementById("progressFill");
+  fill.style.width = `${((current + 1) / questions.length) * 100}%`; fill.style.background = c.accent;
+  document.getElementById("quizCard").style.background = c.card;
+  const catEl = document.getElementById("qCategory");
+  catEl.textContent = q.category; catEl.style.background = c.badge; catEl.style.color = c.accent;
+  document.getElementById("qDifficulty").textContent = q.difficulty;
+  document.getElementById("qEmoji").textContent = q.emoji;
+  document.getElementById("qText").textContent = q.question;
+  const optDiv = document.getElementById("optButtons");
+  optDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<span class="opt-lbl">${["A","B","C","D"][i]}.</span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    optDiv.appendChild(btn);
+  });
+  document.getElementById("hintArea").innerHTML =
+    `<button class="btn-outline" style="font-size:12px;color:${c.accent};border-color:${c.accent};" onclick="showHint()">ヒント（−5pt）</button>`;
+  document.getElementById("expBox").classList.add("hidden");
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.add("hidden"); nextBtn.style.display = "block"; nextBtn.style.background = c.accent;
+}
+
+function showHint() {
+  const q = state.questions[state.current];
+  state.hintUsed = true;
+  document.getElementById("hintArea").innerHTML = `<div class="hint-box">💡 ${q.hint}</div>`;
+}
+
+function selectAnswer(idx) {
+  if (state.selected !== null) return;
+  state.selected = idx;
+  const q = state.questions[state.current];
+  const isCorrect = idx === q.answer;
+  const pts = isCorrect ? (state.hintUsed ? 5 : 10) : 0;
+  state.score += pts; state.streak = isCorrect ? state.streak + 1 : 0;
+  state.maxStreak = Math.max(state.maxStreak, state.streak);
+  state.answers.push({ correct: isCorrect, selected: idx });
+  if (!isCorrect) state.wrongQuestions.push(q);
+  recordAnswer(q.category, isCorrect);
+
+  const c = COLOR;
+  document.getElementById("scoreDisp").textContent = `${state.score} pt`;
+  const streakBadge = document.getElementById("streakBadge");
+  if (state.streak >= 2) { streakBadge.style.display = ""; streakBadge.textContent = `🔥 ${state.streak}連続`; }
+  else { streakBadge.style.display = "none"; }
+
+  const btns = document.getElementById("optButtons").querySelectorAll("button");
+  btns.forEach((btn, i) => {
+    btn.onclick = null;
+    if (i === q.answer) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+    else btn.classList.add("dim");
+  });
+  document.getElementById("hintArea").innerHTML = "";
+
+  const expBox = document.getElementById("expBox");
+  expBox.classList.remove("hidden");
+  expBox.style.borderColor = c.accent + "66";
+  document.getElementById("expLabel").style.color = c.accent;
+  const text = getExplanation(q, idx, isCorrect);
+  const linkHtml = q.link
+    ? `<a href="${q.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:${c.accent};text-decoration:none;border:1px solid ${c.accent}44;padding:3px 10px;border-radius:6px;">🔗 詳しく調べる（Wikipedia）</a>`
+    : "";
+  document.getElementById("expContent").innerHTML = `<span>${text}</span>${linkHtml}`;
+
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.remove("hidden");
+  nextBtn.textContent = state.current + 1 >= state.questions.length ? "結果を見る 🏁" : "次の問題 →";
+}
+
+function nextQuestion() {
+  if (state.current + 1 >= state.questions.length) { showResult(); }
+  else { state.current++; state.selected = null; state.hintUsed = false; renderQuiz(); }
+}
+
+// ── 結果画面 ──
+function showResult() {
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.remove("hidden");
+  const { questions, answers, score, maxStreak, wrongQuestions } = state;
+  const correct = answers.filter(a => a.correct).length;
+  const c = COLOR;
+  document.getElementById("resultEmoji").textContent = correct === questions.length ? "🏆" : correct >= questions.length * 0.7 ? "🥈" : "🎯";
+  document.getElementById("resultScore").textContent = `${score} pt`;
+  document.getElementById("resultSub").textContent = `${correct}/${questions.length}問正解 · 最大連続 ${maxStreak}🔥`;
+  if (correct === questions.length) document.getElementById("perfectBanner").classList.remove("hidden");
+  else document.getElementById("perfectBanner").classList.add("hidden");
+
+  document.getElementById("catStatsCard").style.background = c.card;
+  const catStats = {};
+  questions.forEach((q, i) => {
+    if (!catStats[q.category]) catStats[q.category] = { ok: 0, total: 0 };
+    catStats[q.category].total++;
+    if (answers[i]?.correct) catStats[q.category].ok++;
+  });
+  document.getElementById("catStats").innerHTML = Object.entries(catStats).map(([cat, { ok, total }]) => `
+    <div class="cat-bar-wrap">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${cat}</span><span style="color:${c.accent}">${ok}/${total}</span>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="background:${c.accent};width:${(ok/total)*100}%"></div></div>
+    </div>`).join("");
+
+  document.getElementById("logCard").style.background = c.card;
+  document.getElementById("answerLog").innerHTML = questions.map((q, i) => `
+    <div class="log-row">
+      <span style="flex-shrink:0">${answers[i]?.correct ? "✅" : "❌"}</span>
+      <span style="flex:1">${q.question}</span>
+      <span class="log-ans">${q.options[q.answer]}</span>
+    </div>`).join("");
+
+  const retryBtn = document.getElementById("retryWrongBtn");
+  if (wrongQuestions.length > 0) {
+    retryBtn.classList.remove("hidden");
+    retryBtn.textContent = `❌ 間違えた${wrongQuestions.length}問をもう一度`;
+  } else { retryBtn.classList.add("hidden"); }
+}
+
+// ── 初期化 ──
+renderBg();
+renderHome();
+</script>
+</body>
+</html>

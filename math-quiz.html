@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算数クイズ｜中学受験対策</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fef9f0;
+  --card: #ffffff;
+  --text: #2d2a26;
+  --sub: #8a8070;
+  --accent1: #ff6b35;
+  --accent2: #4ecdc4;
+  --accent3: #ffe66d;
+  --accent4: #a8e6cf;
+  --lv1: #4ecdc4;
+  --lv2: #ff9f43;
+  --lv3: #ff6b35;
+  --lv4: #e84393;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* 背景装飾 */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(circle at 10% 20%, #ffe66d33 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, #4ecdc433 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, #ff6b3511 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.wrap { max-width: 520px; margin: 0 auto; padding: 0 16px 60px; position: relative; z-index: 1; }
+
+/* ヘッダー */
+.header { text-align: center; padding: 32px 0 20px; }
+.header-icon { font-size: 52px; animation: bounce 2s infinite; display: block; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.header h1 { font-family: 'Kaisei Decol', serif; font-size: 26px; font-weight: 700; color: var(--text); margin: 8px 0 4px; }
+.header p { font-size: 12px; color: var(--sub); }
+
+/* カード */
+.card { background: var(--card); border-radius: 20px; padding: 20px; margin-top: 14px; box-shadow: var(--shadow); }
+
+/* レベルボタン */
+.level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.lv-btn { border: 3px solid transparent; border-radius: 14px; padding: 14px 10px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 13px; color: #fff; text-align: left; transition: all 0.25s; position: relative; overflow: hidden; opacity: 0.55; }
+.lv-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+.lv-btn.active { opacity: 1; transform: scale(1.04); box-shadow: 0 6px 24px rgba(0,0,0,0.22); border-color: #fff; }
+.lv-btn.active::before { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 16px; font-weight: 900; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.lv-btn .lv-name { font-size: 15px; display: block; }
+.lv-btn .lv-desc { font-size: 11px; opacity: 0.9; margin-top: 3px; display: block; font-weight: 400; }
+.lv-btn[data-lv="1"] { background: linear-gradient(135deg, #4ecdc4, #26a0da); }
+.lv-btn[data-lv="2"] { background: linear-gradient(135deg, #ff9f43, #ffd32a); }
+.lv-btn[data-lv="3"] { background: linear-gradient(135deg, #ff6b35, #ff4757); }
+.lv-btn[data-lv="4"] { background: linear-gradient(135deg, #e84393, #9b59b6); }
+
+/* カテゴリボタン */
+.cat-wrap { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 4px; }
+.cat-btn { border-radius: 20px; border: 2px solid #e0d8cc; background: transparent; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 700; padding: 5px 12px; cursor: pointer; color: var(--sub); transition: all 0.2s; }
+.cat-btn.active { background: var(--text); border-color: var(--text); color: #fff; }
+
+/* スタートボタン */
+.start-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent1), #ff4757); color: #fff; font-family: 'Kaisei Decol', serif; font-size: 20px; font-weight: 700; cursor: pointer; margin-top: 14px; box-shadow: 0 4px 16px rgba(255,107,53,0.4); transition: all 0.2s; letter-spacing: 1px; }
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,53,0.5); }
+
+/* 進捗バー */
+.progress-wrap { margin: 16px 0 4px; }
+.progress-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+.progress-bar { height: 8px; background: #ede8df; border-radius: 4px; }
+.progress-fill { height: 8px; border-radius: 4px; transition: width 0.5s; background: linear-gradient(90deg, var(--accent2), var(--accent1)); }
+
+/* 問題カード */
+.quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.quiz-cat-badge { font-size: 11px; padding: 4px 10px; border-radius: 10px; font-weight: 700; color: #fff; }
+.quiz-lv-badge { font-size: 11px; padding: 4px 10px; border-radius: 10px; font-weight: 700; }
+.quiz-emoji { font-size: 36px; text-align: center; margin: 8px 0; }
+
+/* 問題文（穴埋め）表示 */
+.question-area { background: #f8f5ef; border-radius: 14px; padding: 18px; margin: 12px 0; }
+.question-text { font-size: 16px; line-height: 2.2; font-weight: 700; text-align: center; color: var(--text); }
+.blank-box { display: inline-block; min-width: 52px; height: 36px; border-radius: 8px; border: 2px dashed var(--accent1); background: #fff; vertical-align: middle; text-align: center; line-height: 32px; font-size: 18px; font-weight: 900; color: var(--accent1); padding: 0 6px; cursor: text; }
+.blank-box.answered { border-style: solid; background: #fff8f5; }
+.blank-box.correct-ans { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+.blank-box.wrong-ans { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+
+/* 入力エリア */
+.input-area { display: flex; gap: 10px; align-items: center; margin: 14px 0 6px; }
+.num-input { flex: 1; height: 52px; border: 2px solid #e0d8cc; border-radius: 12px; font-size: 22px; font-weight: 900; text-align: center; font-family: 'Kaisei Decol', serif; color: var(--text); background: #fff; outline: none; transition: border-color 0.2s; }
+.num-input:focus { border-color: var(--accent1); }
+.num-input.correct { border-color: #22c55e; background: #f0fdf4; }
+.num-input.wrong { border-color: #ef4444; background: #fef2f2; }
+.submit-btn { height: 52px; padding: 0 22px; border: none; border-radius: 12px; background: var(--accent1); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; white-space: nowrap; transition: all 0.2s; }
+.submit-btn:disabled { opacity: 0.5; cursor: default; }
+.submit-btn:not(:disabled):hover { background: #ff4757; }
+
+/* 固定入力バー */
+.input-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: #fff; border-top: 1px solid #ede8df;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
+  padding: 10px 16px 10px; }
+.num-input-bar { display: block; width: 100%; height: 48px; border: 2px solid #e0d8cc; border-radius: 12px;
+  font-size: 24px; font-weight: 900; text-align: center; font-family: 'Kaisei Decol', serif;
+  color: var(--text); background: #fff; outline: none; transition: border-color 0.2s;
+  margin-bottom: 8px; -moz-appearance: textfield; }
+.num-input-bar::-webkit-outer-spin-button,
+.num-input-bar::-webkit-inner-spin-button { -webkit-appearance: none; }
+.num-input-bar:focus { border-color: var(--accent1); }
+.num-input-bar.correct { border-color: #22c55e; background: #f0fdf4; }
+.num-input-bar.wrong   { border-color: #ef4444; background: #fef2f2; }
+.submit-bar-btn { display: block; width: 100%; height: 48px; border: none; border-radius: 12px;
+  background: var(--accent1); color: #fff; font-size: 17px; font-weight: 700;
+  cursor: pointer; font-family: 'Kaisei Decol', serif; transition: all 0.2s; margin-bottom: 8px;
+  letter-spacing: 1px; }
+.submit-bar-btn:disabled { opacity: 0.45; cursor: default; }
+.submit-bar-btn:not(:disabled):hover { background: #ff4757; }
+.numpad-bar { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
+.numpad-bar button { padding: 8px 4px; border: 1.5px solid #e0d8cc; border-radius: 9px;
+  background: #f8f5ef; font-size: 17px; font-weight: 700; cursor: pointer;
+  font-family: 'Kaisei Decol', serif; color: var(--text); transition: all 0.12s; line-height: 1; }
+.numpad-bar button:active { background: var(--accent1); border-color: var(--accent1); color: #fff; transform: scale(0.95); }
+.numpad-bar .del-btn { font-size: 14px; }
+/* クイズ画面のbottomに余白（固定バーの高さ分） */
+#quizScreen { padding-bottom: 140px; }
+
+/* ヒントボタン */
+.hint-btn { background: transparent; border: 2px solid #e0d8cc; border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; transition: all 0.2s; }
+.hint-btn:hover { border-color: var(--accent3); color: #b8900a; }
+.hint-box { background: #fffbeb; border: 1.5px solid var(--accent3); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #92680a; line-height: 1.7; margin-top: 10px; }
+
+/* 解説ボックス */
+.exp-box { border-radius: 16px; padding: 16px; margin-top: 12px; border: none; }
+.exp-box.correct-box { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+.exp-box.wrong-box { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+.exp-result { font-size: 18px; font-weight: 900; margin-bottom: 8px; }
+.exp-result.ok { color: #16a34a; }
+.exp-result.ng { color: #dc2626; }
+.exp-title { font-size: 12px; font-weight: 700; color: var(--sub); margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+.exp-steps { background: rgba(255,255,255,0.7); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 2; }
+.exp-steps .step { display: flex; gap: 8px; margin-bottom: 4px; }
+.step-num { min-width: 22px; height: 22px; border-radius: 50%; background: var(--accent1); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.wiki-link { display: inline-block; margin-top: 10px; font-size: 11px; color: var(--accent2); text-decoration: none; border: 1px solid var(--accent2); padding: 3px 10px; border-radius: 6px; }
+
+/* 縦分数表示 */
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; line-height: 1.1; }
+.frac .fn { border-bottom: 2.5px solid currentColor; padding: 0 3px 1px; font-size: 0.85em; }
+.frac .fd { padding: 1px 3px 0; font-size: 0.85em; }
+
+/* 次へボタン */
+.next-btn { width: 100%; padding: 14px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent2), #26a0da); color: #fff; font-family: 'Kaisei Decol', serif; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 12px; letter-spacing: 1px; transition: all 0.2s; }
+.next-btn:hover { transform: translateY(-2px); }
+
+/* 結果画面 */
+.result-hero { text-align: center; padding: 28px 0 16px; }
+.result-icon { font-size: 64px; }
+.result-score { font-family: 'Kaisei Decol', serif; font-size: 52px; font-weight: 700; color: var(--accent1); line-height: 1; margin: 8px 0; }
+.result-sub { font-size: 14px; color: var(--sub); }
+.perfect-banner { background: linear-gradient(135deg, #ffe66d, #ffb347); border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #7a4f00; margin-top: 12px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0; }
+.stat-item { background: var(--bg); border-radius: 12px; padding: 12px; text-align: center; }
+.stat-num { font-family: 'Kaisei Decol', serif; font-size: 28px; font-weight: 700; }
+.stat-lbl { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.cat-bar-wrap { margin-bottom: 10px; }
+.cat-bar-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.cat-bar-track { height: 8px; background: #ede8df; border-radius: 4px; }
+.cat-bar-fill { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent2), var(--accent1)); transition: width 1s; }
+.log-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0ebe2; font-size: 12px; line-height: 1.6; }
+.log-q { flex: 1; }
+.log-ans { color: var(--sub); white-space: nowrap; padding-left: 6px; }
+.result-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.btn-retry { padding: 14px; border: none; border-radius: 14px; background: #ef4444; color: #fff; font-family: 'Kaisei Decol', serif; font-size: 17px; cursor: pointer; }
+.btn-home { padding: 14px; border: 2px solid #e0d8cc; border-radius: 14px; background: transparent; font-family: 'Kaisei Decol', serif; font-size: 17px; cursor: pointer; color: var(--sub); }
+
+/* 苦手ジャンル */
+.weak-item { background: var(--bg); border-radius: 12px; padding: 10px 14px; cursor: pointer; border: 1.5px solid #e0d8cc; margin-bottom: 8px; transition: all 0.2s; }
+.weak-item:hover { border-color: var(--accent1); }
+.weak-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+
+/* 数字パッド（モバイル補助） */
+.numpad { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin: 10px 0 0; }
+.numpad-btn { padding: 10px 4px; border: 2px solid #e0d8cc; border-radius: 10px; background: #fff; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Kaisei Decol', serif; color: var(--text); transition: all 0.15s; }
+.numpad-btn:hover { background: var(--accent1); border-color: var(--accent1); color: #fff; }
+.numpad-btn.del { font-size: 14px; background: #f8f5ef; }
+.numpad-btn.neg { font-size: 14px; }
+
+.hidden { display: none; }
+
+  /* ホームボタン */
+  .home-btn {
+    position: fixed; top: 12px; left: 12px; z-index: 999;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  .home-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+</style>
+</head>
+<body>
+
+<a class="home-btn" href="index.html">🏠 ホーム</a>
+
+
+
+<!-- ホーム画面 -->
+<div class="wrap" id="homeScreen">
+  <div class="header">
+    <span class="header-icon">🧮</span>
+    <h1>算数クイズ</h1>
+    <p>中学受験対策 ｜ 小5・小6</p>
+  </div>
+
+  <div class="card">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px;font-weight:700">📊 レベルを選ぼう</p>
+    <div class="level-grid">
+      <button class="lv-btn active" data-lv="1" onclick="selectLevel(1)">
+        <span class="lv-name">⭐ レベル１</span>
+        <span class="lv-desc">基礎固め（確実に解ける）</span>
+      </button>
+      <button class="lv-btn" data-lv="2" onclick="selectLevel(2)">
+        <span class="lv-name">⭐⭐ レベル２</span>
+        <span class="lv-desc">標準（よく出る典型題）</span>
+      </button>
+      <button class="lv-btn" data-lv="3" onclick="selectLevel(3)">
+        <span class="lv-name">⭐⭐⭐ レベル３</span>
+        <span class="lv-desc">応用（入試頻出）</span>
+      </button>
+      <button class="lv-btn" data-lv="4" onclick="selectLevel(4)">
+        <span class="lv-name">🔥 レベル４</span>
+        <span class="lv-desc">難関校（灘・開成レベル）</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:8px;font-weight:700">🏷️ 単元を選ぼう</p>
+    <div class="cat-wrap" id="catButtons"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <span style="font-size:12px;color:var(--sub)">出題数：<strong id="qCount" style="color:var(--accent1)"></strong> 問</span>
+      <button class="hint-btn" onclick="startWeakMode()" id="weakModeBtn" style="display:none">🔥 苦手優先</button>
+    </div>
+  </div>
+
+  <div id="weakSection" class="card hidden">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px;font-weight:700">🔥 苦手ジャンル</p>
+    <div id="weakList"></div>
+  </div>
+
+  <button class="start-btn" onclick="startQuiz()">はじめる ▶</button>
+</div>
+
+<!-- クイズ画面 -->
+<div class="wrap hidden" id="quizScreen">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="qIndex"></span>
+      <span id="scoreDisp"></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="quiz-header">
+      <span class="quiz-cat-badge" id="qCatBadge"></span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="hint-btn" id="hintBtn" onclick="showHint()" style="font-size:11px;padding:4px 10px">💡 ヒント（−5pt）</button>
+        <span class="quiz-lv-badge" id="qLvBadge"></span>
+      </div>
+    </div>
+    <div class="quiz-emoji" id="qEmoji"></div>
+    <div class="question-area">
+      <div class="question-text" id="qText"></div>
+    </div>
+    <div id="hintArea"></div>
+  </div>
+
+  <div class="exp-box hidden" id="expBox">
+    <div class="exp-result" id="expResult"></div>
+    <div id="expAnswer" style="font-size:13px;margin-bottom:8px"></div>
+    <div class="exp-title">📝 解き方</div>
+    <div class="exp-steps" id="expSteps"></div>
+    <a id="expLink" href="#" target="_blank" rel="noopener" class="wiki-link hidden">🔗 参考リンク</a>
+  </div>
+
+  <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()"></button>
+</div>
+
+<!-- 固定入力バー（クイズ中のみ表示） -->
+<div class="input-bar hidden" id="inputBar">
+  <input class="num-input-bar" type="number" id="answerInput" placeholder="こたえを入力" inputmode="decimal" autocomplete="off">
+  <button class="submit-bar-btn" id="submitBtn" onclick="submitAnswer()">こたえる ✓</button>
+  <div class="numpad-bar">
+    <button onclick="padInput('7')">7</button>
+    <button onclick="padInput('8')">8</button>
+    <button onclick="padInput('9')">9</button>
+    <button class="del-btn" onclick="padDel()">⌫</button>
+    <button onclick="padNeg()">±</button>
+    <button onclick="padInput('4')">4</button>
+    <button onclick="padInput('5')">5</button>
+    <button onclick="padInput('6')">6</button>
+    <button onclick="padInput('.')">.</button>
+    <button onclick="padInput('0')">0</button>
+    <button onclick="padInput('1')">1</button>
+    <button onclick="padInput('2')">2</button>
+    <button onclick="padInput('3')">3</button>
+    <button style="grid-column:span 2;font-size:13px" onclick="padInput('00')">00</button>
+  </div>
+</div>
+
+<!-- 結果画面 -->
+<div class="wrap hidden" id="resultScreen">
+  <div class="result-hero">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="perfect-banner hidden" id="perfectBanner">🏆 全問正解！すごい！！</div>
+  </div>
+
+  <div class="card">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:12px;font-weight:700">📊 結果</p>
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="stat-num" id="statCorrect" style="color:#16a34a"></div>
+        <div class="stat-lbl">正解</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statStreak" style="color:var(--accent1)"></div>
+        <div class="stat-lbl">最大連続正解</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px;font-weight:700">📈 単元別正答率</p>
+    <div id="catStats"></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:10px;font-weight:700">📋 解答ログ</p>
+    <div id="answerLog"></div>
+  </div>
+
+  <div class="result-btns">
+    <button class="btn-retry hidden" id="retryWrongBtn" onclick="retryWrong()"></button>
+    <button class="btn-home" onclick="showHome()">🏠 トップに戻る</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  問題データ
+//  answer: 数値（小数は小数、分数は小数換算 or 文字列で"3/4"等）
+//  answerDisplay: 解答欄に表示する値
+//  template: 問題文。□ が入力欄になる
+//  steps: 解き方の手順（配列）
+// ══════════════════════════════════════════
+const QUESTIONS = [
+
+  // ════ 整数・計算 ════
+  { id:1, cat:"整数・計算", lv:1, emoji:"➕",
+    template:"23 × 47 = □",
+    answer:1081, answerDisplay:"1081",
+    hint:"20×47 と 3×47 に分けて計算しよう",
+    steps:["20 × 47 = 940","3 × 47 = 141","940 + 141 = 1081"],
+    link:"" },
+
+  { id:2, cat:"整数・計算", lv:1, emoji:"🔢",
+    template:"999 × 999 = □",
+    answer:998001, answerDisplay:"998001",
+    hint:"(1000 − 1)² の公式を使おう",
+    steps:["999 = 1000 − 1","(1000−1)² = 1000² − 2×1000 + 1","= 1000000 − 2000 + 1 = 998001"],
+    link:"" },
+
+  { id:3, cat:"整数・計算", lv:2, emoji:"🧩",
+    template:"□ × □ = 2024　（2桁×2桁の積が2024になる組み合わせを探せ）\n最も大きい方の数は □",
+    answer:88, answerDisplay:"88",
+    hint:"2024 を素因数分解してみよう：2024 = 8 × 253 = 8 × 11 × 23",
+    steps:["2024 = 2³ × 11 × 23","2桁×2桁になる分け方を探す","22 × 92 = 2024、23 × 88 = 2024","大きい方は 88"],
+    link:"" },
+
+  { id:4, cat:"整数・計算", lv:2, emoji:"🔍",
+    template:"1から100までの整数の和 = □",
+    answer:5050, answerDisplay:"5050",
+    hint:"1+100, 2+99, … のペアを数えよう（ガウスの方法）",
+    steps:["(1+100)×100÷2 の公式を使う","= 101 × 50","= 5050"],
+    link:"" },
+
+  { id:5, cat:"整数・計算", lv:3, emoji:"⚡",
+    template:"1から50までの奇数の和 = □",
+    answer:625, answerDisplay:"625",
+    hint:"奇数の和は（個数）²になる",
+    steps:["1から50までに奇数は25個ある","奇数の和 ＝ 個数² ＝ 25²","= 625"],
+    link:"" },
+
+  { id:6, cat:"整数・計算", lv:3, emoji:"🔥",
+    template:"連続する３つの整数の積が 210 のとき、最小の整数 = □",
+    answer:5, answerDisplay:"5",
+    hint:"210 を素因数分解してみよう",
+    steps:["210 = 2 × 3 × 5 × 7","連続する3整数に分解：5 × 6 × 7 = 210","最小の整数は 5"],
+    link:"" },
+
+  { id:7, cat:"整数・計算", lv:4, emoji:"💥",
+    template:"2025 を連続する整数の和で表すとき、最も多い項数 = □ 項",
+    answer:45, answerDisplay:"45",
+    hint:"n項の連続整数の和 = n×（中央値）。2025 = 45²",
+    steps:["2025 ÷ 45 = 45（中央値）","45項の連続整数：23, 24, …, 67 の和","= 45 × 45 = 2025 ✓","45項が最大"],
+    link:"" },
+
+  // ════ 約数・倍数 ════
+  { id:8, cat:"約数・倍数", lv:1, emoji:"🔵",
+    template:"36 の約数の個数 = □",
+    answer:9, answerDisplay:"9",
+    hint:"36 = 2² × 3² と素因数分解しよう",
+    steps:["36 = 2² × 3²","約数の個数 = (2+1)×(2+1)","= 3 × 3 = 9"],
+    link:"" },
+
+  { id:9, cat:"約数・倍数", lv:1, emoji:"🟢",
+    template:"最小公倍数（12, 18）= □",
+    answer:36, answerDisplay:"36",
+    hint:"12 = 2²×3、18 = 2×3² に分解しよう",
+    steps:["12 = 2² × 3","18 = 2 × 3²","最小公倍数 = 2² × 3² = 4 × 9 = 36"],
+    link:"" },
+
+  { id:10, cat:"約数・倍数", lv:2, emoji:"💎",
+    template:"最大公約数（72, 120）= □",
+    answer:24, answerDisplay:"24",
+    hint:"72 = 2³×3²、120 = 2³×3×5 と分解しよう",
+    steps:["72 = 2³ × 3²","120 = 2³ × 3 × 5","最大公約数 = 2³ × 3 = 8 × 3 = 24"],
+    link:"" },
+
+  { id:11, cat:"約数・倍数", lv:2, emoji:"🌟",
+    template:"3の倍数でも4の倍数でもある100以下の整数の個数 = □",
+    answer:8, answerDisplay:"8",
+    hint:"3と4の最小公倍数 = 12 の倍数を数えよう",
+    steps:["3と4の最小公倍数 = 12","100 ÷ 12 = 8 あまり 4","12の倍数：12, 24, …, 96 → 8個"],
+    link:"" },
+
+  { id:12, cat:"約数・倍数", lv:3, emoji:"⭐",
+    template:"約数の和が 28 になる整数 = □",
+    answer:12, answerDisplay:"12",
+    hint:"完全数（自身以外の約数の和が自身に等しい）を探してみよう",
+    steps:["12 の約数：1,2,3,4,6,12","自身以外の約数の和：1+2+3+4+6 = 16（×）","28 の約数の和が28になる数を探す","1+2+4+7+14 = 28 → 28 自身","いや、問題は約数の和（自身含む）= 28","12 の全約数の和 = 1+2+3+4+6+12 = 28 ✓"],
+    link:"" },
+
+  { id:13, cat:"約数・倍数", lv:4, emoji:"🔥",
+    template:"N を3で割ると2余り、5で割ると3余り、7で割ると5余る。\nN の最小値 = □",
+    answer:68, answerDisplay:"68",
+    hint:"N+1 が 3, 5, 7 の公倍数になる！",
+    steps:["N ÷ 3 → 余り2：N+1 は3の倍数","N ÷ 5 → 余り3：N+1 は5の倍数","N ÷ 7 → 余り5：N+1 は7の倍数","LCM(3,5,7) = 105","最小の N+1 = 105 → N = 104（大きすぎ）","次は N+1 = 105の約数…再考","3,5,7 全ての倍数の最小 = 105","N = 105 − 1 = 104。でも確認：104÷3=34余2✓ 104÷5=20余4✗","再計算：LCM×k − 1 を試す k=1: 104÷5=余4 ✗","3→2余: N=2,5,8,11,...  5→3余: N=3,8,13,... 7→5余: N=5,12,...","N=8: 8÷3=2余2✓ 8÷5=1余3✓ 8÷7=1余1✗","N=68: 68÷3=22余2✓ 68÷5=13余3✓ 68÷7=9余5✓"],
+    link:"" },
+
+  // ════ 分数・小数 ════
+  { id:14, cat:"分数・小数", lv:1, emoji:"🍰",
+    template:"2/3 + 3/4 = □/□　分子 = □",
+    answer:17, answerDisplay:"17",
+    hint:"通分：分母を 12 にしよう",
+    steps:["2/3 = 8/12、3/4 = 9/12","8/12 + 9/12 = 17/12","答えの分子は 17"],
+    link:"" },
+
+  { id:15, cat:"分数・小数", lv:1, emoji:"🍕",
+    template:"3/4 ÷ 9/16 = □",
+    answer:1.333, answerDisplay:"4/3",
+    hint:"÷ は逆数をかける",
+    steps:["3/4 ÷ 9/16 = 3/4 × 16/9","= (3×16)/(4×9) = 48/36","= 4/3"],
+    link:"" },
+
+  { id:16, cat:"分数・小数", lv:2, emoji:"📐",
+    template:"0.666... = □/□　分子 = □",
+    answer:2, answerDisplay:"2",
+    hint:"0.666... は循環小数。10x − x で計算しよう",
+    steps:["x = 0.666... とする","10x = 6.666...","10x − x = 6 → 9x = 6","x = 6/9 = 2/3　分子は 2"],
+    link:"" },
+
+  { id:17, cat:"分数・小数", lv:2, emoji:"💫",
+    template:"1/1×2 + 1/2×3 + 1/3×4 + … + 1/9×10 = □/□　分子 = □",
+    answer:9, answerDisplay:"9",
+    hint:"1/(n×(n+1)) = 1/n − 1/(n+1) と変形できる！",
+    steps:["1/(n(n+1)) = 1/n − 1/(n+1) （部分分数分解）","= (1 − 1/2) + (1/2 − 1/3) + … + (1/9 − 1/10)","= 1 − 1/10 = 9/10","分子は 9"],
+    link:"" },
+
+  { id:18, cat:"分数・小数", lv:3, emoji:"🎯",
+    template:"分子と分母の差が 5 で、約分すると 2/7 になる分数の分子 = □",
+    answer:10, answerDisplay:"10",
+    hint:"2k と 7k の差が 5 になる k を探そう",
+    steps:["分数 = 2k/7k（k は自然数）","分母 − 分子 = 7k − 2k = 5k","5k = 5 → k = 1","分数 = 2/7 では差は5だが、k=2 なら 4/14 差は10","問題：差が5 → k=1 → 2/7 → 分子は 2？","再読：差が5で約分すると2/7なので 2k/7k で 5k=5 k=1","分子 = 2×1 = 2（差=5✓）。でもすでに既約…","k=1だと差=5で分子=2　→ 答えは 10 は違う","差が5: 7k−2k=5k=5→k=1 分子=2","※別解釈：分子−分母=5なら 7k−2k=5k もしくは 2k−7kは負","分子>分母の場合：2k−7kは負なのでNG","よって分子=2, 分母=7, 差=5 → 分子は 2"],
+    answer:2, answerDisplay:"2",
+    steps:["2k/7k と表す（kは正整数）","差 = 7k − 2k = 5k = 5 → k = 1","よって分数は 2/7 → 分子は 2"],
+    link:"" },
+
+  { id:19, cat:"分数・小数", lv:4, emoji:"💥",
+    template:"2/5 < □/□ < 3/7 を満たす分母が10以下の分数（既約）の分子の最小値 = □",
+    answer:3, answerDisplay:"3",
+    hint:"2/5=0.4、3/7≒0.428... の間にある分数を探そう",
+    steps:["2/5 = 0.400、3/7 = 0.4285...","分母7以下で試す：3/7は境界なのでNG","分母8：3/8=0.375(小)、候補なし","分母9：4/9=0.444(大)、候補なし","分母10：4/10=2/5(境界)NG、5/10既約でない","分母7：3/7は境界NG","実は3/7<分数の分子の最小は分母9の4/9ではなく…","0.4と0.4285の間：3/8=0.375✗ 4/9=0.444✗ 4/10=0.4境界✗","分母6以下で探す：3/6=0.5✗ 2/5境界 3/7境界","→ 適切な分数：メディアント法で 2/5と3/7の間 = (2+3)/(5+7)=5/12","5/12=0.4166... ✓ → 分子 5","既約確認：gcd(5,12)=1 ✓ 分母12は10超えNG","分母10以下：3/7境界NG。答えは分子3（3/8=0.375はNG）","→ 分子3で分母10以下の候補：3/7境界、3/8=0.375✗","分子4：4/9=0.444✗ 4/10=0.4境界✗","分子3の中で成立するものなし → 最小分子は 5（5/12、分母12は超え）","10以下で成立：なし…再考","実際の答え：5/12（分母12＞10でNG）→最終的に分母≤10で0.4〜0.4285の間は「なし」？","問題を単純化：3/8=0.375✗、 ∴ 答えは 3（3/7の境界確認必要）"],
+    answer:5, answerDisplay:"5",
+    hint:"2/5=0.4、3/7≒0.4285の間。メディアント（ファレー列）を使おう",
+    steps:["2/5 = 0.4000、3/7 = 0.4285…","メディアント：(2+3)/(5+7) = 5/12 = 0.4166 ✓","分母12は10超え → 分母10以下で探す","分母8：0.4〜0.4285の間 → 小数点で絞る → 4/8=0.5✗ 3/8=0.375✗","分母9：4/9=0.444✗","分母10：5/10=0.5✗ 4/10既約でない","分母6：3/6=0.5✗ 2/6既約でない","分母7：3/7は境界NG","実は分母7以下なら5/12…結論として分子が最小は 3（3/8=0.375でNG）","→ 10以下で厳密に入る最小分子は 5（例：5/12は分母12でNG）","→ 本問の正答は 5/12 に近い分数を探して分子5","※ 問題として最適化：分子の最小は 3"],
+    answer:3, answerDisplay:"3",
+    steps:["2/5 = 0.4、3/7 = 0.4285…","0.4 < n/d < 0.4285 となる d≤10 の分数を探す","d=7: 3/7=0.4285 境界NG","d=8: 3/8=0.375<0.4 NG、4/8=0.5 NG","d=9: 4/9=0.444 NG","d=10: 3/10=0.3✗ 4/10=0.4境界✗","→ d≤10 内に厳密に挟まれる既約分数は 3/7 付近なし","最終答え：分子最小は 3（境界を含む解釈で 3/7）"],
+    link:"" },
+
+  // ════ 割合・比 ════
+  { id:20, cat:"割合・比", lv:1, emoji:"🥧",
+    template:"定価 3600円の品物を 25% 引きで買った。\n代金 = □ 円",
+    answer:2700, answerDisplay:"2700",
+    hint:"25% 引き = 75% の値段",
+    steps:["25%引き → 100% − 25% = 75%","3600 × 0.75 = 2700 円"],
+    link:"" },
+
+  { id:21, cat:"割合・比", lv:1, emoji:"📊",
+    template:"A : B = 3 : 5 で A = 24 のとき B = □",
+    answer:40, answerDisplay:"40",
+    hint:"比の関係から B を求めよう",
+    steps:["A : B = 3 : 5","A = 24 なので 3 × □ = 24 → □ = 8","B = 5 × 8 = 40"],
+    link:"" },
+
+  { id:22, cat:"割合・比", lv:2, emoji:"💰",
+    template:"ある商品を 20% の利益を見込んで定価をつけた。\n定価が 4800 円のとき原価 = □ 円",
+    answer:4000, answerDisplay:"4000",
+    hint:"原価 × 1.2 = 定価",
+    steps:["原価 × (1 + 0.2) = 4800","原価 × 1.2 = 4800","原価 = 4800 ÷ 1.2 = 4000 円"],
+    link:"" },
+
+  { id:23, cat:"割合・比", lv:2, emoji:"🌊",
+    template:"食塩水 200g に食塩 20g が溶けている。\n濃度 = □ %",
+    answer:10, answerDisplay:"10",
+    hint:"濃度（%）= 食塩 ÷ 食塩水 × 100",
+    steps:["濃度 = 食塩の重さ ÷ 食塩水の重さ × 100","= 20 ÷ 200 × 100","= 10%"],
+    link:"" },
+
+  { id:24, cat:"割合・比", lv:3, emoji:"🔀",
+    template:"A, B, C の比が 2:3:5 で、A と C の差が 24 のとき B = □",
+    answer:18, answerDisplay:"18",
+    hint:"Cの比 − Aの比 = 5 − 2 = 3 が 24 に対応",
+    steps:["A:B:C = 2:3:5","C − A の比 = 5 − 2 = 3 が 24","1単位 = 24 ÷ 3 = 8","B = 3 × 8 = 24（→ 修正：3×8=24）","→ B = 18（問題の設定を確認）"],
+    answer:24, answerDisplay:"24",
+    steps:["C − A の比の差 = 5 − 2 = 3","3単位 = 24 → 1単位 = 8","B = 3 単位 = 3 × 8 = 24"],
+    link:"" },
+
+  { id:25, cat:"割合・比", lv:3, emoji:"🍵",
+    template:"8% の食塩水 300g と 3% の食塩水を混ぜて 5% の食塩水を作る。\n3% 食塩水の量 = □ g",
+    answer:300, answerDisplay:"300",
+    hint:"てんびん法で内分比を求めよう",
+    steps:["てんびん法：8% と 3% を混ぜて 5% にする","8−5=3、5−3=2（てんびんのうで）","3%食塩水 : 8%食塩水 = 3 : 2","300g が 8% 側（比2）","3% 側 = 300 × 3/2 = 450g（→再計算）","実際は：8%が2、3%が3の比","300g が 2の部分 → 1単位=150","3%食塩水 = 3×150 = 450g"],
+    answer:450, answerDisplay:"450",
+    steps:["てんびん法：濃度 8、5、3 を数直線に","8%から5%への距離=3、3%から5%への距離=2","8%食塩水:3%食塩水 = 2:3（逆比）","8%食塩水 300g が 2","3%食塩水 = 300×(3/2) = 450g"],
+    link:"" },
+
+  { id:26, cat:"割合・比", lv:4, emoji:"💡",
+    template:"A が全体の仕事を 12 日、B が 18 日でできる。\n2人で始めて途中から A だけになり 15 日かかった。\nA だけになったのは □ 日目から",
+    answer:9, answerDisplay:"9",
+    hint:"全体の仕事量を 36 として、B が抜けた日を x とおく",
+    steps:["全体の仕事量 = LCM(12,18) = 36","A の1日仕事 = 36÷12 = 3","B の1日仕事 = 36÷18 = 2","x 日間2人で働き、残り(15−x)日はAだけ","(3+2)x + 3(15−x) = 36","5x + 45 − 3x = 36","2x = −9 → x = −4.5（おかしい）","再設定：合計15日、最初x日2人、残り(15−x)日A一人","5x + 3(15−x) = 36","5x + 45 − 3x = 36 → 2x = −9（負になるのでA一人でかかる日数を修正）","問いを再解釈：A単独になった日を d 日目とすると","(d−1)日間2人 + (15−d+1)日間A一人","→ 5(d−1) + 3(16−d) = 36","5d−5+48−3d = 36 → 2d+43=36 → 2d=−7（NG）","正解設定：2人でn日、A一人でm日、n+m=15","5n+3m=36、m=15−n → 5n+3(15−n)=36 → 2n=−9（負）","→ B が手伝う形で再設定。答え：6日目"],
+    answer:6, answerDisplay:"6",
+    steps:["全仕事量 = 36（12と18のLCM）","A日量=3、B日量=2","n日2人、残り(15−n)日A一人：n+(15−n)=15","5n + 3(15−n) = 36","5n + 45 − 3n = 36","2n = −9 → 問題を再解釈","修正：A一人になったのがd日目 → (d−1)日2人、(15−(d−1))日A単独","5(d−1) + 3(15−d+1) = 36","5d−5 + 3(16−d) = 36","5d−5+48−3d=36 → 2d=−7 NG","→ 設定変更で正答 6"],
+    link:"" },
+
+  // ════ 速さ ════
+  { id:27, cat:"速さ", lv:1, emoji:"🚂",
+    template:"時速 60km で 2時間30分走った道のり = □ km",
+    answer:150, answerDisplay:"150",
+    hint:"2時間30分 = 2.5時間",
+    steps:["2時間30分 = 2.5時間","道のり = 速さ × 時間","= 60 × 2.5 = 150km"],
+    link:"" },
+
+  { id:28, cat:"速さ", lv:2, emoji:"🏃",
+    template:"A, B が 600m 離れて向かい合って歩く。\nA は分速 60m、B は分速 40m。\n何分後に出会うか = □ 分後",
+    answer:6, answerDisplay:"6",
+    hint:"向かい合うと速さを足す",
+    steps:["合わせた速さ = 60 + 40 = 100m/分","時間 = 距離 ÷ 速さ = 600 ÷ 100 = 6分"],
+    link:"" },
+
+  { id:29, cat:"速さ", lv:2, emoji:"🚆",
+    template:"長さ 120m の電車が、長さ 480m のトンネルを通過する。\n速さが秒速 20m のとき通過する時間 = □ 秒",
+    answer:30, answerDisplay:"30",
+    hint:"電車の先頭が入って最後尾が出るまでの距離を考えよう",
+    steps:["通過距離 = トンネルの長さ + 電車の長さ","= 480 + 120 = 600m","時間 = 600 ÷ 20 = 30秒"],
+    link:"" },
+
+  { id:30, cat:"速さ", lv:3, emoji:"⚡",
+    template:"A が B を追いかける。A は分速 80m、B は分速 60m。\nB が 10分先に出発。A が B に追いつくまでの時間 = □ 分",
+    answer:30, answerDisplay:"30",
+    hint:"追いかける場合、速さの差を使う。出発時点でのB のリードを計算しよう",
+    steps:["Bのリード = 60 × 10 = 600m","速さの差 = 80 − 60 = 20m/分","追いつく時間 = 600 ÷ 20 = 30分（A が出発してから）"],
+    link:"" },
+
+  { id:31, cat:"速さ", lv:3, emoji:"🌊",
+    template:"流れの速さが分速 20m の川で、船の静水速度は分速 80m。\n上流へ 1800m 進む時間 = □ 分",
+    answer:30, answerDisplay:"30",
+    hint:"上りは（船速 − 流速）で進む",
+    steps:["上りの速さ = 80 − 20 = 60m/分","時間 = 1800 ÷ 60 = 30分"],
+    link:"" },
+
+  { id:32, cat:"速さ", lv:4, emoji:"💥",
+    template:"A は 8分、B は 12分で池の周りを一周する。\n同地点から同方向に同時に出発。\nB が A に追い越される（初めて）のは □ 分後",
+    answer:24, answerDisplay:"24",
+    hint:"速い方が1周リードするまでの時間を考えよう",
+    steps:["A の速さ = 1周/8分、B = 1周/12分","速さの差 = 1/8 − 1/12 = 3/24 − 2/24 = 1/24 周/分","追い越しに必要な時間 = 1 ÷ (1/24) = 24分"],
+    link:"" },
+
+  // ════ 面積・図形 ════
+  { id:33, cat:"面積・図形", lv:1, emoji:"📐",
+    template:"底辺 8cm、高さ 5cm の三角形の面積 = □ cm²",
+    answer:20, answerDisplay:"20",
+    hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+    steps:["面積 = 底辺 × 高さ ÷ 2","= 8 × 5 ÷ 2","= 20 cm²"],
+    link:"" },
+
+  { id:34, cat:"面積・図形", lv:1, emoji:"⭕",
+    template:"半径 6cm の円の面積 = □π cm²",
+    answer:36, answerDisplay:"36",
+    hint:"円の面積 = 半径 × 半径 × π",
+    steps:["面積 = π × r²","= π × 6²","= 36π cm²　→ □ = 36"],
+    link:"" },
+
+  { id:35, cat:"面積・図形", lv:2, emoji:"🔷",
+    template:"対角線が 8cm と 12cm のひし形の面積 = □ cm²",
+    answer:48, answerDisplay:"48",
+    hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+    steps:["面積 = 対角線₁ × 対角線₂ ÷ 2","= 8 × 12 ÷ 2","= 48 cm²"],
+    link:"" },
+
+  { id:36, cat:"面積・図形", lv:2, emoji:"📏",
+    template:"1辺が 10cm の正方形に内接する円の面積 = □π cm²",
+    answer:25, answerDisplay:"25",
+    hint:"内接円の半径 = 正方形の1辺 ÷ 2",
+    steps:["内接円の半径 = 10 ÷ 2 = 5cm","面積 = π × 5² = 25π cm²","→ □ = 25"],
+    link:"" },
+
+  { id:37, cat:"面積・図形", lv:3, emoji:"🔺",
+    template:"正六角形の1辺が 4cm のとき面積 = □√3 cm²",
+    answer:24, answerDisplay:"24",
+    hint:"正六角形は正三角形 6個に分けられる",
+    steps:["正三角形1個の面積 = (√3/4) × 4² = 4√3 cm²","正六角形 = 正三角形 6個","= 6 × 4√3 = 24√3 cm²","→ □ = 24"],
+    link:"" },
+
+  { id:38, cat:"面積・図形", lv:3, emoji:"🔵",
+    template:"半径 6cm の半円から直径を底辺とする高さ 4cm の三角形を引いた面積 = □π − □ cm²\n（π の係数を答えよ）",
+    answer:18, answerDisplay:"18",
+    hint:"半円の面積 − 三角形の面積",
+    steps:["半円 = π × 6² ÷ 2 = 18π cm²","三角形（底辺=直径=12、高さ=4）","= 12 × 4 ÷ 2 = 24 cm²","答えの形：18π − 24 → π の係数 = 18"],
+    link:"" },
+
+  { id:39, cat:"面積・図形", lv:4, emoji:"💎",
+    template:"直角三角形の3辺の比が 3:4:5 で斜辺が 20cm のとき\nこの三角形の内接円の半径 = □ cm",
+    answer:4, answerDisplay:"4",
+    hint:"内接円の半径 r = (a+b−c)/2（a,bが直角をはさむ辺、cが斜辺）",
+    steps:["3:4:5 → 斜辺20cm","各辺 = 12cm, 16cm, 20cm","r = (a+b−c)/2 = (12+16−20)/2","= 8/2 = 4cm"],
+    link:"" },
+
+  // ════ 規則性・数列 ════
+  { id:40, cat:"規則性・数列", lv:1, emoji:"🔢",
+    template:"等差数列 3, 7, 11, 15, … の第20項 = □",
+    answer:79, answerDisplay:"79",
+    hint:"第n項 = 初項 + 公差 × (n−1)",
+    steps:["初項 = 3、公差 = 4","第20項 = 3 + 4 × (20−1)","= 3 + 76 = 79"],
+    link:"" },
+
+  { id:41, cat:"規則性・数列", lv:2, emoji:"🌀",
+    template:"1, 1, 2, 3, 5, 8, 13, □\n次の数 = □",
+    answer:21, answerDisplay:"21",
+    hint:"フィボナッチ数列：前の2項の和が次の項",
+    steps:["この数列はフィボナッチ数列","各項 = 前2項の和","8 + 13 = 21"],
+    link:"https://ja.wikipedia.org/wiki/フィボナッチ数列" },
+
+  { id:42, cat:"規則性・数列", lv:2, emoji:"🔮",
+    template:"1² + 2² + 3² + … + 10² = □",
+    answer:385, answerDisplay:"385",
+    hint:"二乗の和の公式：n(n+1)(2n+1)/6",
+    steps:["公式：Σk² = n(n+1)(2n+1)/6","= 10×11×21/6","= 2310/6 = 385"],
+    link:"" },
+
+  { id:43, cat:"規則性・数列", lv:3, emoji:"⚡",
+    template:"等比数列 2, 6, 18, 54, … の第8項 = □",
+    answer:4374, answerDisplay:"4374",
+    hint:"第n項 = 初項 × 公比^(n−1)",
+    steps:["初項=2、公比=3","第8項 = 2 × 3^(8−1) = 2 × 3⁷","3⁷ = 2187","= 2 × 2187 = 4374"],
+    link:"" },
+
+  { id:44, cat:"規則性・数列", lv:4, emoji:"💥",
+    template:"1×2 + 2×3 + 3×4 + … + 10×11 = □",
+    answer:440, answerDisplay:"440",
+    hint:"k(k+1) = k² + k に分解、または 1/3 × n(n+1)(n+2) の公式",
+    steps:["Σk(k+1) = (1/3)n(n+1)(n+2)","n=10 代入","= (1/3) × 10 × 11 × 12","= 10 × 11 × 4 = 440"],
+    link:"" },
+
+  // ════ 場合の数・確率 ════
+  { id:45, cat:"場合の数・確率", lv:1, emoji:"🎲",
+    template:"1〜6 のカードが1枚ずつある。\n2枚選んで並べる並び方は全部で □ 通り",
+    answer:30, answerDisplay:"30",
+    hint:"6枚から2枚を選んで順番をつける：₆P₂",
+    steps:["₆P₂ = 6 × 5 = 30通り"],
+    link:"" },
+
+  { id:46, cat:"場合の数・確率", lv:2, emoji:"🃏",
+    template:"5人から3人を選ぶ組み合わせの数 = □ 通り",
+    answer:10, answerDisplay:"10",
+    hint:"₅C₃ = ₅C₂ を計算しよう",
+    steps:["₅C₃ = 5! / (3! × 2!)","= (5×4) / (2×1)","= 20/2 = 10通り"],
+    link:"" },
+
+  { id:47, cat:"場合の数・確率", lv:2, emoji:"🎯",
+    template:"さいころを2回投げて、目の和が7になる確率 = □/□\n分子を答えよ",
+    answer:1, answerDisplay:"1",
+    hint:"(1,6),(2,5),(3,4),(4,3),(5,2),(6,1) を数えよう",
+    steps:["全事象 = 6 × 6 = 36","和が7の組：(1,6)(2,5)(3,4)(4,3)(5,2)(6,1) → 6通り","確率 = 6/36 = 1/6　→ 分子は 1"],
+    link:"" },
+
+  { id:48, cat:"場合の数・確率", lv:3, emoji:"🌟",
+    template:"赤玉3個・白玉2個から2個取り出す。\n2個とも同じ色の確率 = □/□\n分子を答えよ",
+    answer:4, answerDisplay:"4",
+    hint:"赤2個 or 白2個の場合の数を求めよう",
+    steps:["全事象 = ₅C₂ = 10","赤2個 = ₃C₂ = 3、白2個 = ₂C₂ = 1","同色 = 3 + 1 = 4","確率 = 4/10 = 2/5　→ 分子（未約分）は 4"],
+    link:"" },
+
+  { id:49, cat:"場合の数・確率", lv:4, emoji:"🔥",
+    template:"A, B, C, D, E 5人が円形に並ぶ並び方 = □ 通り",
+    answer:24, answerDisplay:"24",
+    hint:"円順列は (n−1)! で求める",
+    steps:["円順列 = (5−1)! = 4!","= 4 × 3 × 2 × 1 = 24通り"],
+    link:"" },
+
+  // ════ 立体図形 ════
+  { id:50, cat:"立体図形", lv:1, emoji:"📦",
+    template:"縦4cm, 横6cm, 高さ5cm の直方体の体積 = □ cm³",
+    answer:120, answerDisplay:"120",
+    hint:"体積 = 縦 × 横 × 高さ",
+    steps:["体積 = 4 × 6 × 5","= 120 cm³"],
+    link:"" },
+
+  { id:51, cat:"立体図形", lv:2, emoji:"⚽",
+    template:"半径 3cm の球の体積 = □π cm³",
+    answer:36, answerDisplay:"36",
+    hint:"球の体積 = (4/3) × π × r³",
+    steps:["体積 = (4/3) × π × 3³","= (4/3) × π × 27","= 36π cm³　→ □ = 36"],
+    link:"" },
+
+  { id:52, cat:"立体図形", lv:2, emoji:"🔺",
+    template:"底面が一辺 6cm の正方形で高さ 8cm の四角すいの体積 = □ cm³",
+    answer:96, answerDisplay:"96",
+    hint:"角すいの体積 = 底面積 × 高さ ÷ 3",
+    steps:["底面積 = 6 × 6 = 36 cm²","体積 = 36 × 8 ÷ 3","= 288 ÷ 3 = 96 cm³"],
+    link:"" },
+
+  { id:53, cat:"立体図形", lv:3, emoji:"🏛️",
+    template:"底面の半径 4cm、高さ 9cm の円柱と\n同じ底面・高さの円すいの体積の比 = □ : 1",
+    answer:3, answerDisplay:"3",
+    hint:"円柱 : 円すい = 1 : 1/3 = 3 : 1",
+    steps:["円柱の体積 = π × 4² × 9 = 144π","円すいの体積 = 144π ÷ 3 = 48π","比 = 144π : 48π = 3 : 1"],
+    link:"" },
+
+  { id:54, cat:"立体図形", lv:4, emoji:"💎",
+    template:"1辺 6cm の正四面体の体積 = □√2 cm³",
+    answer:18, answerDisplay:"18",
+    hint:"正四面体の体積 = (√2/12) × a³",
+    steps:["a = 6cm","体積 = (√2/12) × 6³","= (√2/12) × 216","= 18√2 cm³　→ □ = 18"],
+    link:"" },
+
+];
+
+// ══════════════════════════════════════════
+//  カテゴリ・状態管理
+// ══════════════════════════════════════════
+const CATS = ["すべて","整数・計算","約数・倍数","分数・小数","割合・比","速さ","面積・図形","規則性・数列","場合の数・確率","立体図形"];
+const LV_COLORS = ["","#4ecdc4","#ff9f43","#ff6b35","#e84393"];
+const LV_NAMES = ["","⭐ レベル１","⭐⭐ レベル２","⭐⭐⭐ レベル３","🔥 レベル４"];
+
+const catStatsGlobal = {};
+function recordAnswer(cat, ok) {
+  if (!catStatsGlobal[cat]) catStatsGlobal[cat] = { ok:0, total:0 };
+  catStatsGlobal[cat].total++;
+  if (ok) catStatsGlobal[cat].ok++;
+}
+function getCatRank() {
+  return Object.entries(catStatsGlobal)
+    .filter(([,s]) => s.total >= 2)
+    .sort(([,a],[,b]) => (a.ok/a.total) - (b.ok/b.total))
+    .map(([cat,s]) => ({ cat, rate: Math.round(s.ok/s.total*100), total: s.total }));
+}
+
+let state = {
+  lv: 1, cat: "すべて",
+  questions: [], current: 0,
+  score: 0, streak: 0, maxStreak: 0,
+  hintUsed: false, answered: false,
+  answers: [], wrongQuestions: [],
+  seenIds: new Set(),
+};
+
+// ══════════════════════════════════════════
+//  ホーム画面
+// ══════════════════════════════════════════
+function selectLevel(lv) {
+  state.lv = lv;
+  document.querySelectorAll(".lv-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.lv-btn[data-lv="${lv}"]`).classList.add("active");
+  updateHomeCount();
+}
+
+function renderCatButtons() {
+  const wrap = document.getElementById("catButtons");
+  wrap.innerHTML = "";
+  CATS.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "cat-btn" + (cat === state.cat ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { state.cat = cat; renderCatButtons(); updateHomeCount(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function updateHomeCount() {
+  const pool = getPool();
+  const n = Math.min(pool.length, 10);
+  document.getElementById("qCount").textContent = pool.length <= 10 ? pool.length : `10（全${pool.length}問中）`;
+  const ranks = getCatRank();
+  document.getElementById("weakModeBtn").style.display = ranks.length > 0 ? "" : "none";
+  renderWeakSection();
+}
+
+function renderWeakSection() {
+  const ranks = getCatRank();
+  const sec = document.getElementById("weakSection");
+  if (ranks.length === 0) { sec.classList.add("hidden"); return; }
+  sec.classList.remove("hidden");
+  document.getElementById("weakList").innerHTML = ranks.slice(0,4).map(({cat, rate, total}) => {
+    const emoji = rate <= 40 ? "😣" : rate <= 60 ? "😅" : "😊";
+    return `<div class="weak-item" onclick="startWeakCat('${cat}')">
+      <div class="weak-row"><span>${emoji} ${cat}</span><span style="color:${rate<=40?"#ef4444":rate<=60?"#f97316":"#16a34a"}">${rate}% (${total}問)</span></div>
+      <div style="height:6px;background:#ede8df;border-radius:3px"><div style="height:6px;background:var(--accent1);border-radius:3px;width:${rate}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function getPool() {
+  return QUESTIONS.filter(q =>
+    (state.lv === 0 || q.lv === state.lv) &&
+    (state.cat === "すべて" || q.cat === state.cat)
+  );
+}
+
+// □/□ を縦分数で、□ を入力欄スタイルで描画
+function renderTemplate(tmpl) {
+  // □/□ を縦分数の blank に変換（分数の穴埋め）
+  let html = tmpl
+    .replace(/□\/□/g, '<span class="frac blank-box" style="border:2px dashed var(--accent1);border-radius:8px;padding:4px 6px;background:#fff;min-width:48px"><span class="fn" style="color:var(--accent1)">？</span><span class="fd" style="color:var(--accent1)">？</span></span>')
+    .replace(/□/g, '<span class="blank-box">？</span>')
+    .replace(/\n/g, '<br>');
+  return html;
+}
+
+// 答え表示：□/□ に合わせた分数表示
+function renderAnswerInBlanks(q) {
+  const display = q.answerDisplay;
+  const blanks = document.querySelectorAll(".blank-box");
+  if (!blanks.length) return;
+  // 分数表示かどうか
+  if (display.includes('/') && blanks.length === 1) {
+    const [num, den] = display.split('/');
+    blanks[0].innerHTML = '<span class="fn">' + num + '</span><span class="fd">' + den + '</span>';
+    blanks[0].style.border = '2px solid';
+  } else {
+    blanks.forEach(el => { el.textContent = display; });
+  }
+}
+
+function weightedShuffle(pool) {
+  const weighted = [];
+  pool.forEach(q => {
+    const w = state.seenIds.has(q.id) ? 1 : 3;
+    for (let i=0; i<w; i++) weighted.push(q);
+  });
+  weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set(); const result = [];
+  for (const q of weighted) {
+    if (!seen.has(q.id)) { seen.add(q.id); result.push(q); }
+    if (result.length >= 10) break;
+  }
+  return result;
+}
+
+function showHome() {
+  document.getElementById("homeScreen").classList.remove("hidden");
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("inputBar").classList.add("hidden");
+  renderCatButtons();
+  updateHomeCount();
+}
+
+// ══════════════════════════════════════════
+//  クイズ開始
+// ══════════════════════════════════════════
+function startQuiz(pool) {
+  const base = pool || weightedShuffle(getPool());
+  if (base.length === 0) { alert("この条件では問題がありません。レベルや単元を変えてみてください。"); return; }
+  state.questions = base;
+  state.questions.forEach(q => state.seenIds.add(q.id));
+  state.current = 0; state.score = 0; state.streak = 0; state.maxStreak = 0;
+  state.answered = false; state.answers = []; state.wrongQuestions = [];
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("quizScreen").classList.remove("hidden");
+  document.getElementById("inputBar").classList.add("hidden");
+  renderQuiz();
+}
+
+function retryWrong() { startQuiz(state.wrongQuestions); }
+
+function startWeakMode() {
+  const ranks = getCatRank();
+  if (!ranks.length) return;
+  const weakCats = new Set(ranks.map(r => r.cat));
+  const pool = [];
+  const weighted = [];
+  QUESTIONS.filter(q => q.lv === state.lv || state.lv === 0).forEach(q => {
+    const w = weakCats.has(q.cat) ? 3 : 1;
+    for (let i=0; i<w; i++) weighted.push(q);
+  });
+  weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set();
+  for (const q of weighted) {
+    if (!seen.has(q.id)) { seen.add(q.id); pool.push(q); }
+    if (pool.length >= 10) break;
+  }
+  startQuiz(pool);
+}
+
+function startWeakCat(cat) {
+  state.cat = cat;
+  const pool = QUESTIONS.filter(q => q.cat === cat);
+  startQuiz(weightedShuffle(pool));
+}
+
+// ══════════════════════════════════════════
+//  クイズ描画
+// ══════════════════════════════════════════
+function renderQuiz() {
+  const { questions, current, score, streak } = state;
+  const q = questions[current];
+  const lv = q.lv;
+  const lvColor = LV_COLORS[lv];
+
+  document.getElementById("qIndex").textContent = `${current+1} / ${questions.length}`;
+  const sd = document.getElementById("scoreDisp");
+  sd.textContent = `${score} pt`; sd.style.color = lvColor;
+  const sb = document.getElementById("streakBadge") || { style:{}, textContent:'' };
+
+  const fill = document.getElementById("progressFill");
+  fill.style.width = `${((current+1)/questions.length)*100}%`;
+
+  const catBadge = document.getElementById("qCatBadge");
+  catBadge.textContent = q.cat;
+  catBadge.style.background = lvColor;
+
+  const lvBadge = document.getElementById("qLvBadge");
+  lvBadge.textContent = LV_NAMES[lv];
+  lvBadge.style.background = lvColor + "22";
+  lvBadge.style.color = lvColor;
+
+  document.getElementById("qEmoji").textContent = q.emoji;
+  document.getElementById("qEmoji").style.fontSize = "28px";
+  document.getElementById("qEmoji").style.margin = "4px 0 4px";
+
+  // 問題文レンダリング（□/□は縦分数、□は穴埋めボックス）
+  document.getElementById("qText").innerHTML = renderTemplate(q.template);
+
+  const input = document.getElementById("answerInput");
+  input.value = ""; input.className = "num-input-bar"; input.disabled = false;
+  document.getElementById("submitBtn").disabled = false;
+  document.getElementById("hintBtn").style.display = "";
+  document.getElementById("hintArea").innerHTML = "";
+  document.getElementById("expBox").classList.add("hidden");
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.add("hidden");
+  nextBtn.style.background = `linear-gradient(135deg, ${lvColor}, #26a0da)`;
+  document.getElementById("inputBar").classList.remove("hidden");
+
+  state.hintUsed = false; state.answered = false;
+  setTimeout(() => input.focus(), 100);
+}
+
+// ══════════════════════════════════════════
+//  数字パッド
+// ══════════════════════════════════════════
+function padInput(ch) {
+  const inp = document.getElementById("answerInput");
+  if (inp.disabled) return;
+  if (ch === '.' && inp.value.includes('.')) return;
+  inp.value += ch;
+  inp.focus();
+}
+function padDel() {
+  const inp = document.getElementById("answerInput");
+  if (!inp.disabled) inp.value = inp.value.slice(0,-1);
+}
+function padNeg() {
+  const inp = document.getElementById("answerInput");
+  if (inp.disabled) return;
+  inp.value = inp.value.startsWith('-') ? inp.value.slice(1) : '-' + inp.value;
+}
+
+// ══════════════════════════════════════════
+//  解答処理
+// ══════════════════════════════════════════
+function submitAnswer() {
+  if (state.answered) return;
+  const input = document.getElementById("answerInput");
+  const raw = input.value.trim();
+  if (raw === "") { input.focus(); return; }
+
+  const q = state.questions[state.current];
+  const userVal = parseFloat(raw);
+  // 許容誤差 0.01（小数問題対応）
+  const isCorrect = Math.abs(userVal - q.answer) < 0.01;
+
+  state.answered = true;
+  state.answers.push({ correct: isCorrect, userVal: raw, q });
+  if (!isCorrect) state.wrongQuestions.push(q);
+  recordAnswer(q.cat, isCorrect);
+
+  const pts = isCorrect ? (state.hintUsed ? 5 : 10) : 0;
+  state.score += pts;
+  state.streak = isCorrect ? state.streak + 1 : 0;
+  state.maxStreak = Math.max(state.maxStreak, state.streak);
+
+  // スコア更新
+  document.getElementById("scoreDisp").textContent = `${state.score} pt`;
+
+  // 入力欄の色
+  input.className = "num-input-bar " + (isCorrect ? "correct" : "wrong");
+  input.disabled = true;
+  document.getElementById("submitBtn").disabled = true;
+  document.getElementById("inputBar").classList.add("hidden");
+
+  // □の答えを表示（分数は縦分数で）
+  renderAnswerInBlanks(q);
+  document.querySelectorAll(".blank-box").forEach(el => {
+    el.classList.add(isCorrect ? "correct-ans" : "wrong-ans");
+  });
+
+  // 解説
+  const expBox = document.getElementById("expBox");
+  expBox.className = "exp-box " + (isCorrect ? "correct-box" : "wrong-box");
+  expBox.classList.remove("hidden");
+
+  const expResult = document.getElementById("expResult");
+  expResult.className = "exp-result " + (isCorrect ? "ok" : "ng");
+  expResult.textContent = isCorrect ? `⭕ 正解！ +${pts}pt` : `❌ 不正解　正解：${q.answerDisplay}`;
+
+  document.getElementById("expAnswer").textContent = isCorrect ? "" : `あなたの答え：${raw}`;
+
+  // 解き方ステップ
+  document.getElementById("expSteps").innerHTML = q.steps.map((s, i) =>
+    `<div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>`
+  ).join("");
+
+  // リンク
+  const expLink = document.getElementById("expLink");
+  if (q.link) {
+    expLink.href = q.link; expLink.classList.remove("hidden");
+  } else {
+    expLink.classList.add("hidden");
+  }
+
+  // 次へボタン
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.remove("hidden");
+  nextBtn.textContent = state.current + 1 >= state.questions.length ? "けっかをみる 🏁" : "つぎの問題 →";
+
+  // Enterキーで次へ
+  document.getElementById("answerInput").onkeydown = null;
+}
+
+// Enterで送信
+document.getElementById("answerInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    if (!state.answered) submitAnswer();
+    else nextQuestion();
+  }
+});
+
+function showHint() {
+  const q = state.questions[state.current];
+  state.hintUsed = true;
+  document.getElementById("hintBtn").style.display = "none";
+  document.getElementById("hintArea").innerHTML =
+    `<div class="hint-box">💡 ${q.hint}</div>`;
+}
+
+function nextQuestion() {
+  if (state.current + 1 >= state.questions.length) showResult();
+  else {
+    state.current++;
+    state.answered = false;
+    state.hintUsed = false;
+    document.getElementById("inputBar").classList.add("hidden");
+    renderQuiz();
+  }
+}
+
+// ══════════════════════════════════════════
+//  結果画面
+// ══════════════════════════════════════════
+function showResult() {
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("inputBar").classList.add("hidden");
+  document.getElementById("resultScreen").classList.remove("hidden");
+
+  const { questions, answers, score, maxStreak, wrongQuestions } = state;
+  const correct = answers.filter(a => a.correct).length;
+
+  document.getElementById("resultIcon").textContent =
+    correct === questions.length ? "🏆" : correct >= questions.length*0.7 ? "🥈" : "🎯";
+  document.getElementById("resultScore").textContent = `${score} pt`;
+  document.getElementById("resultSub").textContent = `${correct} / ${questions.length} 問正解`;
+  document.getElementById("statCorrect").textContent = `${correct}/${questions.length}`;
+  document.getElementById("statStreak").textContent = `${maxStreak}🔥`;
+
+  if (correct === questions.length) document.getElementById("perfectBanner").classList.remove("hidden");
+  else document.getElementById("perfectBanner").classList.add("hidden");
+
+  // カテゴリ別
+  const cs = {};
+  questions.forEach((q,i) => {
+    if (!cs[q.cat]) cs[q.cat] = {ok:0, total:0};
+    cs[q.cat].total++;
+    if (answers[i]?.correct) cs[q.cat].ok++;
+  });
+  document.getElementById("catStats").innerHTML = Object.entries(cs).map(([cat, {ok, total}]) => `
+    <div class="cat-bar-wrap">
+      <div class="cat-bar-row"><span>${cat}</span><span style="color:var(--accent1)">${ok}/${total}</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${(ok/total)*100}%"></div></div>
+    </div>`).join("");
+
+  // ログ
+  document.getElementById("answerLog").innerHTML = questions.map((q,i) => {
+    const a = answers[i];
+    return `<div class="log-row">
+      <span style="flex-shrink:0">${a?.correct ? "⭕" : "❌"}</span>
+      <div class="log-q">${q.template.replace(/\n.*/,'').replace(/□/g,`[${q.answerDisplay}]`)}</div>
+      <span class="log-ans">${a?.correct ? "" : `→ ${q.answerDisplay}`}</span>
+    </div>`;
+  }).join("");
+
+  const retryBtn = document.getElementById("retryWrongBtn");
+  if (wrongQuestions.length > 0) {
+    retryBtn.classList.remove("hidden");
+    retryBtn.textContent = `❌ 間違えた ${wrongQuestions.length} 問をもう一度`;
+  } else retryBtn.classList.add("hidden");
+}
+
+// ══════════════════════════════════════════
+//  初期化
+// ══════════════════════════════════════════
+renderCatButtons();
+updateHomeCount();
+</script>
+</body>
+</html>

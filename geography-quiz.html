@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地理クイズ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; color: #fff; transition: background 0.5s; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 0 12px 48px; position: relative; z-index: 1; }
+.bg-grid { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.bg-grid div { position: absolute; width: 100%; height: 100%; }
+.card { border-radius: 16px; padding: 20px 18px; margin-top: 14px; box-shadow: 0 4px 24px #00000040; }
+button { font-family: inherit; cursor: pointer; transition: all 0.2s; }
+.btn-fill { border: none; color: #fff; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 10px; }
+.btn-outline { background: transparent; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 10px; border-width: 2px; border-style: solid; }
+.opt-btn { width: 100%; padding: 12px 14px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 14px; text-align: left; margin-bottom: 8px; border: 1.5px solid #ffffff20; background: #ffffff10; }
+.opt-btn.correct { background: #22c55e; border-color: #22c55e; cursor: default; }
+.opt-btn.wrong   { background: #ef4444; border-color: #ef4444; cursor: default; }
+.opt-btn.dim     { cursor: default; opacity: 0.5; }
+.opt-lbl { opacity: 0.5; margin-right: 8px; }
+.progress-bar { height: 4px; background: #ffffff15; border-radius: 2px; margin-bottom: 14px; }
+.progress-fill { height: 4px; border-radius: 2px; transition: width 0.5s; }
+.badge { font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+.hint-box { font-size: 13px; opacity: 0.7; background: #ffffff10; border-radius: 8px; padding: 8px 14px; text-align: center; margin-top: 10px; }
+.ai-box { border-radius: 16px; padding: 16px 18px; margin-top: 12px; border-width: 1px; border-style: solid; }
+.dots { display: inline-flex; gap: 4px; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #aaa; display: inline-block; animation: bounce 0.9s infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100%{transform:scale(1)} 40%{transform:scale(1.5)} }
+.cat-btn { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.perfect-banner { margin-top: 12px; background: #ffd70030; border: 1.5px solid #ffd700; border-radius: 10px; padding: 10px 16px; font-size: 14px; color: #ffd700; text-align: center; }
+.cat-bar-wrap { margin-bottom: 8px; }
+.cat-bar-track { height: 6px; background: #ffffff15; border-radius: 3px; }
+.cat-bar-fill { height: 6px; border-radius: 3px; transition: width 1s; }
+.log-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #ffffff10; font-size: 13px; }
+.log-ans { font-size: 11px; opacity: 0.5; margin-left: auto; white-space: nowrap; }
+.result-btns { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 0; }
+.hidden { display: none; }
+
+  /* ホームボタン */
+  .home-btn {
+    position: fixed; top: 12px; left: 12px; z-index: 999;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  .home-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+</style>
+</head>
+<body>
+
+<a class="home-btn" href="index.html">🏠 ホーム</a>
+
+
+
+<div class="bg-grid" id="bgGrid"></div>
+
+<!-- ホーム画面 -->
+<div class="wrap" id="homeScreen">
+  <div style="text-align:center;padding:32px 0 16px">
+    <div style="font-size:48px">🌐</div>
+    <h1 id="homeTitle" style="font-size:26px;font-weight:900;letter-spacing:2px;margin:8px 0 4px">地理クイズ</h1>
+    <p style="font-size:13px;opacity:0.5">Geography Quiz</p>
+  </div>
+  <div class="card" id="homeCard">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:10px">📍 エリア選択</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn-fill" id="areaWorld" onclick="setArea('world')" style="flex:1;font-size:13px">🌍 世界</button>
+      <button class="btn-outline" id="areaJapan" onclick="setArea('japan')" style="flex:1;font-size:13px">🗾 日本</button>
+      <button class="btn-outline" id="areaAll" onclick="setArea('all')" style="flex:1;font-size:13px">🌏 すべて</button>
+    </div>
+    <div id="catSection">
+      <p style="font-size:13px;opacity:0.6;margin-bottom:8px">🏷️ カテゴリ</p>
+      <div id="catButtons" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+    </div>
+    <div style="text-align:center;padding:12px 0 4px;opacity:0.5;font-size:13px">
+      出題数: <strong id="qCount" style="font-weight:900"></strong> 問
+    </div>
+    <div id="weakSection" class="hidden" style="margin-bottom:12px">
+      <p style="font-size:13px;opacity:0.6;margin-bottom:8px">🔥 苦手ジャンル（正答率の低い順）</p>
+      <div id="weakCatList" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-fill" id="startBtn" onclick="startQuiz()" style="flex:1;padding:14px;font-size:16px">スタート 🚀</button>
+      <button class="btn-outline" id="weakBtn" onclick="startWeakMode()" style="padding:14px;font-size:13px;white-space:nowrap" title="苦手ジャンルを優先出題">🔥 苦手優先</button>
+    </div>
+  </div>
+</div>
+
+<!-- クイズ画面 -->
+<div class="wrap hidden" id="quizScreen">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 4px 8px">
+    <div id="qIndex" style="font-size:13px;opacity:0.5"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="streakBadge" style="font-size:13px;color:#f97316;font-weight:700;display:none"></span>
+      <span id="scoreDisp" style="font-size:15px;font-weight:700"></span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="card" id="quizCard">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <span class="badge" id="qCategory"></span>
+      <span style="font-size:12px;opacity:0.5" id="qDifficulty"></span>
+    </div>
+    <div style="font-size:40px;text-align:center;margin-bottom:10px" id="qEmoji"></div>
+    <p style="font-size:17px;font-weight:700;text-align:center;line-height:1.6;margin-bottom:16px" id="qText"></p>
+    <div id="optButtons"></div>
+  </div>
+  <div id="hintArea" style="text-align:center;margin-top:10px"></div>
+  <div class="ai-box hidden" id="aiBox">
+    <p style="font-size:12px;margin-bottom:6px" id="aiLabel">🤖 AI解説</p>
+    <div id="aiContent"></div>
+  </div>
+  <button class="btn-fill hidden" id="nextBtn" onclick="nextQuestion()" style="display:block;width:100%;padding:14px;font-size:16px;margin-top:14px"></button>
+</div>
+
+<!-- 結果画面 -->
+<div class="wrap hidden" id="resultScreen">
+  <div style="text-align:center;padding:32px 0 16px">
+    <div style="font-size:56px" id="resultEmoji"></div>
+    <h2 style="margin:8px 0 4px;font-size:24px" id="resultTitle">結果発表</h2>
+    <div style="font-size:40px;font-weight:900" id="resultScore"></div>
+    <div style="opacity:0.6;font-size:14px" id="resultSub"></div>
+    <div class="perfect-banner hidden" id="perfectBanner">🎉 全問正解！パーフェクト！</div>
+  </div>
+  <div class="card" id="catStatsCard">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:10px">📊 カテゴリ別正答率</p>
+    <div id="catStats"></div>
+  </div>
+  <div class="card" id="logCard" style="margin-top:14px">
+    <p style="font-size:13px;opacity:0.6;margin-bottom:10px">📋 解答ログ</p>
+    <div id="answerLog"></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-fill hidden" id="retryWrongBtn" onclick="retryWrong()" style="width:100%;padding:14px;font-size:16px;background:#ef4444;border:none"></button>
+    <button class="btn-outline" id="restartBtn" onclick="showHome()" style="width:100%;padding:14px;font-size:16px">🏠 トップに戻る</button>
+  </div>
+</div>
+
+<script>
+// ── 問題データ ──────────────────────────────────────────────
+const WORLD_QUESTIONS = [
+  { id:1, category:"首都", difficulty:"易", region:"world", question:"オーストラリアの首都は？", options:["シドニー","メルボルン","キャンベラ","ブリスベン"], answer:2, emoji:"🦘", hint:"シドニーでもメルボルンでもない、計画都市", link: "https://ja.wikipedia.org/wiki/キャンベラ", explanation_correct: "シドニーはオーストラリア最大の都市だが首都ではない。1908年に両都市の妥協案として内陸のキャンベラが選ばれた。", explanation_wrong: "シドニーやメルボルンが有名だが、首都は内陸の計画都市キャンベラ。" },
+  { id:2, category:"地形", difficulty:"中", region:"world", question:"世界最長の川は？", options:["アマゾン川","ナイル川","長江","ミシシッピ川"], answer:1, emoji:"🌊", hint:"アフリカ大陸を流れる", link: "https://ja.wikipedia.org/wiki/ナイル川", explanation_correct: "全長約6650kmのナイル川はアフリカ大陸北部を流れ、地中海に注ぐ。アマゾン川は流量では世界最大。", explanation_wrong: "アフリカを流れるナイル川が正解。アマゾン川は流量最大だが長さではナイルに次ぐ。" },
+  { id:3, category:"面積", difficulty:"易", region:"world", question:"世界最大の国（面積）は？", options:["カナダ","中国","アメリカ","ロシア"], answer:3, emoji:"🌍", hint:"ユーラシア大陸に広がる", link: "https://ja.wikipedia.org/wiki/ロシア", explanation_correct: "ロシアの面積は約1710万km²で、日本の約45倍。2位カナダの約2倍もある。", explanation_wrong: "ロシアが正解。日本の約45倍という広大な国土を持つ。" },
+  { id:4, category:"山岳", difficulty:"易", region:"world", question:"世界最高峰の山は？", options:["K2","マカルー","エベレスト","カンチェンジュンガ"], answer:2, emoji:"⛰️", hint:"ヒマラヤ山脈にある", link: "https://ja.wikipedia.org/wiki/エベレスト", explanation_correct: "エベレストの標高は8849m（2020年測量）。チベット語では「チョモランマ」、ネパール語では「サガルマータ」とも呼ばれる。", explanation_wrong: "ヒマラヤ山脈のエベレスト（8849m）が正解。K2は世界第2位。" },
+  { id:5, category:"海洋", difficulty:"中", region:"world", question:"世界最大の海洋は？", options:["大西洋","インド洋","北極海","太平洋"], answer:3, emoji:"🌏", hint:"日本の東に広がる", link: "https://ja.wikipedia.org/wiki/太平洋", explanation_correct: "太平洋の面積は約1億6500万km²で、全陸地面積の合計より広い。深さも世界最深のマリアナ海溝（約11000m）を持つ。", explanation_wrong: "太平洋が正解。全陸地面積より広く、世界最深のマリアナ海溝もある。" },
+  { id:6, category:"首都", difficulty:"難", region:"world", question:"カザフスタンの首都は？", options:["アルマティ","アスタナ","タシケント","ビシュケク"], answer:1, emoji:"🏙️", hint:"かつてヌルスルタンと改名されたが再び改名", link: "https://ja.wikipedia.org/wiki/アスタナ", explanation_correct: "アスタナは2019年に初代大統領の名をとり「ヌルスルタン」に改名されたが、2022年に再びアスタナに戻った。", explanation_wrong: "カザフスタンの首都はアスタナ。アルマティは旧首都で現在も最大都市。" },
+  { id:7, category:"人口", difficulty:"中", region:"world", question:"人口が世界最多の国は？（2023年時点）", options:["中国","インド","アメリカ","インドネシア"], answer:1, emoji:"👥", hint:"2023年に中国を抜いた", link: "https://ja.wikipedia.org/wiki/インド", explanation_correct: "インドは2023年に中国を抜き人口世界1位に。14億人超で、2050年頃まで増加傾向が続くと予測される。", explanation_wrong: "2023年にインドが中国を抜いて世界1位に。現在約14億人。" },
+  { id:8, category:"島", difficulty:"中", region:"world", question:"世界最大の島は？", options:["ニューギニア島","ボルネオ島","グリーンランド","マダガスカル"], answer:2, emoji:"🏝️", hint:"デンマーク領の北極に近い島", link: "https://ja.wikipedia.org/wiki/グリーンランド", explanation_correct: "グリーンランドは面積約216万km²でデンマーク領。面積の約80%が氷床に覆われており、実際の居住可能面積は小さい。", explanation_wrong: "グリーンランドが正解。デンマーク領で面積の8割が氷床に覆われている。" },
+  { id:9, category:"砂漠", difficulty:"中", region:"world", question:"世界最大の砂漠は？（熱砂漠以外も含む）", options:["サハラ砂漠","アラビア砂漠","南極大陸","ゴビ砂漠"], answer:2, emoji:"🏜️", hint:"実は氷の砂漠が最大", link: "https://ja.wikipedia.org/wiki/南極大陸", explanation_correct: "南極大陸は約1400万km²の氷の砂漠。熱砂漠最大のサハラ砂漠（約900万km²）より広い。降水量が極めて少ない点が砂漠の定義を満たす。", explanation_wrong: "砂漠の定義は「乾燥」。南極大陸は熱砂漠のサハラより広い氷の砂漠。" },
+  { id:10, category:"湖", difficulty:"難", region:"world", question:"世界最深の湖は？", options:["カスピ海","バイカル湖","タンガニーカ湖","スペリオル湖"], answer:1, emoji:"💧", hint:"ロシア・シベリアにある", link: "https://ja.wikipedia.org/wiki/バイカル湖", explanation_correct: "バイカル湖の最深部は1637m。世界の淡水の約20%を蓄え、2500万年以上前に形成された世界最古の湖でもある。", explanation_wrong: "バイカル湖が正解。ロシア・シベリアにあり最深1637m、世界の淡水の約20%を占める。" },
+  { id:11, category:"首都", difficulty:"難", region:"world", question:"ブラジルの首都は？", options:["リオデジャネイロ","サンパウロ","ブラジリア","サルバドール"], answer:2, emoji:"🇧🇷", hint:"1960年に遷都された計画都市", link: "https://ja.wikipedia.org/wiki/ブラジリア", explanation_correct: "ブラジリアは1960年に当時の首都リオデジャネイロから遷都。都市全体がユネスコ世界文化遺産に登録されている。", explanation_wrong: "ブラジルの首都はブラジリア。リオデジャネイロは旧首都で有名な観光都市。" },
+  { id:12, category:"地形", difficulty:"難", region:"world", question:"世界最長の山脈は？", options:["ロッキー山脈","ヒマラヤ山脈","アンデス山脈","アルプス山脈"], answer:2, emoji:"🗻", hint:"南アメリカ大陸の西岸を縦断", link: "https://ja.wikipedia.org/wiki/アンデス山脈", explanation_correct: "アンデス山脈は全長約7500kmで南アメリカ西岸を縦断。ロッキー山脈（約4800km）やヒマラヤ山脈（約2400km）より長い。", explanation_wrong: "アンデス山脈が正解。南米西岸を約7500km縦断する世界最長の山脈。" },
+  { id:13, category:"首都", difficulty:"難", region:"world", question:"エチオピアの首都は？", options:["ナイロビ","アジスアベバ","カイロ","ハルツーム"], answer:1, emoji:"🦁", hint:"アフリカ連合本部が置かれる都市", link: "https://ja.wikipedia.org/wiki/アディスアベバ", explanation_correct: "アジスアベバはアフリカ連合（AU）の本部が置かれ「アフリカの首都」とも呼ばれる。標高約2355mの高地都市。", explanation_wrong: "エチオピアの首都はアジスアベバ。アフリカ連合本部が置かれる。" },
+  { id:14, category:"首都", difficulty:"難", region:"world", question:"ミャンマーの首都は？", options:["ヤンゴン","マンダレー","ネピドー","バゴー"], answer:2, emoji:"🛕", hint:"2006年に新設された計画都市", link: "https://ja.wikipedia.org/wiki/ネピドー", explanation_correct: "ネピドーは2006年に突然発表された新首都。旧首都ヤンゴンより内陸に位置し、計画的に建設された。", explanation_wrong: "ミャンマーの首都はネピドー。2006年に旧首都ヤンゴンから遷都された計画都市。" },
+  { id:15, category:"首都", difficulty:"難", region:"world", question:"モロッコの首都は？", options:["カサブランカ","マラケシュ","フェズ","ラバト"], answer:3, emoji:"🕌", hint:"最大都市はカサブランカだが首都ではない", link: "https://ja.wikipedia.org/wiki/ラバト", explanation_correct: "モロッコ最大の都市はカサブランカだが首都はラバト。映画「カサブランカ」で有名な都市と混同しやすい。", explanation_wrong: "モロッコの首都はラバト。最大都市カサブランカとの混同に注意。" },
+  { id:16, category:"首都", difficulty:"難", region:"world", question:"ウズベキスタンの首都は？", options:["サマルカンド","タシケント","ブハラ","ヒヴァ"], answer:1, emoji:"🏛️", hint:"中央アジア最大の都市", link: "https://ja.wikipedia.org/wiki/タシュケント", explanation_correct: "タシケントは中央アジア最大の都市。古くはシルクロードの要衝として栄えた。", explanation_wrong: "ウズベキスタンの首都はタシケント。中央アジア最大の都市。" },
+  { id:17, category:"首都", difficulty:"難", region:"world", question:"スリランカの立法府がある都市は？", options:["コロンボ","スリジャヤワルダナプラコッテ","キャンディ","ゴール"], answer:1, emoji:"🌿", hint:"世界で最も長い首都名の一つ", link: "https://ja.wikipedia.org/wiki/スリジャヤワルダナプラコッテ", explanation_correct: "スリジャヤワルダナプラコッテは世界で最も長い首都名のひとつ。行政上の首都だが、最大都市コロンボが事実上の中心都市。", explanation_wrong: "スリランカの首都（立法府所在地）はスリジャヤワルダナプラコッテ。コロンボは最大の商業都市。" },
+  { id:18, category:"首都", difficulty:"中", region:"world", question:"アルゼンチンの首都は？", options:["サンティアゴ","リマ","ブエノスアイレス","モンテビデオ"], answer:2, emoji:"💃", hint:"タンゴ発祥の都市", link: "https://ja.wikipedia.org/wiki/ブエノスアイレス", explanation_correct: "ブエノスアイレスは「南米のパリ」と呼ばれる。タンゴ発祥の地でもあり、南米最大級の都市のひとつ。", explanation_wrong: "アルゼンチンの首都はブエノスアイレス。タンゴ発祥の「南米のパリ」。" },
+  { id:19, category:"首都", difficulty:"中", region:"world", question:"ナイジェリアの首都は？", options:["ラゴス","アブジャ","カノ","イバダン"], answer:1, emoji:"🌍", hint:"1991年にラゴスから遷都された", link: "https://ja.wikipedia.org/wiki/アブジャ", explanation_correct: "アブジャは1991年にラゴスから遷都された計画都市。ナイジェリアはアフリカ最多人口を誇る。", explanation_wrong: "ナイジェリアの首都はアブジャ。1991年にラゴスから遷都された。" },
+  { id:20, category:"首都", difficulty:"難", region:"world", question:"フィリピンの首都は？", options:["セブ","ダバオ","マカティ","マニラ"], answer:3, emoji:"🏝️", hint:"マニラ首都圏の中心都市", link: "https://ja.wikipedia.org/wiki/マニラ", explanation_correct: "マニラはフィリピンの首都。メトロ・マニラは複数の市で構成されており、マカティなどのビジネス街も含む。", explanation_wrong: "フィリピンの首都はマニラ。セブやダバオは主要都市だが首都ではない。" },
+  { id:21, category:"首都", difficulty:"易", region:"world", question:"カナダの首都は？", options:["トロント","バンクーバー","オタワ","モントリオール"], answer:2, emoji:"🍁", hint:"最大都市のトロントではない", link: "https://ja.wikipedia.org/wiki/オタワ", explanation_correct: "カナダの首都はオタワ。最大都市トロントとの混同が多いが、オタワはオンタリオ州の東端に位置する。", explanation_wrong: "カナダの首都はオタワ。最大都市のトロントではない点に注意。" },
+  { id:22, category:"首都", difficulty:"中", region:"world", question:"サウジアラビアの首都は？", options:["メッカ","メディナ","ジッダ","リヤド"], answer:3, emoji:"🕋", hint:"国内最大の都市", link: "https://ja.wikipedia.org/wiki/リヤド", explanation_correct: "リヤドはサウジアラビア最大の都市で首都。メッカとメディナはイスラム教の聖地で、非イスラム教徒の入域が制限されている。", explanation_wrong: "サウジアラビアの首都はリヤド。メッカ・メディナはイスラム教の聖地。" },
+  { id:23, category:"気候", difficulty:"中", region:"world", question:"ケッペンの気候区分で「Af」は何気候？", options:["砂漠気候","熱帯雨林気候","サバナ気候","温帯湿潤気候"], answer:1, emoji:"🌴", hint:"一年中雨が多く最も暖かい気候", link: "https://ja.wikipedia.org/wiki/熱帯雨林気候", explanation_correct: "Afは熱帯雨林気候。A=熱帯、f=年中湿潤（feucht）の意味。コンゴ盆地やアマゾン川流域に分布する。", explanation_wrong: "Afは熱帯雨林気候。A=熱帯、f=年中湿潤を示す。" },
+  { id:24, category:"気候", difficulty:"中", region:"world", question:"地中海性気候の特徴は？", options:["夏に雨が多い","冬に雨が多い","一年中乾燥する","一年中雨が多い"], answer:1, emoji:"☀️", hint:"夏は乾燥し冬に降水量が多い", link: "https://ja.wikipedia.org/wiki/地中海性気候", explanation_correct: "地中海性気候（Cs）は夏乾燥・冬湿潤が特徴。南欧・カリフォルニア・南アフリカ南端などに分布する。", explanation_wrong: "地中海性気候は冬に雨が多く夏は乾燥する。南ヨーロッパが代表的。" },
+  { id:25, category:"気候", difficulty:"難", region:"world", question:"モンスーンが最も発達するのはどの地域？", options:["ヨーロッパ","南アメリカ","南アジア・東南アジア","北アフリカ"], answer:2, emoji:"🌧️", hint:"インドや東南アジアの気候を特徴づける", link: "https://ja.wikipedia.org/wiki/モンスーン", explanation_correct: "南アジア・東南アジアのモンスーンは、夏に海洋から大量の湿気を運び豪雨をもたらす。インドの雨季はこれが原因。", explanation_wrong: "モンスーンは南アジア・東南アジアで最も発達。インドの雨季の主因。" },
+  { id:26, category:"気候", difficulty:"易", region:"world", question:"世界で最も雨が多い地域はどこ？", options:["アマゾン川流域","インド・チェラプンジ周辺","東南アジア島嶼部","コンゴ盆地"], answer:1, emoji:"☔", hint:"インド北東部のメガーラヤ州", link: "https://ja.wikipedia.org/wiki/チェラプンジ", explanation_correct: "インド・メガーラヤ州のマウシンラムは年間降水量約11870mmで世界一雨が多い地域として知られる。", explanation_wrong: "世界最多雨はインド北東部のチェラプンジ・マウシンラム周辺。" },
+  { id:27, category:"気候", difficulty:"中", region:"world", question:"砂漠の形成に関係しない要因はどれ？", options:["亜熱帯高圧帯","寒流の影響","雨陰効果","偏西風の影響"], answer:3, emoji:"🌵", hint:"偏西風は中緯度帯の気候に影響する", link: "https://ja.wikipedia.org/wiki/砂漠", explanation_correct: "偏西風は中緯度帯（30〜60度）の気候に影響するが、砂漠の形成要因ではない。砂漠は亜熱帯高圧帯・寒流・雨陰で形成される。", explanation_wrong: "偏西風は砂漠形成に関係しない。亜熱帯高圧帯・寒流・雨陰効果が主な要因。" },
+  { id:28, category:"気候", difficulty:"難", region:"world", question:"ツンドラ気候の気候区分記号は？", options:["ET","EF","Dw","BS"], answer:0, emoji:"🥶", hint:"Eは極気候、Tはツンドラ", link: "https://ja.wikipedia.org/wiki/ツンドラ気候", explanation_correct: "ケッペンの気候区分でE=極気候、ET=ツンドラ気候（短い夏に地衣類・コケ程度が育つ）、EF=氷雪気候（全期間氷点下）。", explanation_wrong: "ツンドラ気候はET。E=極気候、T=ツンドラ（Tundra）の頭文字。" },
+  { id:29, category:"気候", difficulty:"中", region:"world", question:"エルニーニョ現象が起きると日本の夏は？", options:["猛暑になる","冷夏になる","変化なし","大雪が増える"], answer:1, emoji:"🌊", hint:"太平洋の海面水温上昇が影響", link: "https://ja.wikipedia.org/wiki/エルニーニョ現象", explanation_correct: "エルニーニョ時は太平洋赤道付近の海水温が上昇し、日本付近の偏西風が北偏。日本の夏は冷夏・梅雨が長くなる傾向がある。", explanation_wrong: "エルニーニョ発生時、日本の夏は冷夏になりやすい。" },
+  { id:30, category:"気候", difficulty:"易", region:"world", question:"赤道直下の国に共通する気候は？", options:["砂漠気候","熱帯気候","温帯気候","亜寒帯気候"], answer:1, emoji:"🌞", hint:"一年中高温で雨が多い", link: "https://ja.wikipedia.org/wiki/熱帯気候", explanation_correct: "赤道直下は太陽エネルギーが強く年中高温多雨の熱帯気候。ケッペン区分では主にAf（熱帯雨林）やAw（サバナ）が分布。", explanation_wrong: "赤道直下は熱帯気候。年中高温で降水量が多い。" },
+  { id:31, category:"文化", difficulty:"易", region:"world", question:"ユネスコ世界遺産最多の国は？（2024年時点）", options:["中国","イタリア","スペイン","フランス"], answer:1, emoji:"🏛️", hint:"ローマ・ヴェネチアなど古代遺跡の宝庫", link: "https://ja.wikipedia.org/wiki/世界遺産", explanation_correct: "イタリアは2024年時点で58件の世界遺産を登録。ローマ歴史地区・ヴェネツィアなど古代遺跡が豊富。", explanation_wrong: "世界遺産最多はイタリア（58件）。ローマやヴェネツィアなど多数。" },
+  { id:32, category:"文化", difficulty:"中", region:"world", question:"ギザの大ピラミッドがある国は？", options:["スーダン","リビア","エジプト","チュニジア"], answer:2, emoji:"🔺", hint:"ナイル川沿いの国", link: "https://ja.wikipedia.org/wiki/ギザの大ピラミッド", explanation_correct: "ギザの大ピラミッドは紀元前2560年頃に建設されたクフ王の墓。高さ約138m（建設当初は146m）で古代七不思議で現存する唯一のもの。", explanation_wrong: "ギザの大ピラミッドはエジプトにある。クフ王の墓で古代七不思議唯一の現存物。" },
+  { id:33, category:"文化", difficulty:"中", region:"world", question:"マチュ・ピチュ遺跡がある国は？", options:["メキシコ","ペルー","ボリビア","コロンビア"], answer:1, emoji:"🦙", hint:"インカ帝国の遺跡", link: "https://ja.wikipedia.org/wiki/マチュ・ピチュ", explanation_correct: "マチュ・ピチュはペルーのアンデス山中、標高約2430mに位置するインカ帝国の遺跡。15世紀に建設されたとされる。", explanation_wrong: "マチュ・ピチュはペルーにあるインカ帝国の遺跡。標高2430mの山中。" },
+  { id:34, category:"文化", difficulty:"難", region:"world", question:"国旗に星が最も多い国はどれ？", options:["アメリカ","ブラジル","中国","ツバル"], answer:1, emoji:"⭐", hint:"南半球の星座が描かれた国旗", link: "https://ja.wikipedia.org/wiki/ブラジルの国旗", explanation_correct: "ブラジルの国旗には27個の星が描かれ、南天の星座を表している。アメリカは50個だが問いは「最も多い」国。", explanation_wrong: "国旗に星が最も多いのはブラジル（27個）。アメリカは50個だが…実はブラジルが上。" },
+  { id:35, category:"文化", difficulty:"中", region:"world", question:"アンコール・ワットが位置する国は？", options:["タイ","ベトナム","カンボジア","ミャンマー"], answer:2, emoji:"🛕", hint:"クメール王朝の遺跡", link: "https://ja.wikipedia.org/wiki/アンコール・ワット", explanation_correct: "アンコール・ワットは12世紀にクメール王朝が建設したヒンドゥー教（後に仏教）寺院。カンボジアの国旗にも描かれている。", explanation_wrong: "アンコール・ワットはカンボジアにある。12世紀のクメール王朝の遺跡。" },
+  { id:36, category:"文化", difficulty:"易", region:"world", question:"自由の女神像がある都市は？", options:["ワシントンD.C.","ニューヨーク","ボストン","フィラデルフィア"], answer:1, emoji:"🗽", hint:"フランスから贈られた", link: "https://ja.wikipedia.org/wiki/自由の女神像", explanation_correct: "自由の女神像は1886年にフランスから贈られ、ニューヨーク港のリバティ島に立つ。高さは台座含め約93m。", explanation_wrong: "自由の女神像はニューヨークのリバティ島にある。フランスから贈られた。" },
+  { id:37, category:"文化", difficulty:"難", region:"world", question:"タージ・マハルが建てられたのはどの都市？", options:["デリー","ムンバイ","ジャイプール","アーグラ"], answer:3, emoji:"🕌", hint:"ムガル帝国の皇帝が妃のために建てた", link: "https://ja.wikipedia.org/wiki/タージ・マハル", explanation_correct: "タージ・マハルはムガル帝国第5代皇帝シャー・ジャハーンが亡き妻のために建てた墓廟。アーグラにあるユネスコ世界遺産。", explanation_wrong: "タージ・マハルはインドのアーグラにある。ムガル帝国の皇帝が妃のために建てた。" },
+  { id:38, category:"文化", difficulty:"中", region:"world", question:"世界で最も母語話者が多い言語は？", options:["英語","スペイン語","中国語（普通話）","ヒンディー語"], answer:2, emoji:"💬", hint:"中国の公用語", link: "https://ja.wikipedia.org/wiki/標準中国語", explanation_correct: "中国語（普通話）の母語話者は約9億人以上。英語は第2言語話者を含めると最多だが、母語話者数では中国語が1位。", explanation_wrong: "母語話者数では中国語が世界1位（約9億人）。英語は国際語だが母語話者では3位程度。" },
+];
+
+const JAPAN_QUESTIONS = [
+  { id:101, category:"県庁所在地", difficulty:"易", region:"japan", question:"石川県の県庁所在地は？", options:["金沢市","富山市","福井市","七尾市"], answer:0, emoji:"🏯", hint:"兼六園で有名な城下町", link: "https://ja.wikipedia.org/wiki/金沢市", explanation_correct: "金沢市は加賀百万石の城下町。兼六園は日本三名園のひとつで観光名所として有名。", explanation_wrong: "石川県の県庁所在地は金沢市。兼六園で有名な加賀百万石の城下町。" },
+  { id:102, category:"県庁所在地", difficulty:"中", region:"japan", question:"愛媛県の県庁所在地は？", options:["高知市","松山市","高松市","徳島市"], answer:1, emoji:"🍊", hint:"道後温泉で有名", link: "https://ja.wikipedia.org/wiki/松山市", explanation_correct: "松山市は愛媛県最大の都市。道後温泉は日本最古の温泉のひとつで夏目漱石「坊っちゃん」の舞台でもある。", explanation_wrong: "愛媛県の県庁所在地は松山市。道後温泉や坊っちゃんで有名。" },
+  { id:103, category:"県庁所在地", difficulty:"難", region:"japan", question:"山口県の県庁所在地は？", options:["下関市","山口市","宇部市","周南市"], answer:1, emoji:"🦭", hint:"県内最大都市は下関だが県庁所在地は別", link: "https://ja.wikipedia.org/wiki/山口市", explanation_correct: "山口市は山口県の県庁所在地だが、県内最大の都市は下関市。人口差が大きい珍しいケース。", explanation_wrong: "山口県の県庁所在地は山口市。最大都市の下関市と混同しやすい。" },
+  { id:104, category:"日本の地形", difficulty:"易", region:"japan", question:"日本最高峰の山は？", options:["北岳","富士山","槍ヶ岳","奥穂高岳"], answer:1, emoji:"🗻", hint:"静岡・山梨県にまたがる", link: "https://ja.wikipedia.org/wiki/富士山", explanation_correct: "富士山の標高は3776m。2013年に世界文化遺産に登録。静岡・山梨の2県にまたがる独立峰。", explanation_wrong: "日本最高峰は富士山（3776m）。静岡・山梨にまたがるユネスコ世界文化遺産。" },
+  { id:105, category:"日本の地形", difficulty:"中", region:"japan", question:"日本最長の川は？", options:["利根川","信濃川","石狩川","木曽川"], answer:1, emoji:"🌊", hint:"新潟県を流れ日本海に注ぐ", link: "https://ja.wikipedia.org/wiki/信濃川", explanation_correct: "信濃川は全長367kmで日本最長。長野県内では「千曲川」と呼ばれ、新潟県に入ると「信濃川」になる。", explanation_wrong: "日本最長の川は信濃川（367km）。長野県内では千曲川と呼ばれる。" },
+  { id:106, category:"日本の地形", difficulty:"中", region:"japan", question:"日本最大の湖は？", options:["霞ヶ浦","サロマ湖","琵琶湖","猪苗代湖"], answer:2, emoji:"💧", hint:"滋賀県にある", link: "https://ja.wikipedia.org/wiki/琵琶湖", explanation_correct: "琵琶湖は滋賀県面積の約6分の1を占める。古代湖として約400万年の歴史を持ち、日本の淡水の約15%を蓄える。", explanation_wrong: "日本最大の湖は琵琶湖（滋賀県）。約400万年の歴史を持つ古代湖。" },
+  { id:107, category:"日本の地形", difficulty:"難", region:"japan", question:"日本最大の平野は？", options:["濃尾平野","関東平野","石狩平野","越後平野"], answer:1, emoji:"🌾", hint:"東京都周辺に広がる", link: "https://ja.wikipedia.org/wiki/関東平野", explanation_correct: "関東平野は面積約1万7000km²で日本最大。利根川・荒川などが流れ、東京・埼玉・千葉・茨城などが位置する。", explanation_wrong: "日本最大の平野は関東平野。東京周辺に広がる約1万7000km²の平地。" },
+  { id:108, category:"都道府県", difficulty:"易", region:"japan", question:"都道府県の数は？", options:["45","46","47","48"], answer:2, emoji:"🗾", hint:"1都1道2府43県", link: "https://ja.wikipedia.org/wiki/都道府県", explanation_correct: "日本は1都（東京）・1道（北海道）・2府（大阪・京都）・43県の計47都道府県から成る。", explanation_wrong: "都道府県は47。1都1道2府43県の構成。" },
+  { id:109, category:"都道府県", difficulty:"中", region:"japan", question:"面積が最も小さい都道府県は？", options:["東京都","大阪府","神奈川県","香川県"], answer:3, emoji:"📏", hint:"うどんで有名な四国の県", link: "https://ja.wikipedia.org/wiki/香川県", explanation_correct: "香川県の面積は約1877km²で最小。うどんの産地として有名で、県民一人あたりのうどん消費量も全国トップクラス。", explanation_wrong: "面積最小は香川県（約1877km²）。うどん県とも呼ばれる。" },
+  { id:110, category:"都道府県", difficulty:"中", region:"japan", question:"面積が最も大きい都道府県は？", options:["岩手県","北海道","長野県","新潟県"], answer:1, emoji:"🐻", hint:"日本の北端に位置する", link: "https://ja.wikipedia.org/wiki/北海道", explanation_correct: "北海道の面積は約8万3000km²で全国の約22%を占める。2位の岩手県の約4倍もある。", explanation_wrong: "面積最大は北海道（約8.3万km²）。全国の約22%を占め、2位岩手の約4倍。" },
+  { id:111, category:"都道府県", difficulty:"難", region:"japan", question:"海に面していない内陸県の数は？", options:["6","7","8","9"], answer:2, emoji:"🏔️", hint:"栃木・群馬・埼玉・山梨・長野・岐阜・奈良・滋賀", link: "https://ja.wikipedia.org/wiki/内陸県", explanation_correct: "内陸県は栃木・群馬・埼玉・山梨・長野・岐阜・奈良・滋賀の8県。滋賀県は琵琶湖があるが海には面していない。", explanation_wrong: "内陸県は8県。栃木・群馬・埼玉・山梨・長野・岐阜・奈良・滋賀。" },
+  { id:112, category:"日本の地形", difficulty:"難", region:"japan", question:"本州を除く日本最大の島は？", options:["四国","九州","北海道","沖縄本島"], answer:2, emoji:"🏝️", hint:"日本の最北の主要島", link: "https://ja.wikipedia.org/wiki/北海道", explanation_correct: "本州を除くと北海道が最大（約7.8万km²）。九州（約3.7万km²）、四国（約1.8万km²）が続く。", explanation_wrong: "本州除く最大の島は北海道。九州・四国・沖縄本島と続く。" },
+  { id:113, category:"県庁所在地", difficulty:"中", region:"japan", question:"島根県の県庁所在地は？", options:["米子市","松江市","出雲市","浜田市"], answer:1, emoji:"⛩️", hint:"宍道湖に面した城下町", link: "https://ja.wikipedia.org/wiki/松江市", explanation_correct: "松江市は宍道湖のほとりにある城下町。島根県は出雲大社でも有名。", explanation_wrong: "島根県の県庁所在地は松江市。宍道湖や松江城で有名。" },
+  { id:114, category:"都道府県", difficulty:"易", region:"japan", question:"日本の最南端の都道府県は？", options:["鹿児島県","沖縄県","東京都（小笠原）","高知県"], answer:1, emoji:"🌺", hint:"那覇市が県庁所在地", link: "https://ja.wikipedia.org/wiki/沖縄県", explanation_correct: "沖縄県は1972年にアメリカから返還。那覇市が県庁所在地で、県内には多くの米軍基地がある。", explanation_wrong: "最南端の都道府県は沖縄県。1972年にアメリカから返還された。" },
+  { id:115, category:"日本の地形", difficulty:"中", region:"japan", question:"本州四国連絡橋のルートは何本ある？", options:["1本","2本","3本","4本"], answer:2, emoji:"🌉", hint:"神戸〜鳴門、児島〜坂出、尾道〜今治の3ルート", link: "https://ja.wikipedia.org/wiki/本州四国連絡橋", explanation_correct: "本四連絡橋は神戸〜鳴門（神戸淡路鳴門自動車道）、児島〜坂出（瀬戸大橋）、尾道〜今治（西瀬戸自動車道）の3ルート。", explanation_wrong: "本四連絡橋は3ルート。神戸〜鳴門・児島〜坂出（瀬戸大橋）・尾道〜今治。" },
+  { id:116, category:"県庁所在地", difficulty:"易", region:"japan", question:"北海道の道庁所在地は？", options:["函館市","旭川市","札幌市","釧路市"], answer:2, emoji:"❄️", hint:"北海道最大の都市", link: "https://ja.wikipedia.org/wiki/札幌市", explanation_correct: "札幌市は北海道最大の都市で人口約200万人。1972年冬季オリンピックの開催地。道庁所在地でもある。", explanation_wrong: "北海道の道庁所在地は札幌市。1972年冬季五輪開催地。" },
+  { id:117, category:"県庁所在地", difficulty:"易", region:"japan", question:"青森県の県庁所在地は？", options:["弘前市","青森市","八戸市","十和田市"], answer:1, emoji:"🍎", hint:"ねぶた祭で有名", link: "https://ja.wikipedia.org/wiki/青森市", explanation_correct: "青森市はねぶた祭（毎年8月）で有名。青森県はりんご生産量日本一。", explanation_wrong: "青森県の県庁所在地は青森市。ねぶた祭で有名。" },
+  { id:118, category:"県庁所在地", difficulty:"中", region:"japan", question:"岩手県の県庁所在地は？", options:["花巻市","盛岡市","一関市","釜石市"], answer:1, emoji:"🐴", hint:"わんこそばで有名な県", link: "https://ja.wikipedia.org/wiki/盛岡市", explanation_correct: "盛岡市は岩手県の県庁所在地。わんこそばや冷麺が名物。南部鉄器の産地でもある。", explanation_wrong: "岩手県の県庁所在地は盛岡市。わんこそばや冷麺が有名。" },
+  { id:119, category:"県庁所在地", difficulty:"易", region:"japan", question:"宮城県の県庁所在地は？", options:["仙台市","石巻市","塩竈市","気仙沼市"], answer:0, emoji:"🌸", hint:"杜の都と呼ばれる東北最大の都市", link: "https://ja.wikipedia.org/wiki/仙台市", explanation_correct: "仙台市は東北最大の都市で人口約110万人。「杜の都」の愛称を持ち、伊達政宗ゆかりの地。", explanation_wrong: "宮城県の県庁所在地は仙台市。東北最大の「杜の都」。" },
+  { id:120, category:"県庁所在地", difficulty:"難", region:"japan", question:"秋田県の県庁所在地は？", options:["大館市","横手市","秋田市","能代市"], answer:2, emoji:"🍶", hint:"なまはげで有名な県", link: "https://ja.wikipedia.org/wiki/秋田市", explanation_correct: "秋田市は秋田県の県庁所在地。なまはげで有名な男鹿半島は秋田県にある。秋田美人でも知られる。", explanation_wrong: "秋田県の県庁所在地は秋田市。なまはげで有名。" },
+  { id:121, category:"県庁所在地", difficulty:"難", region:"japan", question:"山形県の県庁所在地は？", options:["鶴岡市","酒田市","山形市","米沢市"], answer:2, emoji:"🍒", hint:"さくらんぼの産地として有名", link: "https://ja.wikipedia.org/wiki/山形市", explanation_correct: "山形市は山形県の県庁所在地。さくらんぼ（品種：佐藤錦など）の産地として名高く、産出量は全国トップ。", explanation_wrong: "山形県の県庁所在地は山形市。さくらんぼ生産量日本一の県。" },
+  { id:122, category:"県庁所在地", difficulty:"易", region:"japan", question:"福島県の県庁所在地は？", options:["郡山市","いわき市","福島市","会津若松市"], answer:2, emoji:"🍑", hint:"県名と同じ市名", link: "https://ja.wikipedia.org/wiki/福島市", explanation_correct: "福島市は福島県の県庁所在地。県内最大都市はいわき市だが県庁所在地は福島市。桃の産地としても有名。", explanation_wrong: "福島県の県庁所在地は福島市。最大都市はいわき市との混同注意。" },
+  { id:123, category:"県庁所在地", difficulty:"難", region:"japan", question:"茨城県の県庁所在地は？", options:["つくば市","水戸市","土浦市","日立市"], answer:1, emoji:"🌺", hint:"偕楽園で有名な都市", link: "https://ja.wikipedia.org/wiki/水戸市", explanation_correct: "水戸市は茨城県の県庁所在地。偕楽園は日本三名園のひとつで梅の名所として有名。", explanation_wrong: "茨城県の県庁所在地は水戸市。偕楽園（梅の名所）で有名。" },
+  { id:124, category:"県庁所在地", difficulty:"中", region:"japan", question:"栃木県の県庁所在地は？", options:["足利市","小山市","宇都宮市","日光市"], answer:2, emoji:"🥟", hint:"餃子の消費量が多い都市", link: "https://ja.wikipedia.org/wiki/宇都宮市", explanation_correct: "宇都宮市は栃木県の県庁所在地。餃子の消費量が日本有数で「餃子の街」として知られる。", explanation_wrong: "栃木県の県庁所在地は宇都宮市。餃子の街として有名。" },
+  { id:125, category:"県庁所在地", difficulty:"中", region:"japan", question:"群馬県の県庁所在地は？", options:["前橋市","高崎市","桐生市","太田市"], answer:0, emoji:"♨️", hint:"高崎市と間違いやすい", link: "https://ja.wikipedia.org/wiki/前橋市", explanation_correct: "前橋市は群馬県の県庁所在地。隣接する高崎市の方が人口・交通の面で栄えているため混同されやすい。", explanation_wrong: "群馬県の県庁所在地は前橋市。交通の便がよい高崎市との混同注意。" },
+  { id:126, category:"県庁所在地", difficulty:"中", region:"japan", question:"新潟県の県庁所在地は？", options:["長岡市","三条市","上越市","新潟市"], answer:3, emoji:"🍙", hint:"コシヒカリで有名な県の最大都市", link: "https://ja.wikipedia.org/wiki/新潟市", explanation_correct: "新潟市は新潟県の県庁所在地で政令指定都市。コシヒカリをはじめとする米どころとして有名。", explanation_wrong: "新潟県の県庁所在地は新潟市。コシヒカリで有名な米どころ。" },
+  { id:127, category:"県庁所在地", difficulty:"難", region:"japan", question:"富山県の県庁所在地は？", options:["富山市","高岡市","射水市","魚津市"], answer:0, emoji:"🦀", hint:"蜃気楼が見える富山湾に面した都市", link: "https://ja.wikipedia.org/wiki/富山市", explanation_correct: "富山市は富山県の県庁所在地。富山湾は蜃気楼が見られることで有名。ホタルイカや白えびも特産。", explanation_wrong: "富山県の県庁所在地は富山市。蜃気楼やホタルイカで有名。" },
+  { id:128, category:"県庁所在地", difficulty:"難", region:"japan", question:"福井県の県庁所在地は？", options:["敦賀市","小浜市","越前市","福井市"], answer:3, emoji:"🦕", hint:"恐竜化石の産地として有名", link: "https://ja.wikipedia.org/wiki/福井市", explanation_correct: "福井市は福井県の県庁所在地。恐竜化石の産地（勝山市の福井県立恐竜博物館）として有名。", explanation_wrong: "福井県の県庁所在地は福井市。近郊に日本有数の恐竜化石産地がある。" },
+  { id:129, category:"歴史地理", difficulty:"中", region:"japan", question:"江戸時代の東海道の宿場数は？", options:["33宿","53宿","69宿","45宿"], answer:1, emoji:"🏮", hint:"広重の「東海道五十三次」でも有名", link: "https://ja.wikipedia.org/wiki/東海道", explanation_correct: "東海道は江戸（品川）〜京都（三条大橋）を結ぶ五街道のひとつ。53の宿場町があり歌川広重の「東海道五十三次」で広く知られる。", explanation_wrong: "東海道の宿場は53。広重「東海道五十三次」で有名。" },
+  { id:130, category:"歴史地理", difficulty:"難", region:"japan", question:"旧国名「陸奥（むつ）」は現在のどの地域？", options:["北関東","東北地方","甲信越","北陸"], answer:1, emoji:"⛩️", hint:"現在の青森・岩手・宮城・福島などにあたる", link: "https://ja.wikipedia.org/wiki/陸奥国", explanation_correct: "陸奥（むつ）国は古代の行政区分で、現在の青森・岩手・宮城・福島・秋田の一部にあたる広大な地域だった。", explanation_wrong: "旧国名「陸奥」は現在の東北地方（青森・岩手・宮城・福島など）に相当する。" },
+  { id:131, category:"歴史地理", difficulty:"中", region:"japan", question:"明治維新前の「薩摩藩」は現在のどの県？", options:["長崎県","熊本県","大分県","鹿児島県"], answer:3, emoji:"🍹", hint:"西郷隆盛の出身地", link: "https://ja.wikipedia.org/wiki/薩摩藩", explanation_correct: "薩摩藩は現在の鹿児島県西部に相当。西郷隆盛・大久保利通など明治維新の立役者を多く輩出した。", explanation_wrong: "薩摩藩は現在の鹿児島県。西郷隆盛・大久保利通らが活躍した。" },
+  { id:132, category:"歴史地理", difficulty:"難", region:"japan", question:"「長州藩」の藩庁があった城下町は？", options:["山口市","萩市","下関市","周南市"], answer:1, emoji:"🏯", hint:"明治維新の志士が多く出た", link: "https://ja.wikipedia.org/wiki/長州藩", explanation_correct: "長州藩（萩藩）の藩庁は萩市に置かれた。吉田松陰・伊藤博文・山縣有朋など維新志士の多くが萩出身。", explanation_wrong: "長州藩の藩庁は萩市。吉田松陰・伊藤博文らを輩出した。" },
+  { id:133, category:"歴史地理", difficulty:"中", region:"japan", question:"徳川幕府が置かれた「江戸」は現在のどの都市？", options:["京都市","大阪市","東京都","横浜市"], answer:2, emoji:"🏯", hint:"現在の首都", link: "https://ja.wikipedia.org/wiki/江戸", explanation_correct: "江戸は現在の東京都の中心部にあたる。徳川家康が1603年に幕府を開き、以降260年以上政治の中心だった。", explanation_wrong: "江戸は現在の東京都。1603年に徳川幕府が開かれた。" },
+  { id:134, category:"歴史地理", difficulty:"難", region:"japan", question:"旧国名「伊予（いよ）」は現在のどの県？", options:["香川県","高知県","徳島県","愛媛県"], answer:3, emoji:"🍊", hint:"四国の西側", link: "https://ja.wikipedia.org/wiki/伊予国", explanation_correct: "伊予国は現在の愛媛県に相当。四国の西に位置し、道後温泉や瀬戸内海に面した地域を含む。", explanation_wrong: "旧国名「伊予」は現在の愛媛県。四国西部に位置する。" },
+  { id:135, category:"歴史地理", difficulty:"中", region:"japan", question:"かつて「蝦夷地（えぞち）」と呼ばれたのはどこ？", options:["本州北部","北海道","樺太（サハリン）","千島列島"], answer:1, emoji:"🐻", hint:"明治時代に開拓が進んだ地域", link: "https://ja.wikipedia.org/wiki/蝦夷地", explanation_correct: "蝦夷地（えぞち）は江戸時代の北海道の呼び名。明治時代に開拓使が置かれ、1869年に「北海道」と改称された。", explanation_wrong: "蝦夷地は現在の北海道。1869年に北海道と改称された。" },
+  { id:136, category:"歴史地理", difficulty:"難", region:"japan", question:"五街道で江戸から京都を結ぶ山側のルートは？", options:["東海道","中山道","奥州街道","日光街道"], answer:1, emoji:"🏔️", hint:"内陸を通る険しいルート", link: "https://ja.wikipedia.org/wiki/中山道", explanation_correct: "中山道は江戸〜京都を内陸（木曽路）経由で結ぶ全長約540kmの街道。東海道より険しいが宿場69を持つ。", explanation_wrong: "江戸〜京都の山側ルートは中山道。木曽路を経由する全長約540km。" },
+  { id:137, category:"産業", difficulty:"易", region:"japan", question:"りんごの生産量が日本一の都道府県は？", options:["山形県","長野県","青森県","岩手県"], answer:2, emoji:"🍎", hint:"本州最北端の県", link: "https://ja.wikipedia.org/wiki/リンゴ", explanation_correct: "青森県のりんご生産量は全国の約60%を占める。主要品種はふじ・王林・ジョナゴールドなど。", explanation_wrong: "りんご生産量日本一は青森県。全国の約60%を占める。" },
+  { id:138, category:"産業", difficulty:"易", region:"japan", question:"みかんの生産量が日本一の都道府県は？（近年）", options:["愛媛県","和歌山県","静岡県","熊本県"], answer:1, emoji:"🍊", hint:"紀伊半島の南側", link: "https://ja.wikipedia.org/wiki/ミカン", explanation_correct: "和歌山県はみかん生産量日本一（年により愛媛と入れ替わることも）。紀伊半島の温暖な気候が適している。", explanation_wrong: "みかん生産量は和歌山県がトップ。愛媛県と1・2位を争う。" },
+  { id:139, category:"産業", difficulty:"中", region:"japan", question:"米の生産量が日本一の都道府県は？", options:["秋田県","北海道","新潟県","山形県"], answer:1, emoji:"🌾", hint:"広大な農地を持つ最北の道", link: "https://ja.wikipedia.org/wiki/米", explanation_correct: "北海道は広大な農地を活かし米の生産量日本一。「ゆめぴりか」「ななつぼし」などのブランド米も人気。", explanation_wrong: "米の生産量日本一は北海道。広大な農地と品種改良で新潟を抜いた。" },
+  { id:140, category:"産業", difficulty:"中", region:"japan", question:"トヨタ市がある都道府県は？", options:["神奈川県","静岡県","愛知県","三重県"], answer:2, emoji:"🚗", hint:"中京工業地帯の中心", link: "https://ja.wikipedia.org/wiki/豊田市", explanation_correct: "愛知県豊田市はトヨタ自動車の本社所在地。1959年に挙母市から豊田市に改称。中京工業地帯の中心。", explanation_wrong: "トヨタ市は愛知県。旧称「挙母市」をトヨタ自動車にちなみ改称した。" },
+  { id:141, category:"産業", difficulty:"難", region:"japan", question:"漁獲量日本一で有名な「銚子港」がある県は？", options:["神奈川県","静岡県","千葉県","茨城県"], answer:2, emoji:"🐟", hint:"関東平野の東側、太平洋に面する", link: "https://ja.wikipedia.org/wiki/銚子市", explanation_correct: "銚子港は千葉県銚子市にあり、全国有数の漁獲量を誇る。さばやいわし・かつおの水揚げが多い。", explanation_wrong: "銚子港は千葉県にある。全国トップクラスの漁獲量を誇る。" },
+  { id:142, category:"産業", difficulty:"中", region:"japan", question:"清水焼（陶磁器）の産地として有名な都市は？", options:["名古屋市","有田市","京都市","瀬戸市"], answer:2, emoji:"🍶", hint:"東山に窯が集中する", link: "https://ja.wikipedia.org/wiki/清水焼", explanation_correct: "清水焼は京都市東山区の清水寺周辺を中心に生産される陶磁器。京焼とも呼ばれ、色絵が特徴。", explanation_wrong: "清水焼の産地は京都市。東山の清水寺周辺に窯が集中する。" },
+  { id:143, category:"産業", difficulty:"難", region:"japan", question:"「西陣織」の産地は？", options:["金沢市","京都市","大阪市","博多市"], answer:1, emoji:"🧵", hint:"京の伝統工芸", link: "https://ja.wikipedia.org/wiki/西陣織", explanation_correct: "西陣織は京都市上京区の西陣地区で生産される高級絹織物。1200年以上の歴史を持つ伝統工芸品。", explanation_wrong: "西陣織は京都市の伝統工芸。1200年以上の歴史を持つ高級絹織物。" },
+  { id:144, category:"産業", difficulty:"中", region:"japan", question:"北九州市がある都道府県は？", options:["熊本県","佐賀県","長崎県","福岡県"], answer:3, emoji:"🏭", hint:"官営八幡製鉄所があった場所", link: "https://ja.wikipedia.org/wiki/北九州市", explanation_correct: "北九州市は福岡県の政令指定都市。明治時代に官営八幡製鉄所が設立され、日本の近代化を支えた工業都市。", explanation_wrong: "北九州市は福岡県。八幡製鉄所で知られる近代化の礎となった工業都市。" },
+  { id:145, category:"産業", difficulty:"難", region:"japan", question:"日本最大の国際貿易港は？（コンテナ取扱量）", options:["東京港","名古屋港","横浜港","神戸港"], answer:1, emoji:"🚢", hint:"自動車輸出でも有名", link: "https://ja.wikipedia.org/wiki/名古屋港", explanation_correct: "名古屋港は自動車などの輸出が多く貿易額・コンテナ取扱量で日本最大。中京工業地帯の製品が多く輸出される。", explanation_wrong: "日本最大の貿易港は名古屋港。自動車輸出を中心に貿易額・コンテナ量ともに最大。" },
+];
+
+
+
+
+const EXTRA_WORLD = [
+  { id:39, category:"首都", difficulty:"中", region:"world", question:"メキシコの首都は？", options:["グアダラハラ","モンテレイ","メキシコシティ","プエブラ"], answer:2, emoji:"🌮", hint:"北米大陸にある人口2000万超の巨大都市", link:"https://ja.wikipedia.org/wiki/メキシコシティ", explanation_correct:"メキシコシティはアステカ帝国の首都テノチティトランの跡地に建設。海抜2240mの高地に位置する。", explanation_wrong:"メキシコの首都はメキシコシティ。アステカ帝国の遺跡の上に建てられた高地都市。" },
+  { id:40, category:"首都", difficulty:"易", region:"world", question:"韓国の首都は？", options:["釜山","ソウル","仁川","大邱"], answer:1, emoji:"🇰🇷", hint:"漢江が流れる朝鮮半島の中心都市", link:"https://ja.wikipedia.org/wiki/ソウル特別市", explanation_correct:"ソウルは韓国人口の約20%が集中する巨大都市。漢江が流れ、景福宮などの史跡も多い。", explanation_wrong:"韓国の首都はソウル。釜山は第2の都市、仁川は空港がある都市。" },
+  { id:41, category:"首都", difficulty:"中", region:"world", question:"インドの首都は？", options:["ムンバイ","コルカタ","チェンナイ","ニューデリー"], answer:3, emoji:"🇮🇳", hint:"イギリス植民地時代に建設された計画都市", link:"https://ja.wikipedia.org/wiki/ニューデリー", explanation_correct:"ニューデリーはインドの首都。最大都市ムンバイとの混同に注意。イギリスが20世紀初頭に建設した計画都市。", explanation_wrong:"インドの首都はニューデリー。最大都市はムンバイだが、首都は別の計画都市。" },
+  { id:42, category:"首都", difficulty:"難", region:"world", question:"パキスタンの首都は？", options:["カラチ","ラホール","イスラマバード","ペシャワール"], answer:2, emoji:"🕌", hint:"1960年代に建設された新首都", link:"https://ja.wikipedia.org/wiki/イスラマバード", explanation_correct:"イスラマバードは1960年代に建設されたパキスタンの計画首都。最大都市のカラチから遷都された。", explanation_wrong:"パキスタンの首都はイスラマバード。最大都市カラチとの混同注意。" },
+  { id:43, category:"地形", difficulty:"中", region:"world", question:"世界最大の熱帯雨林はどこにある？", options:["コンゴ盆地","ボルネオ島","アマゾン川流域","東南アジア"], answer:2, emoji:"🌿", hint:"南米最大の川沿いに広がる", link:"https://ja.wikipedia.org/wiki/アマゾン熱帯雨林", explanation_correct:"アマゾン熱帯雨林は約550万km²で世界の熱帯雨林の半分以上を占める。地球の酸素の20%を生産するとも言われる。", explanation_wrong:"世界最大の熱帯雨林はアマゾン川流域。南米ブラジルを中心に広がる。" },
+  { id:44, category:"地形", difficulty:"難", region:"world", question:"世界で最も低い場所（陸地）はどこ？", options:["死海沿岸","カスピ海沿岸","マリアナ海溝","チャッド湖沿岸"], answer:0, emoji:"🌊", hint:"イスラエル・ヨルダン国境にある塩湖のほとり", link:"https://ja.wikipedia.org/wiki/死海", explanation_correct:"死海沿岸の陸地は海面下約430mで世界最低地点。塩分濃度は約30%で人体が浮かび上がる。", explanation_wrong:"世界最低の陸地は死海沿岸（海面下約430m）。マリアナ海溝は海底の最深部。" },
+  { id:45, category:"人口", difficulty:"中", region:"world", question:"ヨーロッパで最も人口が多い国は？", options:["フランス","イギリス","イタリア","ドイツ"], answer:3, emoji:"🇩🇪", hint:"欧州最大の経済大国でもある", link:"https://ja.wikipedia.org/wiki/ドイツ", explanation_correct:"ドイツの人口は約8400万人でEU最多。首都はベルリンで、EU経済の中心でもある。", explanation_wrong:"ヨーロッパ最多人口はドイツ（約8400万人）。フランス・イギリスはそれぞれ約6700万人。" },
+  { id:46, category:"面積", difficulty:"難", region:"world", question:"アフリカで最も面積が大きい国は？", options:["スーダン","コンゴ民主共和国","アルジェリア","リビア"], answer:2, emoji:"🌍", hint:"サハラ砂漠の大部分を占める北アフリカの国", link:"https://ja.wikipedia.org/wiki/アルジェリア", explanation_correct:"アルジェリアの面積は約238万km²でアフリカ最大。国土の大部分はサハラ砂漠が占める。", explanation_wrong:"アフリカ最大面積はアルジェリア。2011年のスーダン分割前はスーダンが最大だった。" },
+  { id:47, category:"海洋", difficulty:"中", region:"world", question:"世界で最も深い海溝は？", options:["プエルトリコ海溝","ジャワ海溝","マリアナ海溝","トンガ海溝"], answer:2, emoji:"🌊", hint:"チャレンジャー海淵があることで有名", link:"https://ja.wikipedia.org/wiki/マリアナ海溝", explanation_correct:"マリアナ海溝の最深部チャレンジャー海淵は水深約11000m。太平洋西部、グアム近くに位置する。", explanation_wrong:"世界最深の海溝はマリアナ海溝（約11000m）。太平洋の西部にある。" },
+  { id:48, category:"気候", difficulty:"中", region:"world", question:"サバナ気候の特徴は？", options:["年中乾燥","雨季と乾季がある","年中湿潤","冬に雨が多い"], answer:1, emoji:"🦁", hint:"ライオンが暮らすアフリカの草原がこの気候", link:"https://ja.wikipedia.org/wiki/サバナ気候", explanation_correct:"サバナ気候（Aw）は雨季と乾季が明確に分かれる。アフリカのサバンナや南米のセラードが代表例。", explanation_wrong:"サバナ気候の特徴は雨季と乾季がある点。年中乾燥は砂漠気候。" },
+  { id:49, category:"文化", difficulty:"中", region:"world", question:"オリンピックが最初に開催された国は？", options:["フランス","イギリス","ギリシャ","アメリカ"], answer:2, emoji:"🏅", hint:"古代オリンピックの発祥地でもある", link:"https://ja.wikipedia.org/wiki/1896年アテネオリンピック", explanation_correct:"近代オリンピックは1896年にギリシャのアテネで初開催。古代オリンピックもギリシャのオリンピアが起源。", explanation_wrong:"近代オリンピック第1回は1896年ギリシャ・アテネ。古代オリンピックの発祥地でもある。" },
+  { id:50, category:"文化", difficulty:"難", region:"world", question:"イースター島はどの国の領土？", options:["ペルー","チリ","ニュージーランド","オーストラリア"], answer:1, emoji:"🗿", hint:"モアイ像で有名な南太平洋の孤島", link:"https://ja.wikipedia.org/wiki/イースター島", explanation_correct:"イースター島（ラパ・ヌイ）はチリ領の孤島。モアイ像で有名で、ユネスコ世界遺産にも登録されている。", explanation_wrong:"イースター島はチリ領。南太平洋の孤島でモアイ像が有名。" },
+  { id:51, category:"山岳", difficulty:"中", region:"world", question:"アフリカ最高峰の山は？", options:["ケニア山","キリマンジャロ","ルウェンゾリ山","エチオピア高原"], answer:1, emoji:"🏔️", hint:"タンザニアにある赤道直下の雪山", link:"https://ja.wikipedia.org/wiki/キリマンジャロ", explanation_correct:"キリマンジャロは標高5895mでアフリカ最高峰。タンザニアにある赤道近くの火山で、山頂に氷河がある。", explanation_wrong:"アフリカ最高峰はキリマンジャロ（5895m）。タンザニアにある赤道近くの雪山。" },
+  { id:52, category:"島", difficulty:"難", region:"world", question:"インドネシアの島の数はおよそいくつ？", options:["約3000","約7000","約17000","約25000"], answer:2, emoji:"🏝️", hint:"世界最多の島を持つ国のひとつ", link:"https://ja.wikipedia.org/wiki/インドネシア", explanation_correct:"インドネシアは約17000の島から成る世界最大の島嶼国家。うち居住する島は約6000。", explanation_wrong:"インドネシアは約17000の島を持つ世界最大の島嶼国家。" },
+  { id:53, category:"人口", difficulty:"難", region:"world", question:"世界で最も人口密度が高い国（都市国家除く）は？", options:["日本","バングラデシュ","オランダ","韓国"], answer:1, emoji:"👥", hint:"南アジアの小国で面積が狭く人口が密集", link:"https://ja.wikipedia.org/wiki/バングラデシュ", explanation_correct:"バングラデシュは人口約1億7000万人を日本の約40%の面積に抱え、都市国家を除く世界最高密度。", explanation_wrong:"都市国家除く最高人口密度はバングラデシュ。日本の40%の面積に1億7000万人が住む。" },
+];
+
+const EXTRA_JAPAN = [
+  { id:146, category:"県庁所在地", difficulty:"易", region:"japan", question:"神奈川県の県庁所在地は？", options:["川崎市","横浜市","相模原市","小田原市"], answer:1, emoji:"🚢", hint:"日本最大の港湾都市", link:"https://ja.wikipedia.org/wiki/横浜市", explanation_correct:"横浜市は神奈川県の県庁所在地で人口約377万人。東京に次ぐ日本第2の都市で国際貿易港として有名。", explanation_wrong:"神奈川県の県庁所在地は横浜市。川崎市は工業都市だが県庁所在地ではない。" },
+  { id:147, category:"県庁所在地", difficulty:"中", region:"japan", question:"埼玉県の県庁所在地は？", options:["川越市","さいたま市","熊谷市","所沢市"], answer:1, emoji:"🏙️", hint:"2001年に複数市が合併して誕生した政令市", link:"https://ja.wikipedia.org/wiki/さいたま市", explanation_correct:"さいたま市は2001年に浦和・大宮・与野の3市が合併して誕生。埼玉県の県庁所在地で政令指定都市。", explanation_wrong:"埼玉県の県庁所在地はさいたま市。2001年に誕生した比較的新しい政令市。" },
+  { id:148, category:"県庁所在地", difficulty:"易", region:"japan", question:"千葉県の県庁所在地は？", options:["船橋市","市川市","松戸市","千葉市"], answer:3, emoji:"🥜", hint:"県名と同じ市名", link:"https://ja.wikipedia.org/wiki/千葉市", explanation_correct:"千葉市は千葉県の県庁所在地で政令指定都市。落花生（ピーナッツ）の産地として有名な千葉県の中心都市。", explanation_wrong:"千葉県の県庁所在地は千葉市。県内最大人口は千葉市だが、船橋市も大きい。" },
+  { id:149, category:"県庁所在地", difficulty:"中", region:"japan", question:"静岡県の県庁所在地は？", options:["浜松市","沼津市","静岡市","富士市"], answer:2, emoji:"🍵", hint:"お茶の産地として有名な県", link:"https://ja.wikipedia.org/wiki/静岡市", explanation_correct:"静岡市は静岡県の県庁所在地。お茶の産地・富士山の玄関口として知られる。浜松市とほぼ同規模の政令市。", explanation_wrong:"静岡県の県庁所在地は静岡市。浜松市も政令市だが県庁所在地は静岡市。" },
+  { id:150, category:"県庁所在地", difficulty:"中", region:"japan", question:"長野県の県庁所在地は？", options:["松本市","上田市","長野市","飯田市"], answer:2, emoji:"🏔️", hint:"1998年冬季オリンピック開催地", link:"https://ja.wikipedia.org/wiki/長野市", explanation_correct:"長野市は長野県の県庁所在地。1998年冬季オリンピックの開催地として世界に知られる。善光寺も有名。", explanation_wrong:"長野県の県庁所在地は長野市。松本市は城下町として有名だが県庁所在地は長野市。" },
+  { id:151, category:"県庁所在地", difficulty:"中", region:"japan", question:"岐阜県の県庁所在地は？", options:["大垣市","多治見市","岐阜市","高山市"], answer:2, emoji:"🏯", hint:"信長が天下統一を目指した地", link:"https://ja.wikipedia.org/wiki/岐阜市", explanation_correct:"岐阜市は岐阜県の県庁所在地。織田信長がここを拠点に天下統一を目指し「岐阜」と命名した。", explanation_wrong:"岐阜県の県庁所在地は岐阜市。織田信長ゆかりの地として有名。" },
+  { id:152, category:"県庁所在地", difficulty:"易", region:"japan", question:"大阪府の府庁所在地は？", options:["堺市","東大阪市","大阪市","豊中市"], answer:2, emoji:"🍜", hint:"たこ焼き・お好み焼きで有名な日本第2の都市圏", link:"https://ja.wikipedia.org/wiki/大阪市", explanation_correct:"大阪市は大阪府の府庁所在地。人口約275万人で日本第3位。「天下の台所」として商業・文化の中心。", explanation_wrong:"大阪府の府庁所在地は大阪市。たこ焼き・道頓堀で有名な商業都市。" },
+  { id:153, category:"県庁所在地", difficulty:"易", region:"japan", question:"兵庫県の県庁所在地は？", options:["姫路市","西宮市","尼崎市","神戸市"], answer:3, emoji:"🌉", hint:"異人館・中華街で有名な港町", link:"https://ja.wikipedia.org/wiki/神戸市", explanation_correct:"神戸市は兵庫県の県庁所在地。異人館・南京町（中華街）・ポートタワーで有名な国際港湾都市。", explanation_wrong:"兵庫県の県庁所在地は神戸市。姫路市は白鷺城（姫路城）で有名。" },
+  { id:154, category:"県庁所在地", difficulty:"中", region:"japan", question:"広島県の県庁所在地は？", options:["呉市","福山市","広島市","尾道市"], answer:2, emoji:"🕊️", hint:"世界平和記念都市", link:"https://ja.wikipedia.org/wiki/広島市", explanation_correct:"広島市は広島県の県庁所在地。1945年に原爆を投下され、現在は世界平和記念都市として平和活動を発信している。", explanation_wrong:"広島県の県庁所在地は広島市。原爆ドームとして世界遺産にも登録されている。" },
+  { id:155, category:"県庁所在地", difficulty:"中", region:"japan", question:"香川県の県庁所在地は？", options:["丸亀市","高松市","観音寺市","坂出市"], answer:1, emoji:"🍜", hint:"うどん県のターミナル都市", link:"https://ja.wikipedia.org/wiki/高松市", explanation_correct:"高松市は香川県の県庁所在地。うどんの聖地として全国に知られ、瀬戸大橋で本州と結ばれている。", explanation_wrong:"香川県の県庁所在地は高松市。うどん県の中心都市。" },
+  { id:156, category:"産業", difficulty:"中", region:"japan", question:"日本最大の漁業地帯「三陸沖」がある地方は？", options:["北陸","山陰","東北","北海道"], answer:2, emoji:"🐟", hint:"親潮と黒潮がぶつかる豊かな漁場", link:"https://ja.wikipedia.org/wiki/三陸沖", explanation_correct:"三陸沖は東北地方（岩手・宮城・青森）の太平洋岸。親潮と黒潮がぶつかる世界有数の漁場で、さんまやサバが豊富。", explanation_wrong:"三陸沖は東北地方の太平洋岸。親潮と黒潮がぶつかる世界有数の漁場。" },
+  { id:157, category:"日本の地形", difficulty:"中", region:"japan", question:"日本最大の半島は？", options:["房総半島","能登半島","紀伊半島","知多半島"], answer:2, emoji:"🌲", hint:"和歌山・三重・奈良にまたがる", link:"https://ja.wikipedia.org/wiki/紀伊半島", explanation_correct:"紀伊半島は面積約1万1000km²で日本最大の半島。熊野古道・高野山などの世界遺産を有する。", explanation_wrong:"日本最大の半島は紀伊半島（約1万1000km²）。熊野古道や高野山で有名。" },
+  { id:158, category:"都道府県", difficulty:"難", region:"japan", question:"日本で最も人口が少ない都道府県は？", options:["島根県","鳥取県","高知県","徳島県"], answer:1, emoji:"🦀", hint:"日本最小人口を長年維持している山陰の県", link:"https://ja.wikipedia.org/wiki/鳥取県", explanation_correct:"鳥取県は人口約54万人で全都道府県中最少。鳥取砂丘・境港（鬼太郎の郷）などが有名。", explanation_wrong:"人口最少は鳥取県（約54万人）。島根県も少ないが鳥取の方が少ない。" },
+  { id:159, category:"歴史地理", difficulty:"中", region:"japan", question:"「加賀百万石」と呼ばれた大藩の中心都市は？", options:["富山市","金沢市","福井市","高岡市"], answer:1, emoji:"🏯", hint:"現在も伝統文化が残る石川県の県庁所在地", link:"https://ja.wikipedia.org/wiki/加賀藩", explanation_correct:"加賀藩（前田家）は江戸時代最大の外様大名。石高100万石を誇り、現在の石川県金沢市を中心に栄えた。", explanation_wrong:"加賀百万石の中心は金沢市。前田家が治めた江戸時代最大の外様大名の城下町。" },
+  { id:160, category:"歴史地理", difficulty:"難", region:"japan", question:"明治維新で廃藩置県が行われたのは何年？", options:["1868年","1871年","1875年","1889年"], answer:1, emoji:"📜", hint:"明治政府が近代国家体制を整えた重要な改革", link:"https://ja.wikipedia.org/wiki/廃藩置県", explanation_correct:"廃藩置県は1871年（明治4年）。それまでの藩を廃止し府県を設置。現在の都道府県制度の起源となった。", explanation_wrong:"廃藩置県は1871年（明治4年）。1868年は明治維新（王政復古）の年。" },
+  { id:161, category:"県庁所在地", difficulty:"中", region:"japan", question:"東京都の都庁が置かれているのはどの区？", options:["千代田区","新宿区","渋谷区","品川区"], answer:1, emoji:"🗼", hint:"1991年に完成した高さ243mの超高層庁舎", link:"https://ja.wikipedia.org/wiki/東京都庁舎", explanation_correct:"東京都庁は新宿区西新宿に位置し1991年完成。地上48階・高さ243mの超高層ビルで、展望室は無料で利用できる。", explanation_wrong:"東京都庁は新宿区西新宿にある。千代田区には皇居や国会議事堂がある。" },
+  { id:162, category:"県庁所在地", difficulty:"中", region:"japan", question:"山梨県の県庁所在地は？", options:["富士吉田市","山梨市","甲府市","都留市"], answer:2, emoji:"🍇", hint:"武田信玄ゆかりの城下町", link:"https://ja.wikipedia.org/wiki/甲府市", explanation_correct:"甲府市は山梨県の県庁所在地。武田信玄が治めた城下町で、甲府城跡（舞鶴城公園）が市の中心にある。ぶどう・桃の産地でも有名。", explanation_wrong:"山梨県の県庁所在地は甲府市。武田信玄ゆかりの城下町。" },
+  { id:163, category:"県庁所在地", difficulty:"易", region:"japan", question:"愛知県の県庁所在地は？", options:["豊橋市","一宮市","岡崎市","名古屋市"], answer:3, emoji:"🏯", hint:"日本第3の都市圏・中京工業地帯の中心", link:"https://ja.wikipedia.org/wiki/名古屋市", explanation_correct:"名古屋市は愛知県の県庁所在地で人口約233万人。トヨタ自動車を擁する中京工業地帯の中心都市。名古屋城も有名。", explanation_wrong:"愛知県の県庁所在地は名古屋市。岡崎市は徳川家康の出生地だが県庁所在地ではない。" },
+  { id:164, category:"県庁所在地", difficulty:"難", region:"japan", question:"三重県の県庁所在地は？", options:["四日市市","伊勢市","鈴鹿市","津市"], answer:3, emoji:"🦞", hint:"都道府県庁所在地で唯一の1文字地名", link:"https://ja.wikipedia.org/wiki/津市", explanation_correct:"津市は三重県の県庁所在地。「津」は都道府県庁所在地で唯一の1文字。伊勢市・四日市より知名度が低いため間違いやすい難問。", explanation_wrong:"三重県の県庁所在地は津市。都道府県庁所在地で唯一の1文字。伊勢市・四日市との混同に注意。" },
+  { id:165, category:"県庁所在地", difficulty:"中", region:"japan", question:"滋賀県の県庁所在地は？", options:["草津市","長浜市","彦根市","大津市"], answer:3, emoji:"🚣", hint:"琵琶湖の南端に位置する歴史都市", link:"https://ja.wikipedia.org/wiki/大津市", explanation_correct:"大津市は滋賀県の県庁所在地。琵琶湖南端に位置し、比叡山・三井寺などの名所を持つ歴史都市。彦根市の彦根城も有名。", explanation_wrong:"滋賀県の県庁所在地は大津市。彦根市は彦根城で有名だが県庁所在地ではない。" },
+  { id:166, category:"県庁所在地", difficulty:"易", region:"japan", question:"京都府の府庁所在地は？", options:["宇治市","亀岡市","京都市","舞鶴市"], answer:2, emoji:"⛩️", hint:"794年に遷都された千年の都", link:"https://ja.wikipedia.org/wiki/京都市", explanation_correct:"京都市は京都府の府庁所在地。794年に平安京として遷都され1000年以上首都だった古都。17件のユネスコ世界遺産がある。", explanation_wrong:"京都府の府庁所在地は京都市。平安京として794年から長らく日本の首都だった。" },
+  { id:167, category:"県庁所在地", difficulty:"易", region:"japan", question:"奈良県の県庁所在地は？", options:["橿原市","桜井市","天理市","奈良市"], answer:3, emoji:"🦌", hint:"東大寺・春日大社などの世界遺産がある古都", link:"https://ja.wikipedia.org/wiki/奈良市", explanation_correct:"奈良市は奈良県の県庁所在地。710年に平城京が置かれた奈良時代の都。東大寺の大仏・春日大社・奈良公園の鹿で有名。", explanation_wrong:"奈良県の県庁所在地は奈良市。東大寺や春日大社などの世界遺産がある古都。" },
+  { id:168, category:"県庁所在地", difficulty:"中", region:"japan", question:"和歌山県の県庁所在地は？", options:["田辺市","新宮市","橋本市","和歌山市"], answer:3, emoji:"🍊", hint:"みかん・梅の産地で有名な城下町", link:"https://ja.wikipedia.org/wiki/和歌山市", explanation_correct:"和歌山市は和歌山県の県庁所在地。和歌山城を中心に発展した城下町で、みかん・梅干しの産地として全国に名高い。", explanation_wrong:"和歌山県の県庁所在地は和歌山市。和歌山城を中心に発展した城下町。" },
+  { id:169, category:"県庁所在地", difficulty:"中", region:"japan", question:"鳥取県の県庁所在地は？", options:["米子市","倉吉市","境港市","鳥取市"], answer:3, emoji:"🦀", hint:"鳥取砂丘に最も近い都市", link:"https://ja.wikipedia.org/wiki/鳥取市", explanation_correct:"鳥取市は鳥取県の県庁所在地。鳥取砂丘は市内から車ですぐ。砂の美術館も人気。隣の境港市は鬼太郎の町として有名。", explanation_wrong:"鳥取県の県庁所在地は鳥取市。米子市は交通の要衝だが県庁所在地ではない。" },
+  { id:170, category:"県庁所在地", difficulty:"中", region:"japan", question:"岡山県の県庁所在地は？", options:["倉敷市","津山市","玉野市","岡山市"], answer:3, emoji:"🍑", hint:"日本三名園のひとつ・後楽園がある「晴れの国」", link:"https://ja.wikipedia.org/wiki/岡山市", explanation_correct:"岡山市は岡山県の県庁所在地で政令指定都市。後楽園（日本三名園）と黒い外観の岡山城（烏城）が有名な「晴れの国」。", explanation_wrong:"岡山県の県庁所在地は岡山市。倉敷市は美観地区で有名だが県庁所在地ではない。" },
+  { id:171, category:"県庁所在地", difficulty:"中", region:"japan", question:"高知県の県庁所在地は？", options:["四万十市","宿毛市","高知市","土佐市"], answer:2, emoji:"🐟", hint:"坂本龍馬の出身地・よさこい祭りで有名", link:"https://ja.wikipedia.org/wiki/高知市", explanation_correct:"高知市は高知県の県庁所在地。坂本龍馬の出身地として知られ、毎年8月のよさこい祭りと鰹のたたきが有名。", explanation_wrong:"高知県の県庁所在地は高知市。坂本龍馬ゆかりの地でよさこい祭りが有名。" },
+  { id:172, category:"県庁所在地", difficulty:"中", region:"japan", question:"徳島県の県庁所在地は？", options:["阿南市","鳴門市","小松島市","徳島市"], answer:3, emoji:"💃", hint:"阿波踊りで有名な吉野川沿いの都市", link:"https://ja.wikipedia.org/wiki/徳島市", explanation_correct:"徳島市は徳島県の県庁所在地。毎年8月に開催される阿波踊りは日本最大級の盆踊り。鳴門の渦潮も近い。", explanation_wrong:"徳島県の県庁所在地は徳島市。阿波踊りで全国的に有名な都市。" },
+  { id:173, category:"県庁所在地", difficulty:"易", region:"japan", question:"福岡県の県庁所在地は？", options:["北九州市","久留米市","大牟田市","福岡市"], answer:3, emoji:"🍜", hint:"九州最大の都市・博多ラーメンで有名", link:"https://ja.wikipedia.org/wiki/福岡市", explanation_correct:"福岡市は福岡県の県庁所在地で九州最大の都市。博多ラーメン・もつ鍋・明太子など食文化が豊かで人口増加が続く注目都市。", explanation_wrong:"福岡県の県庁所在地は福岡市。北九州市も大きいが県庁所在地は福岡市。" },
+  { id:174, category:"県庁所在地", difficulty:"中", region:"japan", question:"佐賀県の県庁所在地は？", options:["唐津市","鳥栖市","伊万里市","佐賀市"], answer:3, emoji:"🏺", hint:"有田焼・唐津焼など陶磁器の産地の中心", link:"https://ja.wikipedia.org/wiki/佐賀市", explanation_correct:"佐賀市は佐賀県の県庁所在地。有田焼・唐津焼など陶磁器の産地で有名な佐賀県の行政中心。嬉野温泉も近い。", explanation_wrong:"佐賀県の県庁所在地は佐賀市。有田焼（伊万里焼）で有名な陶磁器の産地の中心都市。" },
+  { id:175, category:"県庁所在地", difficulty:"易", region:"japan", question:"長崎県の県庁所在地は？", options:["佐世保市","諫早市","島原市","長崎市"], answer:3, emoji:"🔔", hint:"出島と原爆で歴史に刻まれた港町", link:"https://ja.wikipedia.org/wiki/長崎市", explanation_correct:"長崎市は長崎県の県庁所在地。江戸時代の出島で西洋文化の窓口となり、1945年に原爆が投下された平和都市。グラバー園も有名。", explanation_wrong:"長崎県の県庁所在地は長崎市。出島・グラバー園・原爆平和公園で有名。" },
+  { id:176, category:"県庁所在地", difficulty:"易", region:"japan", question:"熊本県の県庁所在地は？", options:["八代市","天草市","宇土市","熊本市"], answer:3, emoji:"🐻", hint:"桜島ならぬ火の国・くまモンの聖地", link:"https://ja.wikipedia.org/wiki/熊本市", explanation_correct:"熊本市は熊本県の県庁所在地で政令指定都市。熊本城は2016年熊本地震で被災したが復旧が続く。くまモンの聖地。", explanation_wrong:"熊本県の県庁所在地は熊本市。熊本城・くまモンで有名な「火の国」の中心。" },
+  { id:177, category:"県庁所在地", difficulty:"中", region:"japan", question:"大分県の県庁所在地は？", options:["別府市","佐伯市","中津市","大分市"], answer:3, emoji:"♨️", hint:"温泉湧出量・源泉数日本一の「おんせん県」", link:"https://ja.wikipedia.org/wiki/大分市", explanation_correct:"大分市は大分県の県庁所在地。大分県は温泉の湧出量・源泉数が日本一で「おんせん県おおいた」が観光キャッチコピー。", explanation_wrong:"大分県の県庁所在地は大分市。別府市は温泉地として有名だが県庁所在地ではない。" },
+  { id:178, category:"県庁所在地", difficulty:"中", region:"japan", question:"宮崎県の県庁所在地は？", options:["都城市","延岡市","日向市","宮崎市"], answer:3, emoji:"🌴", hint:"フェニックスが並ぶ南国の太陽・マンゴーの産地", link:"https://ja.wikipedia.org/wiki/宮崎市", explanation_correct:"宮崎市は宮崎県の県庁所在地。フェニックス（ヤシの木）が並ぶ南国の景観で知られ、宮崎マンゴーが特産品として人気。", explanation_wrong:"宮崎県の県庁所在地は宮崎市。南国リゾートのイメージで有名な九州東側の都市。" },
+  { id:179, category:"県庁所在地", difficulty:"易", region:"japan", question:"鹿児島県の県庁所在地は？", options:["霧島市","薩摩川内市","姶良市","鹿児島市"], answer:3, emoji:"🌋", hint:"桜島を望む薩摩の中心・西郷隆盛ゆかりの地", link:"https://ja.wikipedia.org/wiki/鹿児島市", explanation_correct:"鹿児島市は鹿児島県の県庁所在地。目の前に活火山・桜島がそびえる九州最大級の都市。西郷隆盛ゆかりの地でもある。", explanation_wrong:"鹿児島県の県庁所在地は鹿児島市。桜島を望む薩摩の中心都市。" },
+  { id:180, category:"県庁所在地", difficulty:"易", region:"japan", question:"沖縄県の県庁所在地は？", options:["浦添市","沖縄市","宜野湾市","那覇市"], answer:3, emoji:"🌺", hint:"首里城のある沖縄最大の都市", link:"https://ja.wikipedia.org/wiki/那覇市", explanation_correct:"那覇市は沖縄県の県庁所在地で沖縄本島最大の都市。琉球王国の王宮だった首里城（世界遺産）がある。国際通りも有名。", explanation_wrong:"沖縄県の県庁所在地は那覇市。首里城（世界遺産）がある沖縄最大の都市。" },
+];
+
+// WORLD_QUESTIONSとJAPAN_QUESTIONSに結合
+const ALL_QUESTIONS = [...WORLD_QUESTIONS, ...EXTRA_WORLD, ...JAPAN_QUESTIONS, ...EXTRA_JAPAN];
+const ALL_WORLD = [...WORLD_QUESTIONS, ...EXTRA_WORLD];
+const ALL_JAPAN = [...JAPAN_QUESTIONS, ...EXTRA_JAPAN];
+const WORLD_CATS = ["すべて","首都","地形","面積","山岳","海洋","人口","島","砂漠","湖","気候","文化"];
+const JAPAN_CATS = ["すべて","県庁所在地","日本の地形","都道府県","歴史地理","産業"];
+
+const COLORS = {
+  world: { bg:"#0f2027", accent:"#00c6ff", card:"#1a3a4a", badge:"#00c6ff22" },
+  japan: { bg:"#1a0a0f", accent:"#ff6b8a", card:"#3a1a24", badge:"#ff6b8a22" },
+  all:   { bg:"#0d1117", accent:"#a78bfa", card:"#1e1b2e", badge:"#a78bfa22" },
+};
+
+// ── 状態 ──────────────────────────────────────────────────
+// カテゴリ別の累積正誤データ（セッション内で蓄積）
+const catStatsGlobal = {}; // { "首都": { ok:3, total:5 }, ... }
+
+function getCatRank() {
+  // 正答率が低い順にカテゴリを返す（5問以上解いたカテゴリのみ対象）
+  return Object.entries(catStatsGlobal)
+    .filter(([, s]) => s.total >= 3)
+    .sort(([, a], [, b]) => (a.ok / a.total) - (b.ok / b.total))
+    .map(([cat, s]) => ({ cat, rate: Math.round(s.ok / s.total * 100), total: s.total }));
+}
+
+function recordAnswer(category, isCorrect) {
+  if (!catStatsGlobal[category]) catStatsGlobal[category] = { ok: 0, total: 0 };
+  catStatsGlobal[category].total++;
+  if (isCorrect) catStatsGlobal[category].ok++;
+}
+
+let state = {
+  area: "world", cat: "すべて", weakMode: false,
+  questions: [], current: 0,
+  score: 0, streak: 0, maxStreak: 0,
+  selected: null, hintUsed: false,
+  answers: [], wrongQuestions: [],
+  seenIds: new Set(),
+};
+
+// ── AI解説 ────────────────────────────────────────────────
+function fetchExplanation(question, selectedIdx, isCorrect) {
+  if (isCorrect) {
+    return Promise.resolve("✅ " + (question.explanation_correct ?? question.hint));
+  } else {
+    return Promise.resolve("💡 正解は「" + question.options[question.answer] + "」。" + (question.explanation_wrong ?? question.hint));
+  }
+}
+
+// ── 背景グリッド ──────────────────────────────────────────
+function renderBg(accent) {
+  const grid = document.getElementById("bgGrid");
+  grid.innerHTML = "";
+  for (let i = 0; i < 12; i++) {
+    const d = document.createElement("div");
+    d.style.cssText = `border:1px solid ${accent}10;transform:rotate(${i*15}deg) scale(${1+i*0.15})`;
+    grid.appendChild(d);
+  }
+}
+
+// ── ホーム画面 ────────────────────────────────────────────
+function setArea(area) {
+  state.area = area;
+  state.cat = "すべて";
+  applyTheme(area);
+  renderHome();
+}
+
+function applyTheme(area) {
+  const c = COLORS[area] || COLORS.world;
+  document.body.style.background = c.bg;
+  renderBg(c.accent);
+  // ボタン色を更新
+  document.querySelectorAll(".btn-fill[data-theme]").forEach(b => {
+    b.style.background = c.accent;
+  });
+}
+
+function renderHome() {
+  const area = state.area;
+  const c = COLORS[area] || COLORS.world;
+  const accent = c.accent;
+
+  document.getElementById("homeTitle").style.color = accent;
+  document.getElementById("homeCard").style.background = c.card;
+  document.getElementById("startBtn").style.background = accent;
+
+  // エリアボタン
+  ["world","japan","all"].forEach(a => {
+    const btn = document.getElementById("area" + a.charAt(0).toUpperCase() + a.slice(1));
+    if (a === area) {
+      btn.className = "btn-fill";
+      btn.style.cssText = `flex:1;font-size:13px;background:${accent};border:none;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;`;
+    } else {
+      btn.className = "btn-outline";
+      btn.style.cssText = `flex:1;font-size:13px;color:${accent};border-color:${accent};background:transparent;padding:10px 18px;border-radius:10px;font-weight:700;border-width:2px;border-style:solid;`;
+    }
+  });
+
+  // カテゴリ
+  const cats = area === "world" ? WORLD_CATS : area === "japan" ? JAPAN_CATS : ["すべて"];
+  const catSection = document.getElementById("catSection");
+  catSection.style.display = area === "all" ? "none" : "block";
+
+  const catBtns = document.getElementById("catButtons");
+  catBtns.innerHTML = "";
+  cats.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.textContent = cat;
+    btn.className = "cat-btn";
+    if (cat === state.cat) {
+      btn.style.cssText = `padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;background:${accent};border:none;color:#fff;`;
+    } else {
+      btn.style.cssText = `padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;color:${accent};border:2px solid ${accent};background:transparent;`;
+    }
+    btn.onclick = () => { state.cat = cat; renderHome(); };
+    catBtns.appendChild(btn);
+  });
+
+  // 出題数
+  const pool = area === "world" ? ALL_WORLD : area === "japan" ? ALL_JAPAN : ALL_QUESTIONS;
+  const filtered = state.cat === "すべて" ? pool : pool.filter(q => q.category === state.cat);
+  const count = filtered.length;
+  const show = Math.min(count, 20);
+  document.getElementById("qCount").style.color = accent;
+  document.getElementById("qCount").textContent = count <= 20 ? count : `20（全${count}問中）`;
+
+  // 苦手ジャンルボタンのスタイル更新
+  const weakBtn = document.getElementById("weakBtn");
+  weakBtn.style.color = c.accent;
+  weakBtn.style.borderColor = c.accent;
+
+  // 苦手ジャンル一覧の更新
+  const ranks = getCatRank();
+  const weakSection = document.getElementById("weakSection");
+  const weakList = document.getElementById("weakCatList");
+  if (ranks.length === 0) {
+    weakSection.classList.add("hidden");
+  } else {
+    weakSection.classList.remove("hidden");
+    weakList.innerHTML = ranks.slice(0, 5).map(({ cat, rate, total }) => {
+      const bar = `<div style="height:4px;background:#ffffff15;border-radius:2px;margin-top:4px"><div style="height:4px;background:${c.accent};border-radius:2px;width:${rate}%"></div></div>`;
+      const label = rate <= 40 ? "😣" : rate <= 60 ? "😅" : "😊";
+      return `<div style="background:#ffffff08;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #ffffff15"
+        onclick="startWeakCat('${cat}')"
+        onmouseover="this.style.borderColor='${c.accent}'" onmouseout="this.style.borderColor='#ffffff15'">
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span>${label} ${cat}</span>
+          <span style="color:${rate<=40?'#ef4444':rate<=60?'#f97316':c.accent}">${rate}% (${total}問)</span>
+        </div>${bar}
+      </div>`;
+    }).join("");
+  }
+}
+
+function showHome() {
+  document.getElementById("homeScreen").classList.remove("hidden");
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  renderHome();
+}
+
+// ── クイズ開始 ────────────────────────────────────────────
+function weightedShuffle(pool, seenIds) {
+  // 未出題は重み3、出題済みは重み1で選ばれやすさを調整
+  const weighted = [];
+  pool.forEach(q => {
+    const w = seenIds.has(q.id) ? 1 : 3;
+    for (let i = 0; i < w; i++) weighted.push(q);
+  });
+  // Fisher-Yatesシャッフル後、重複除去して先頭20問
+  const shuffled = weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set();
+  const result = [];
+  for (const q of shuffled) {
+    if (!seen.has(q.id)) { seen.add(q.id); result.push(q); }
+    if (result.length >= 20) break;
+  }
+  return result;
+}
+
+function startQuiz(questions) {
+  const area = state.area;
+  let pool;
+  if (questions) {
+    // 間違えた問題再挑戦時はそのまま使う（20問制限のみ適用）
+    pool = questions.slice(0, 20);
+    state.questions = [...pool].sort(() => Math.random() - 0.5);
+  } else {
+    const base = area === "world" ? ALL_WORLD : area === "japan" ? ALL_JAPAN : ALL_QUESTIONS;
+    pool = state.cat === "すべて" ? base : base.filter(q => q.category === state.cat);
+    state.questions = weightedShuffle(pool, state.seenIds);
+  }
+  // seenIdsを更新
+  state.questions.forEach(q => state.seenIds.add(q.id));
+  state.dummy = null; // dummy line to avoid extra replacement
+  state.current = 0;
+  state.score = 0;
+  state.streak = 0;
+  state.maxStreak = 0;
+  state.selected = null;
+  state.hintUsed = false;
+  state.answers = [];
+  state.wrongQuestions = [];
+
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("quizScreen").classList.remove("hidden");
+  renderQuiz();
+}
+
+function retryWrong() {
+  startQuiz(state.wrongQuestions);
+}
+
+// 苦手ジャンル優先モード：正答率の低いカテゴリから重み付き出題
+function startWeakMode() {
+  const ranks = getCatRank();
+  if (ranks.length === 0) {
+    alert("まだデータが不足しています。\n先にいくつか問題を解いてください！");
+    return;
+  }
+  // 正答率が低いカテゴリの問題を優先してプール構築
+  const base = state.area === "world" ? ALL_WORLD : state.area === "japan" ? ALL_JAPAN : ALL_QUESTIONS;
+  const weakCats = new Set(ranks.map(r => r.cat));
+  // 苦手カテゴリの問題は重み3、それ以外は重み1
+  const weighted = [];
+  base.forEach(q => {
+    const w = weakCats.has(q.category) ? 3 : 1;
+    for (let i = 0; i < w; i++) weighted.push(q);
+  });
+  const shuffled = weighted.sort(() => Math.random() - 0.5);
+  const seen = new Set();
+  const pool = [];
+  for (const q of shuffled) {
+    if (!seen.has(q.id)) { seen.add(q.id); pool.push(q); }
+    if (pool.length >= 20) break;
+  }
+  state.weakMode = true;
+  startQuiz(pool);
+}
+
+// 特定カテゴリのみで出題
+function startWeakCat(cat) {
+  const base = state.area === "world" ? ALL_WORLD : state.area === "japan" ? ALL_JAPAN : ALL_QUESTIONS;
+  const pool = base.filter(q => q.category === cat);
+  if (pool.length === 0) return;
+  state.cat = cat;
+  state.weakMode = true;
+  startQuiz(pool);
+}
+
+// ── クイズ描画 ────────────────────────────────────────────
+function renderQuiz() {
+  const { questions, current, score, streak } = state;
+  const q = questions[current];
+  const area = q.region === "japan" ? "japan" : state.area === "all" ? "all" : "world";
+  const c = COLORS[area] || COLORS.world;
+
+  document.body.style.background = c.bg;
+  renderBg(c.accent);
+
+  document.getElementById("qIndex").textContent = `${current + 1} / ${questions.length}`;
+  const scoreDisp = document.getElementById("scoreDisp");
+  scoreDisp.textContent = `${score} pt`;
+  scoreDisp.style.color = c.accent;
+
+  const streakBadge = document.getElementById("streakBadge");
+  if (streak >= 2) { streakBadge.style.display = ""; streakBadge.textContent = `🔥 ${streak}連続`; }
+  else { streakBadge.style.display = "none"; }
+
+  const fill = document.getElementById("progressFill");
+  fill.style.width = `${((current + 1) / questions.length) * 100}%`;
+  fill.style.background = c.accent;
+
+  document.getElementById("quizCard").style.background = c.card;
+  const catEl = document.getElementById("qCategory");
+  catEl.textContent = q.category;
+  catEl.style.background = c.badge;
+  catEl.style.color = c.accent;
+  document.getElementById("qDifficulty").textContent = q.difficulty;
+  document.getElementById("qEmoji").textContent = q.emoji;
+  document.getElementById("qText").textContent = q.question;
+
+  // 選択肢
+  const optDiv = document.getElementById("optButtons");
+  optDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<span class="opt-lbl">${["A","B","C","D"][i]}.</span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    optDiv.appendChild(btn);
+  });
+
+  // ヒント
+  const hintArea = document.getElementById("hintArea");
+  hintArea.innerHTML = `<button class="btn-outline" style="font-size:12px;color:${c.accent};border-color:${c.accent};" onclick="showHint()">ヒント（−5pt）</button>`;
+
+  // AI解説・次へ非表示
+  document.getElementById("aiBox").classList.add("hidden");
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.add("hidden");
+  nextBtn.style.background = c.accent;
+  nextBtn.style.display = "block";
+}
+
+function showHint() {
+  const q = state.questions[state.current];
+  state.hintUsed = true;
+  document.getElementById("hintArea").innerHTML = `<div class="hint-box">💡 ${q.hint}</div>`;
+}
+
+async function selectAnswer(idx) {
+  if (state.selected !== null) return;
+  state.selected = idx;
+
+  const q = state.questions[state.current];
+  const isCorrect = idx === q.answer;
+  const pts = isCorrect ? (state.hintUsed ? 5 : 10) : 0;
+  state.score += pts;
+  state.streak = isCorrect ? state.streak + 1 : 0;
+  state.maxStreak = Math.max(state.maxStreak, state.streak);
+  state.answers.push({ correct: isCorrect, selected: idx });
+  if (!isCorrect) state.wrongQuestions.push(q);
+  recordAnswer(q.category, isCorrect);
+
+  // スコア更新
+  const area = q.region === "japan" ? "japan" : state.area === "all" ? "all" : "world";
+  const c = COLORS[area] || COLORS.world;
+  document.getElementById("scoreDisp").textContent = `${state.score} pt`;
+  const streakBadge = document.getElementById("streakBadge");
+  if (state.streak >= 2) { streakBadge.style.display = ""; streakBadge.textContent = `🔥 ${state.streak}連続`; }
+  else { streakBadge.style.display = "none"; }
+
+  // 選択肢の色更新
+  const btns = document.getElementById("optButtons").querySelectorAll("button");
+  btns.forEach((btn, i) => {
+    btn.onclick = null;
+    if (i === q.answer) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+    else btn.classList.add("dim");
+  });
+
+  // ヒント非表示
+  document.getElementById("hintArea").innerHTML = "";
+
+  // AI解説エリア表示
+  const aiBox = document.getElementById("aiBox");
+  aiBox.classList.remove("hidden");
+  aiBox.style.borderColor = c.accent + "66";
+  document.getElementById("aiLabel").style.color = c.accent;
+  document.getElementById("aiContent").innerHTML = '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  // 次へボタン
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.classList.remove("hidden");
+  nextBtn.style.display = "block";
+  nextBtn.textContent = state.current + 1 >= state.questions.length ? "結果を見る 🏁" : "次の問題 →";
+
+  // 解説表示
+  try {
+    const text = await fetchExplanation(q, idx, isCorrect);
+    const linkHtml = q.link
+      ? `<a href="${q.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:${c.accent};text-decoration:none;border:1px solid ${c.accent}44;padding:3px 10px;border-radius:6px;">🔗 詳しく調べる（Wikipedia）</a>`
+      : "";
+    document.getElementById("aiContent").innerHTML =
+      `<span style="font-size:13px;line-height:1.7">${text}</span>${linkHtml}`;
+  } catch(e) {
+    document.getElementById("aiContent").textContent = "エラー: " + (e?.message ?? String(e));
+  }
+}
+
+function nextQuestion() {
+  if (state.current + 1 >= state.questions.length) {
+    showResult();
+  } else {
+    state.current++;
+    state.selected = null;
+    state.hintUsed = false;
+    renderQuiz();
+  }
+}
+
+// ── 結果画面 ──────────────────────────────────────────────
+function showResult() {
+  document.getElementById("quizScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.remove("hidden");
+
+  const { questions, answers, score, maxStreak, wrongQuestions } = state;
+  const correct = answers.filter(a => a.correct).length;
+  const area = questions[0]?.region === "japan" ? "japan" : state.area === "all" ? "all" : "world";
+  const c = COLORS[area] || COLORS.world;
+
+  document.body.style.background = c.bg;
+  renderBg(c.accent);
+
+  document.getElementById("resultEmoji").textContent = correct === questions.length ? "🏆" : correct >= questions.length * 0.7 ? "🥈" : "🎯";
+  document.getElementById("resultTitle").style.color = c.accent;
+  document.getElementById("resultScore").textContent = `${score} pt`;
+  document.getElementById("resultSub").textContent = `${correct}/${questions.length}問正解 · 最大連続 ${maxStreak}🔥`;
+
+  const perfectBanner = document.getElementById("perfectBanner");
+  if (correct === questions.length) perfectBanner.classList.remove("hidden");
+  else perfectBanner.classList.add("hidden");
+
+  // カテゴリ別
+  document.getElementById("catStatsCard").style.background = c.card;
+  const catStats = {};
+  questions.forEach((q, i) => {
+    if (!catStats[q.category]) catStats[q.category] = { ok: 0, total: 0 };
+    catStats[q.category].total++;
+    if (answers[i]?.correct) catStats[q.category].ok++;
+  });
+  const statsDiv = document.getElementById("catStats");
+  statsDiv.innerHTML = Object.entries(catStats).map(([cat, { ok, total }]) => `
+    <div class="cat-bar-wrap">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${cat}</span><span style="color:${c.accent}">${ok}/${total}</span>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="background:${c.accent};width:${(ok/total)*100}%"></div></div>
+    </div>`).join("");
+
+  // ログ
+  document.getElementById("logCard").style.background = c.card;
+  document.getElementById("answerLog").innerHTML = questions.map((q, i) => `
+    <div class="log-row">
+      <span>${answers[i]?.correct ? "✅" : "❌"}</span>
+      <span style="flex:1">${q.question}</span>
+      <span class="log-ans">${q.options[q.answer]}</span>
+    </div>`).join("");
+
+  // ボタン
+  const retryBtn = document.getElementById("retryWrongBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  if (wrongQuestions.length > 0) {
+    retryBtn.classList.remove("hidden");
+    retryBtn.textContent = `❌ 間違えた${wrongQuestions.length}問をもう一度`;
+  } else {
+    retryBtn.classList.add("hidden");
+  }
+  restartBtn.style.color = c.accent;
+  restartBtn.style.borderColor = c.accent;
+}
+
+// ── 初期化 ────────────────────────────────────────────────
+applyTheme("world");
+renderHome();
+</script>
+</body>
+</html>
