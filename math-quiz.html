@@ -271,7 +271,10 @@ body::before {
 
   <div class="card" id="quizCard">
     <div class="quiz-header">
-      <span class="quiz-cat-badge" id="qCatBadge"></span>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span class="quiz-cat-badge" id="qCatBadge"></span>
+        <span style="font-size:10px;color:var(--sub);letter-spacing:0.5px" id="qIdBadge"></span>
+      </div>
       <div style="display:flex;align-items:center;gap:8px">
         <button class="hint-btn" id="hintBtn" onclick="showHint()" style="font-size:11px;padding:4px 10px">💡 ヒント（−5pt）</button>
         <span class="quiz-lv-badge" id="qLvBadge"></span>
@@ -617,10 +620,10 @@ const QUESTIONS = [
     link:"" },
 
   { id:34, cat:"面積・図形", lv:1, emoji:"⭕",
-    template:"半径 6cm の円の面積 = □π cm²",
-    answer:36, answerDisplay:"36",
-    hint:"円の面積 = 半径 × 半径 × π",
-    steps:["面積 = π × r²","= π × 6²","= 36π cm²　→ □ = 36"],
+    template:"半径 5cm の円の面積 = □ cm²\n（円周率は 3.14）",
+    answer:78.5, answerDisplay:"78.5",
+    hint:"円の面積 = 半径 × 半径 × 円周率",
+    steps:["面積 = 半径 × 半径 × 3.14","= 5 × 5 × 3.14","= 25 × 3.14 = 78.5 cm²"],
     link:"" },
 
   { id:35, cat:"面積・図形", lv:2, emoji:"🔷",
@@ -631,10 +634,10 @@ const QUESTIONS = [
     link:"" },
 
   { id:36, cat:"面積・図形", lv:2, emoji:"📏",
-    template:"1辺が 10cm の正方形に内接する円の面積 = □π cm²",
-    answer:25, answerDisplay:"25",
+    template:"1辺が 20cm の正方形に内接する円の面積 = □ cm²\n（円周率は 3.14）",
+    answer:314, answerDisplay:"314",
     hint:"内接円の半径 = 正方形の1辺 ÷ 2",
-    steps:["内接円の半径 = 10 ÷ 2 = 5cm","面積 = π × 5² = 25π cm²","→ □ = 25"],
+    steps:["内接円の半径 = 20 ÷ 2 = 10cm","面積 = 半径 × 半径 × 3.14","= 10 × 10 × 3.14 = 314 cm²"],
     link:"" },
 
   { id:37, cat:"面積・図形", lv:3, emoji:"🔺",
@@ -645,10 +648,10 @@ const QUESTIONS = [
     link:"" },
 
   { id:38, cat:"面積・図形", lv:3, emoji:"🔵",
-    template:"半径 6cm の半円から直径を底辺とする高さ 4cm の三角形を引いた面積 = □π − □ cm²\n（π の係数を答えよ）",
-    answer:18, answerDisplay:"18",
+    template:"半径 10cm の半円から、底辺 20cm・高さ 10cm の三角形を引いた面積 = □ cm²\n（円周率は 3.14）",
+    answer:57, answerDisplay:"57",
     hint:"半円の面積 − 三角形の面積",
-    steps:["半円 = π × 6² ÷ 2 = 18π cm²","三角形（底辺=直径=12、高さ=4）","= 12 × 4 ÷ 2 = 24 cm²","答えの形：18π − 24 → π の係数 = 18"],
+    steps:["半円 = 半径 × 半径 × 3.14 ÷ 2","= 10 × 10 × 3.14 ÷ 2 = 157 cm²","三角形 = 底辺 × 高さ ÷ 2","= 20 × 10 ÷ 2 = 100 cm²","157 − 100 = 57 cm²"],
     link:"" },
 
   { id:39, cat:"面積・図形", lv:4, emoji:"💎",
@@ -738,11 +741,11 @@ const QUESTIONS = [
     steps:["体積 = 4 × 6 × 5","= 120 cm³"],
     link:"" },
 
-  { id:51, cat:"立体図形", lv:2, emoji:"⚽",
-    template:"半径 3cm の球の体積 = □π cm³",
-    answer:36, answerDisplay:"36",
-    hint:"球の体積 = (4/3) × π × r³",
-    steps:["体積 = (4/3) × π × 3³","= (4/3) × π × 27","= 36π cm³　→ □ = 36"],
+  { id:51, cat:"立体図形", lv:2, emoji:"🛢",
+    template:"底面の半径 5cm、高さ 8cm の円柱の体積 = □ cm³\n（円周率は 3.14）",
+    answer:628, answerDisplay:"628",
+    hint:"円柱の体積 = 底面積 × 高さ",
+    steps:["底面積 = 半径 × 半径 × 3.14","= 5 × 5 × 3.14 = 78.5 cm²","体積 = 底面積 × 高さ","= 78.5 × 8 = 628 cm³"],
     link:"" },
 
   { id:52, cat:"立体図形", lv:2, emoji:"🔺",
@@ -963,6 +966,8 @@ function renderQuiz() {
   catBadge.textContent = q.cat;
   catBadge.style.background = lvColor;
 
+  document.getElementById("qIdBadge").textContent = `QUIZ ID: ${String(q.id).padStart(5, '0')}`;
+
   const lvBadge = document.getElementById("qLvBadge");
   lvBadge.textContent = LV_NAMES[lv];
   lvBadge.style.background = lvColor + "22";
@@ -1105,6 +1110,7 @@ function nextQuestion() {
     state.answered = false;
     state.hintUsed = false;
     document.getElementById("inputBar").classList.add("hidden");
+    window.scrollTo({ top: 0, behavior: 'instant' });
     renderQuiz();
   }
 }
@@ -1146,9 +1152,10 @@ function showResult() {
   // ログ
   document.getElementById("answerLog").innerHTML = questions.map((q,i) => {
     const a = answers[i];
+    const qId = String(q.id).padStart(5, '0');
     return `<div class="log-row">
       <span style="flex-shrink:0">${a?.correct ? "⭕" : "❌"}</span>
-      <div class="log-q">${q.template.replace(/\n.*/,'').replace(/□/g,`[${q.answerDisplay}]`)}</div>
+      <div class="log-q"><span style="font-size:10px;color:var(--sub);margin-right:4px">${qId}</span>${q.template.replace(/\n.*/,'').replace(/□/g,`[${q.answerDisplay}]`)}</div>
       <span class="log-ans">${a?.correct ? "" : `→ ${q.answerDisplay}`}</span>
     </div>`;
   }).join("");
