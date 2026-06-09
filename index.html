@@ -158,18 +158,21 @@ body {
   background: radial-gradient(ellipse at 80% 20%, rgba(255,107,53,0.08), transparent 60%);
 }
 
-/* ゴルフ */
-.card-golf {
-  background: linear-gradient(135deg, #0d1f0d 0%, #071407 100%);
-  box-shadow: 0 4px 24px rgba(45,200,45,0.08);
+/* RPG */
+.card-rpg {
+  background: linear-gradient(135deg, #12081a 0%, #0a0510 100%);
+  box-shadow: 0 4px 24px rgba(215,160,255,0.08);
 }
-.card-golf:hover {
-  border-color: rgba(45,200,45,0.4);
-  box-shadow: 0 8px 40px rgba(45,200,45,0.18);
+.card-rpg:hover {
+  border-color: rgba(215,160,255,0.4);
+  box-shadow: 0 8px 40px rgba(215,160,255,0.18);
 }
-.card-golf::before {
-  background: radial-gradient(ellipse at 80% 20%, rgba(45,200,45,0.08), transparent 60%);
+.card-rpg::before {
+  background: radial-gradient(ellipse at 80% 20%, rgba(215,160,255,0.08), transparent 60%);
 }
+.rpg-title  { color: #d7a0ff; }
+.tag-rpg { color: #d7a0ff; border-color: rgba(215,160,255,0.3); background: rgba(215,160,255,0.08); }
+
 
 .card-inner {
   display: flex;
@@ -216,7 +219,6 @@ body {
 .tag-geo  { color: var(--accent-geo);  border-color: rgba(0,198,255,0.3);  background: rgba(0,198,255,0.08); }
 .tag-pmp  { color: var(--accent-pmp);  border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
 .tag-math { color: var(--accent-math); border-color: rgba(255,107,53,0.3); background: rgba(255,107,53,0.08); }
-.tag-golf { color: #4ade80;            border-color: rgba(45,200,45,0.3);  background: rgba(45,200,45,0.08); }
 
 .card-arrow {
   font-size: 20px;
@@ -247,6 +249,7 @@ body {
 .fade-in:nth-child(1) { animation-delay: 0.1s; }
 .fade-in:nth-child(2) { animation-delay: 0.25s; }
 .fade-in:nth-child(3) { animation-delay: 0.4s; }
+.fade-in:nth-child(4) { animation-delay: 0.55s; }
 @keyframes fadeIn {
   to { opacity: 1; transform: translateY(0); }
 }
@@ -292,6 +295,22 @@ body {
             <span class="tag tag-pmp">📋 全50問</span>
             <span class="tag tag-pmp">12カテゴリ</span>
             <span class="tag tag-pmp">苦手優先モード</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-rpg fade-in" href="math-tower-rpg.html">
+      <div class="card-inner">
+        <div class="card-icon">🏰</div>
+        <div class="card-body">
+          <div class="card-title rpg-title">算数の塔</div>
+          <div class="card-desc">RPG風バトルゲーム。算数の問題を解いて敵を倒し、武器を手に入れよう。全4フロアを攻略せよ！</div>
+          <div class="card-tags">
+            <span class="tag tag-rpg">🏰 全4フロア</span>
+            <span class="tag tag-rpg">⚔️ バトル形式</span>
+            <span class="tag tag-rpg">小5・小6レベル</span>
           </div>
         </div>
         <div class="card-arrow">›</div>

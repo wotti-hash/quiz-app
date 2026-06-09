@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>算数の塔</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a12;
+  --card: #13131f;
+  --border: rgba(255,255,255,0.1);
+  --text: #f0eee8;
+  --sub: #8a8898;
+  --gold: #ffd700;
+  --red: #ff4444;
+  --green: #44dd88;
+}
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.hidden { display: none !important; }
+
+/* ══ TITLE ══ */
+#titleScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 30%, #1a1a3a 0%, #0a0a12 70%);
+}
+.title-castle { font-size: 80px; animation: floatAnim 3s ease-in-out infinite; margin-bottom: 12px; }
+@keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.title-main {
+  font-family: 'Kaisei Decol', serif;
+  font-size: 38px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffd700, #ff9f43, #ff6b35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+}
+.title-sub { font-size: 13px; color: var(--sub); margin-bottom: 52px; }
+.btn-start {
+  padding: 16px 52px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #ffd700, #ff9f43);
+  color: #1a1000;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 28px rgba(255,215,0,0.45);
+  transition: all 0.2s;
+  letter-spacing: 3px;
+}
+.btn-start:hover { transform: translateY(-3px); box-shadow: 0 8px 36px rgba(255,215,0,0.6); }
+.title-weapons {
+  margin-top: 52px;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+.title-weapon { font-size: 30px; opacity: 0.25; transition: opacity 0.4s; }
+.title-weapon.earned { opacity: 1; }
+
+/* ══ MAP ══ */
+#mapScreen { max-width: 420px; margin: 0 auto; padding: 24px 20px 48px; }
+.map-header { text-align: center; padding: 12px 0 24px; }
+.map-title { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--gold); }
+.map-sub { font-size: 12px; color: var(--sub); margin-top: 4px; }
+.floor-list { display: flex; flex-direction: column-reverse; gap: 12px; }
+.floor-card {
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.25s;
+  position: relative;
+}
+.floor-card.can-enter { background: var(--card); border-color: rgba(255,215,0,0.3); cursor: pointer; }
+.floor-card.can-enter:hover { transform: translateY(-2px); border-color: rgba(255,215,0,0.6); box-shadow: 0 4px 20px rgba(255,215,0,0.15); }
+.floor-card.cleared { background: rgba(68,221,136,0.08); border-color: rgba(68,221,136,0.35); cursor: pointer; }
+.floor-card.cleared:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(68,221,136,0.15); }
+.floor-card.locked { opacity: 0.38; cursor: default; }
+.floor-num { font-size: 12px; color: var(--sub); min-width: 20px; text-align: center; }
+.floor-monster { font-size: 40px; flex-shrink: 0; }
+.floor-info { flex: 1; min-width: 0; }
+.floor-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.floor-card.can-enter .floor-name { color: var(--gold); }
+.floor-card.cleared .floor-name { color: var(--green); }
+.floor-card.locked .floor-name { color: var(--sub); }
+.floor-desc { font-size: 11px; color: var(--sub); line-height: 1.5; }
+.floor-badge { font-size: 22px; flex-shrink: 0; }
+.map-weapons-box {
+  margin-top: 28px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.mw-title { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 12px; }
+.mw-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.mw-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.mw-item.earned { color: var(--gold); }
+.mw-item.not-earned { color: var(--sub); opacity: 0.45; }
+.mw-emoji { font-size: 20px; }
+.btn-back-index {
+  display: block;
+  text-align: center;
+  padding: 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--sub);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 20px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-back-index:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+
+/* ══ BATTLE ══ */
+#battleScreen { max-width: 420px; margin: 0 auto; padding: 14px 16px 230px; min-height: 100vh; }
+.b-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.b-floor-tag {
+  font-size: 12px;
+  color: var(--sub);
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.b-q-count { font-size: 12px; color: var(--sub); }
+.player-hp { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+.php-label { font-size: 12px; color: var(--sub); margin-right: 2px; }
+.heart { font-size: 20px; transition: transform 0.2s; }
+.heart.lost { animation: heartPop 0.3s; }
+@keyframes heartPop { 0%{transform:scale(1.4)} 100%{transform:scale(1)} }
+.monster-area {
+  text-align: center;
+  padding: 16px 16px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  position: relative;
+}
+.monster-area.shake { animation: monsterShake 0.4s; }
+@keyframes monsterShake {
+  0%{transform:translateX(0)}
+  20%{transform:translateX(-10px) scale(1.06)}
+  40%{transform:translateX(10px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+  100%{transform:translateX(0)}
+}
+.m-emoji { font-size: 60px; display: block; margin-bottom: 6px; }
+.m-name { font-family: 'Kaisei Decol', serif; font-size: 16px; color: #ff9f43; margin-bottom: 10px; }
+.hp-bar-track { background: #1c1c2a; border-radius: 8px; height: 12px; overflow: hidden; }
+.hp-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ff4444, #ff9f43);
+  transition: width 0.5s;
+}
+.hp-label { font-size: 11px; color: var(--sub); text-align: right; margin-top: 4px; }
+.answer-feedback {
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.answer-feedback.correct { background: rgba(68,221,136,0.15); color: var(--green); border: 1px solid rgba(68,221,136,0.4); }
+.answer-feedback.wrong { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid rgba(255,68,68,0.4); }
+.fb-icon { font-size: 20px; flex-shrink: 0; }
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.q-cat { font-size: 11px; color: var(--sub); margin-bottom: 8px; }
+.q-text {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 2.1;
+  color: var(--text);
+}
+.q-blank {
+  display: inline-block;
+  min-width: 48px;
+  height: 32px;
+  line-height: 30px;
+  border: 2px dashed rgba(255,215,0,0.6);
+  border-radius: 8px;
+  color: var(--gold);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  background: rgba(255,215,0,0.07);
+  padding: 0 6px;
+}
+.q-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #b8900a;
+  background: rgba(255,215,0,0.09);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.6;
+}
+.hint-btn {
+  background: transparent;
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 8px;
+  color: rgba(255,215,0,0.7);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  display: block;
+}
+
+/* Fixed input bar */
+.battle-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  background: #0d0d1a;
+  border-top: 1px solid var(--border);
+  padding: 10px 14px 14px;
+  z-index: 100;
+}
+.input-disp {
+  width: 100%;
+  height: 44px;
+  background: var(--card);
+  border: 2px solid rgba(255,215,0,0.35);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-family: 'Kaisei Decol', serif;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.input-disp.empty { color: rgba(255,215,0,0.3); }
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+.numpad button {
+  padding: 9px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Kaisei Decol', serif;
+  transition: all 0.1s;
+  touch-action: manipulation;
+}
+.numpad button:active { background: rgba(255,215,0,0.2); border-color: var(--gold); transform: scale(0.93); }
+.numpad .np-attack {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #ff6b35, #ff4444);
+  border-color: #ff6b35;
+  color: #fff;
+  font-size: 15px;
+}
+.numpad .np-attack:disabled { opacity: 0.35; cursor: default; }
+.numpad .np-attack:active:not(:disabled) { background: linear-gradient(135deg, #ff4444, #cc2222); transform: scale(0.95); }
+
+/* Flash overlay */
+#flashOverlay {
+  position: fixed;
+  inset: 0;
+  background: #550000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+  transition: opacity 0.12s;
+}
+
+/* ══ RESULT ══ */
+#resultScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.res-big { font-size: 76px; margin-bottom: 16px; }
+.res-title { font-family: 'Kaisei Decol', serif; font-size: 30px; margin-bottom: 10px; }
+.res-title.win { color: var(--gold); }
+.res-title.lose { color: var(--red); }
+.res-msg { font-size: 14px; color: var(--sub); margin-bottom: 28px; line-height: 1.8; white-space: pre-line; }
+.weapon-box {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,159,67,0.08));
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 16px;
+  padding: 20px 32px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.wb-label { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 8px; }
+.wb-emoji { font-size: 52px; margin-bottom: 8px; }
+.wb-name { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--gold); }
+.res-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+.btn-map-res, .btn-retry-res {
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.btn-map-res { background: linear-gradient(135deg, #ffd700, #ff9f43); color: #1a1000; }
+.btn-retry-res { background: linear-gradient(135deg, #ff4444, #cc2222); color: #fff; }
+.btn-sub-res {
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--sub);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ══ ENDING ══ */
+#endingScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+  background: radial-gradient(ellipse at 50% 30%, #2a2000 0%, #0a0a12 70%);
+}
+.end-icon { font-size: 64px; margin-bottom: 16px; animation: floatAnim 2s ease-in-out infinite; }
+.end-title { font-family: 'Kaisei Decol', serif; font-size: 30px; color: var(--gold); margin-bottom: 10px; }
+.end-msg { font-size: 14px; color: var(--sub); margin-bottom: 32px; line-height: 1.8; }
+.end-weapons { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 36px; }
+.ew-item { text-align: center; }
+.ew-emoji { font-size: 40px; }
+.ew-name { font-size: 11px; color: var(--gold); margin-top: 6px; }
+.btn-reset {
+  padding: 14px 44px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #ffd700, #ff9f43);
+  color: #1a1000;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(255,215,0,0.4);
+  margin-bottom: 14px;
+}
+.btn-end-home {
+  display: block;
+  padding: 12px 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  background: transparent;
+  color: var(--sub);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+</style>
+</head>
+<body>
+
+<!-- flash overlay for damage -->
+<div id="flashOverlay"></div>
+
+<!-- ══ TITLE ══ -->
+<div id="titleScreen">
+  <div class="title-castle">🏰</div>
+  <div class="title-main">算数の塔</div>
+  <div class="title-sub">問題を解いて塔を攻略せよ！</div>
+  <button class="btn-start" onclick="goToMap()">冒険をはじめる</button>
+  <div class="title-weapons" id="titleWeapons"></div>
+</div>
+
+<!-- ══ MAP ══ -->
+<div id="mapScreen" class="hidden">
+  <div style="max-width:420px;margin:0 auto;padding:24px 20px 48px">
+    <div class="map-header">
+      <div class="map-title">🏰 算数の塔</div>
+      <div class="map-sub">挑戦するフロアを選ぼう</div>
+    </div>
+    <div class="floor-list" id="floorList"></div>
+    <div class="map-weapons-box" id="mapWeaponsBox">
+      <div class="mw-title">WEAPONS</div>
+      <div class="mw-row" id="mwRow"></div>
+    </div>
+    <a class="btn-back-index" href="index.html">← QUIZ HUB に戻る</a>
+  </div>
+</div>
+
+<!-- ══ BATTLE ══ -->
+<div id="battleScreen" class="hidden">
+  <div class="b-header">
+    <span class="b-floor-tag" id="bFloorTag">1F</span>
+    <span class="b-q-count" id="bQCount">1 / 6</span>
+  </div>
+
+  <div class="player-hp" id="playerHpRow">
+    <span class="php-label">勇者HP</span>
+  </div>
+
+  <div class="monster-area" id="monsterArea">
+    <span class="m-emoji" id="mEmoji">🟢</span>
+    <div class="m-name" id="mName">ぬめりスライム</div>
+    <div class="hp-bar-track"><div class="hp-bar-fill" id="mHpBar" style="width:100%"></div></div>
+    <div class="hp-label" id="mHpLabel">HP: 3 / 3</div>
+  </div>
+
+  <div id="feedbackArea"></div>
+
+  <div class="q-card">
+    <div class="q-cat" id="qCat">整数・計算</div>
+    <div class="q-text" id="qText"></div>
+    <button class="hint-btn hidden" id="hintBtn" onclick="toggleHint()">💡 ヒントを見る</button>
+    <div class="q-hint hidden" id="hintText"></div>
+  </div>
+
+  <div class="battle-bar">
+    <div class="input-disp empty" id="inputDisp">？</div>
+    <div class="numpad">
+      <button onclick="ni('7')">7</button>
+      <button onclick="ni('8')">8</button>
+      <button onclick="ni('9')">9</button>
+      <button onclick="ni('.')">.</button>
+      <button onclick="nd()">←</button>
+      <button onclick="ni('4')">4</button>
+      <button onclick="ni('5')">5</button>
+      <button onclick="ni('6')">6</button>
+      <button onclick="ni('0')">0</button>
+      <button onclick="ni('-')">−</button>
+      <button onclick="ni('1')">1</button>
+      <button onclick="ni('2')">2</button>
+      <button onclick="ni('3')">3</button>
+      <button class="np-attack" id="attackBtn" onclick="submitAns()">⚔️ こうげき！</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="resultScreen" class="hidden">
+  <div class="res-big" id="resBig">🎉</div>
+  <div class="res-title" id="resTitle">クリア！</div>
+  <div class="res-msg" id="resMsg"></div>
+  <div class="weapon-box hidden" id="weaponBox">
+    <div class="wb-label">武器を獲得！</div>
+    <div class="wb-emoji" id="wbEmoji"></div>
+    <div class="wb-name" id="wbName"></div>
+  </div>
+  <div class="res-btns">
+    <button class="btn-map-res hidden" id="btnMapRes" onclick="goToMap()">マップに戻る</button>
+    <button class="btn-retry-res hidden" id="btnRetryRes" onclick="retryFloor()">もう一度挑戦</button>
+    <button class="btn-sub-res" onclick="goToMap()">マップに戻る</button>
+  </div>
+</div>
+
+<!-- ══ ENDING ══ -->
+<div id="endingScreen" class="hidden">
+  <div class="end-icon">👑</div>
+  <div class="end-title">塔を制覇した！</div>
+  <div class="end-msg">全4フロアをクリアした！<br>君は真の算数マスターだ！</div>
+  <div class="end-weapons" id="endWeapons"></div>
+  <button class="btn-reset" onclick="resetAll()">最初からはじめる</button>
+  <a class="btn-end-home" href="index.html">← QUIZ HUB に戻る</a>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  フロア & 問題データ
+// ══════════════════════════════════════════
+const FLOORS = [
+  {
+    floor: 1, monsterName: "ぬめりスライム", monsterEmoji: "🟢",
+    monsterMaxHP: 3, weapon: "木の剣", weaponEmoji: "🗡️",
+    questions: [
+      { cat:"整数・計算",  template:"23 × 47 = □",
+        answer:1081, hint:"20×47 と 3×47 に分けて計算しよう",
+        steps:["20 × 47 = 940","3 × 47 = 141","940 + 141 = 1081"] },
+      { cat:"約数・倍数",  template:"36 の約数の個数 = □",
+        answer:9, hint:"36 = 2² × 3² と素因数分解しよう",
+        steps:["36 = 2² × 3²","約数の個数 = (2+1)×(2+1) = 9"] },
+      { cat:"割合・比",    template:"A : B = 3 : 5 で A = 24 のとき B = □",
+        answer:40, hint:"3単位 = 24 → 1単位 = 8",
+        steps:["A = 24 → 3単位 = 24","1単位 = 8","B = 5 × 8 = 40"] },
+      { cat:"速さ",        template:"時速 60km で 2時間30分走った道のり = □ km",
+        answer:150, hint:"2時間30分 = 2.5時間",
+        steps:["2時間30分 = 2.5時間","60 × 2.5 = 150 km"] },
+      { cat:"面積・図形",  template:"底辺 8cm、高さ 5cm の\n三角形の面積 = □ cm²",
+        answer:20, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+        steps:["8 × 5 ÷ 2 = 20 cm²"] },
+      { cat:"規則性・数列", template:"等差数列 3, 7, 11, 15, … の第20項 = □",
+        answer:79, hint:"第n項 = 初項 + 公差 × (n−1)",
+        steps:["初項=3、公差=4","第20項 = 3 + 4 × 19 = 79"] }
+    ]
+  },
+  {
+    floor: 2, monsterName: "もりのおおかみ", monsterEmoji: "🐺",
+    monsterMaxHP: 4, weapon: "鉄の剣", weaponEmoji: "⚔️",
+    questions: [
+      { cat:"整数・計算",  template:"1から100までの整数の和 = □",
+        answer:5050, hint:"(1+100)×100÷2（ガウスの方法）",
+        steps:["= 101 × 50 = 5050"] },
+      { cat:"約数・倍数",  template:"最大公約数（72, 120）= □",
+        answer:24, hint:"72 = 2³×3²、120 = 2³×3×5 に分解しよう",
+        steps:["72 = 2³×3²、120 = 2³×3×5","GCD = 2³×3 = 24"] },
+      { cat:"割合・比",    template:"20% の利益を見込んで定価をつけた。\n定価が 4800 円のとき原価 = □ 円",
+        answer:4000, hint:"原価 × 1.2 = 定価",
+        steps:["原価 × 1.2 = 4800","原価 = 4800 ÷ 1.2 = 4000 円"] },
+      { cat:"速さ",        template:"600m 離れて向かい合って歩く A（分速60m）と B（分速40m）。\n何分後に出会う = □ 分後",
+        answer:6, hint:"向かい合うと速さを足す",
+        steps:["合速度 = 60+40 = 100 m/分","600 ÷ 100 = 6 分"] },
+      { cat:"面積・図形",  template:"対角線が 8cm と 12cm の\nひし形の面積 = □ cm²",
+        answer:48, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+        steps:["8 × 12 ÷ 2 = 48 cm²"] },
+      { cat:"規則性・数列", template:"1, 1, 2, 3, 5, 8, 13, □　次の数 = □",
+        answer:21, hint:"前の2項の和が次の項（フィボナッチ数列）",
+        steps:["8 + 13 = 21"] }
+    ]
+  },
+  {
+    floor: 3, monsterName: "かずのドラゴン", monsterEmoji: "🐉",
+    monsterMaxHP: 4, weapon: "魔法の杖", weaponEmoji: "🔱",
+    questions: [
+      { cat:"整数・計算",  template:"1から50までの奇数の和 = □",
+        answer:625, hint:"奇数の和は（個数）² になる",
+        steps:["1〜50の奇数は25個","25² = 625"] },
+      { cat:"速さ",        template:"A が B を追いかける。A は分速80m、B は分速60m。\nB が 10分先に出発。A が追いつくまで = □ 分",
+        answer:30, hint:"Bのリード ÷ 速さの差",
+        steps:["Bのリード = 60×10 = 600m","速さの差 = 20m/分","600÷20 = 30 分"] },
+      { cat:"速さ",        template:"流れ分速20mの川で船の静水速度は分速80m。\n上流へ 1800m 進む時間 = □ 分",
+        answer:30, hint:"上りは（船速 − 流速）で進む",
+        steps:["上り速度 = 80−20 = 60 m/分","1800 ÷ 60 = 30 分"] },
+      { cat:"面積・図形",  template:"半径10cmの半円から\n底辺20cm・高さ10cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
+        answer:57, hint:"半円の面積 − 三角形の面積",
+        steps:["半円 = 10×10×3.14÷2 = 157","三角形 = 20×10÷2 = 100","157 − 100 = 57 cm²"] },
+      { cat:"規則性・数列", template:"等比数列 2, 6, 18, 54, … の第8項 = □",
+        answer:4374, hint:"第n項 = 初項 × 公比^(n−1)",
+        steps:["初項=2、公比=3","第8項 = 2 × 3⁷ = 2 × 2187 = 4374"] },
+      { cat:"場合の数・確率", template:"赤玉3個・白玉2個から2個取り出す。\n2個とも同じ色になる確率を\n□/10 の形で答えよ（□を答えよ）",
+        answer:4, hint:"赤2個 + 白2個の組み合わせを数えよう",
+        steps:["全事象 = ₅C₂ = 10","赤2個 = ₃C₂ = 3","白2個 = ₂C₂ = 1","同色 = 4 → 確率 = 4/10"] }
+    ]
+  },
+  {
+    floor: 4, monsterName: "ちしきの魔王", monsterEmoji: "👿",
+    monsterMaxHP: 5, weapon: "知識の剣", weaponEmoji: "💫",
+    questions: [
+      { cat:"整数・計算",  template:"2025 を連続整数の和で表すとき\n最も多い項数 = □ 項",
+        answer:45, hint:"2025 = 45²。n項の連続整数の和 = n×（中央値）",
+        steps:["2025 = 45²","45項の連続整数（中央値45）の和 = 45×45 = 2025"] },
+      { cat:"速さ",        template:"A は8分、B は12分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
+        answer:24, hint:"速さの差を使う：1/8 − 1/12",
+        steps:["速さの差 = 1/8 − 1/12 = 1/24 周/分","追い越し時間 = 1 ÷ (1/24) = 24 分"] },
+      { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 20cm のとき\n内接円の半径 = □ cm",
+        answer:4, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
+        steps:["各辺 = 12, 16, 20 cm","r = (12+16−20) ÷ 2 = 4 cm"] },
+      { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + … + 10×11 = □",
+        answer:440, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
+        steps:["= (1/3) × 10 × 11 × 12","= 10 × 11 × 4 = 440"] },
+      { cat:"場合の数・確率", template:"A, B, C, D, E の5人が\n円形に並ぶ並び方 = □ 通り",
+        answer:24, hint:"円順列は (n−1)! で求める",
+        steps:["円順列 = (5−1)! = 4!","= 4×3×2×1 = 24 通り"] },
+      { cat:"立体図形",    template:"1辺 6cm の正四面体の体積 = □√2 cm³",
+        answer:18, hint:"体積 = (√2/12) × a³",
+        steps:["= (√2/12) × 6³ = (√2/12) × 216","= 18√2 cm³　→ □ = 18"] }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════
+//  セーブデータ
+// ══════════════════════════════════════════
+const SAVE_KEY = 'mathTowerSave_v1';
+let save = { cleared: [], weapons: [] };
+
+function loadSave() {
+  try {
+    const d = localStorage.getItem(SAVE_KEY);
+    if (d) save = JSON.parse(d);
+  } catch(e) {}
+}
+function writeSave() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e) {}
+}
+function isCleared(i) { return save.cleared.includes(i); }
+function hasWeapon(i) { return save.weapons.includes(i); }
+function isUnlocked(i) { return i === 0 || isCleared(i - 1); }
+
+// ══════════════════════════════════════════
+//  ゲーム状態
+// ══════════════════════════════════════════
+let gs = {
+  floorIndex: 0,
+  qIndex: 0,
+  playerHP: 5,
+  monsterHP: 0,
+  monsterMaxHP: 0,
+  answered: false,
+  inputVal: '',
+  hintVisible: false
+};
+
+// ══════════════════════════════════════════
+//  画面切り替え
+// ══════════════════════════════════════════
+const SCREENS = ['titleScreen','mapScreen','battleScreen','resultScreen','endingScreen'];
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════════
+//  タイトル
+// ══════════════════════════════════════════
+function initTitle() {
+  const tw = document.getElementById('titleWeapons');
+  tw.innerHTML = FLOORS.map((f, i) =>
+    `<span class="title-weapon ${hasWeapon(i) ? 'earned' : ''}">${f.weaponEmoji}</span>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════
+//  マップ
+// ══════════════════════════════════════════
+function goToMap() {
+  if (save.cleared.length === 4) {
+    renderEnding();
+    showScreen('endingScreen');
+    return;
+  }
+  renderMap();
+  showScreen('mapScreen');
+}
+
+function renderMap() {
+  const list = document.getElementById('floorList');
+  list.innerHTML = '';
+  FLOORS.forEach((f, i) => {
+    const cleared = isCleared(i);
+    const unlocked = isUnlocked(i);
+    const cls = cleared ? 'cleared' : (unlocked ? 'can-enter' : 'locked');
+    const badge = cleared ? '✅' : (unlocked ? '▶️' : '🔒');
+    const desc = unlocked
+      ? `HP ${f.monsterMaxHP} | 全${f.questions.length}問 | 武器: ${f.weaponEmoji}${f.weapon}`
+      : '前のフロアをクリアしよう';
+    const card = document.createElement('div');
+    card.className = `floor-card ${cls}`;
+    card.innerHTML = `
+      <div class="floor-num">${i+1}F</div>
+      <div class="floor-monster">${f.monsterEmoji}</div>
+      <div class="floor-info">
+        <div class="floor-name">${f.monsterName}</div>
+        <div class="floor-desc">${desc}</div>
+      </div>
+      <div class="floor-badge">${badge}</div>
+    `;
+    if (unlocked) card.onclick = () => startFloor(i);
+    list.appendChild(card);
+  });
+
+  const row = document.getElementById('mwRow');
+  row.innerHTML = FLOORS.map((f, i) =>
+    `<div class="mw-item ${hasWeapon(i) ? 'earned' : 'not-earned'}">
+       <span class="mw-emoji">${f.weaponEmoji}</span>
+       <span>${hasWeapon(i) ? f.weapon : '？？？'}</span>
+     </div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════
+//  バトル開始
+// ══════════════════════════════════════════
+function startFloor(fi) {
+  gs = {
+    floorIndex: fi,
+    qIndex: 0,
+    playerHP: 5,
+    monsterHP: FLOORS[fi].monsterMaxHP,
+    monsterMaxHP: FLOORS[fi].monsterMaxHP,
+    answered: false,
+    inputVal: '',
+    hintVisible: false
+  };
+  showScreen('battleScreen');
+  renderBattle();
+}
+
+// ══════════════════════════════════════════
+//  バトル描画
+// ══════════════════════════════════════════
+function renderBattle() {
+  const f = FLOORS[gs.floorIndex];
+  const q = f.questions[gs.qIndex];
+
+  document.getElementById('bFloorTag').textContent = `${gs.floorIndex+1}F`;
+  document.getElementById('bQCount').textContent = `${gs.qIndex+1} / ${f.questions.length}`;
+
+  // Player HP
+  const hpRow = document.getElementById('playerHpRow');
+  hpRow.innerHTML = '<span class="php-label">勇者HP</span>' +
+    Array.from({length:5}, (_,i) => `<span class="heart">${i < gs.playerHP ? '❤️' : '🖤'}</span>`).join('');
+
+  // Monster
+  document.getElementById('mEmoji').textContent = f.monsterEmoji;
+  document.getElementById('mName').textContent = f.monsterName;
+  document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
+  document.getElementById('mHpLabel').textContent = `HP: ${gs.monsterHP} / ${gs.monsterMaxHP}`;
+
+  // Clear feedback
+  document.getElementById('feedbackArea').innerHTML = '';
+
+  // Question
+  document.getElementById('qCat').textContent = q.cat;
+  document.getElementById('qText').innerHTML = renderTmpl(q.template);
+  document.getElementById('hintBtn').classList.remove('hidden');
+  document.getElementById('hintBtn').textContent = '💡 ヒントを見る';
+  document.getElementById('hintText').textContent = q.hint;
+  document.getElementById('hintText').classList.add('hidden');
+  gs.hintVisible = false;
+
+  // Input
+  gs.inputVal = '';
+  gs.answered = false;
+  updateDisp();
+  document.getElementById('attackBtn').disabled = false;
+  document.getElementById('attackBtn').textContent = '⚔️ こうげき！';
+}
+
+function renderTmpl(t) {
+  return t.replace(/\n/g, '<br>').replace(/□/g, '<span class="q-blank">□</span>');
+}
+
+function toggleHint() {
+  gs.hintVisible = !gs.hintVisible;
+  document.getElementById('hintText').classList.toggle('hidden', !gs.hintVisible);
+  document.getElementById('hintBtn').textContent = gs.hintVisible ? '💡 ヒントを隠す' : '💡 ヒントを見る';
+}
+
+// ══════════════════════════════════════════
+//  数字入力
+// ══════════════════════════════════════════
+function ni(v) {
+  if (gs.answered) return;
+  if (v === '-' && gs.inputVal !== '') return;
+  if (v === '.' && gs.inputVal.includes('.')) return;
+  if (gs.inputVal.length >= 7) return;
+  if (gs.inputVal === '' && v === '.') v = '0.';
+  gs.inputVal += v;
+  updateDisp();
+}
+function nd() {
+  if (gs.answered) return;
+  gs.inputVal = gs.inputVal.slice(0, -1);
+  updateDisp();
+}
+function updateDisp() {
+  const d = document.getElementById('inputDisp');
+  const empty = gs.inputVal === '';
+  d.textContent = empty ? '？' : gs.inputVal;
+  d.classList.toggle('empty', empty);
+}
+
+// ══════════════════════════════════════════
+//  回答チェック
+// ══════════════════════════════════════════
+function submitAns() {
+  if (gs.answered || gs.inputVal === '') return;
+  const q = FLOORS[gs.floorIndex].questions[gs.qIndex];
+  const userVal = parseFloat(gs.inputVal);
+  const correct = !isNaN(userVal) && Math.abs(userVal - q.answer) < 0.01;
+
+  gs.answered = true;
+  document.getElementById('attackBtn').disabled = true;
+  document.getElementById('hintBtn').classList.add('hidden');
+  // Always show hint after answering
+  document.getElementById('hintText').classList.remove('hidden');
+
+  if (correct) {
+    gs.monsterHP = Math.max(0, gs.monsterHP - 1);
+    monsterHit();
+    document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
+    document.getElementById('mHpLabel').textContent = `HP: ${gs.monsterHP} / ${gs.monsterMaxHP}`;
+    showFeedback(true, q.answer);
+  } else {
+    gs.playerHP = Math.max(0, gs.playerHP - 1);
+    playerHit();
+    const hpRow = document.getElementById('playerHpRow');
+    hpRow.innerHTML = '<span class="php-label">勇者HP</span>' +
+      Array.from({length:5}, (_,i) => `<span class="heart${i >= gs.playerHP ? ' lost' : ''}">${i < gs.playerHP ? '❤️' : '🖤'}</span>`).join('');
+    showFeedback(false, q.answer);
+  }
+
+  setTimeout(() => {
+    if (gs.playerHP <= 0) {
+      showFloorResult(false);
+    } else if (gs.monsterHP <= 0) {
+      showFloorResult(true);
+    } else {
+      gs.qIndex++;
+      const f = FLOORS[gs.floorIndex];
+      if (gs.qIndex >= f.questions.length) {
+        // All questions done: win only if monster is dead
+        showFloorResult(gs.monsterHP <= 0);
+      } else {
+        renderBattle();
+      }
+    }
+  }, 1900);
+}
+
+function monsterHit() {
+  const ma = document.getElementById('monsterArea');
+  ma.classList.remove('shake');
+  void ma.offsetWidth;
+  ma.classList.add('shake');
+  setTimeout(() => ma.classList.remove('shake'), 450);
+}
+function playerHit() {
+  const overlay = document.getElementById('flashOverlay');
+  overlay.style.opacity = '0.45';
+  setTimeout(() => { overlay.style.opacity = '0'; }, 380);
+}
+function showFeedback(ok, ans) {
+  document.getElementById('feedbackArea').innerHTML =
+    `<div class="answer-feedback ${ok ? 'correct' : 'wrong'}">
+       <span class="fb-icon">${ok ? '✨' : '💔'}</span>
+       <span>${ok ? 'せいかい！ダメージをあたえた！' : `ちがう！こたえは <strong>${ans}</strong>`}</span>
+     </div>`;
+}
+
+// ══════════════════════════════════════════
+//  フロア結果
+// ══════════════════════════════════════════
+function showFloorResult(win) {
+  const f = FLOORS[gs.floorIndex];
+  showScreen('resultScreen');
+
+  if (win) {
+    if (!save.cleared.includes(gs.floorIndex)) save.cleared.push(gs.floorIndex);
+    if (!save.weapons.includes(gs.floorIndex)) save.weapons.push(gs.floorIndex);
+    writeSave();
+
+    document.getElementById('resBig').textContent = '🎉';
+    const rt = document.getElementById('resTitle');
+    rt.textContent = `${gs.floorIndex+1}F クリア！`;
+    rt.className = 'res-title win';
+    document.getElementById('resMsg').textContent =
+      `${f.monsterName} をたおした！\n${f.weaponEmoji} ${f.weapon} を手に入れた！`;
+
+    document.getElementById('weaponBox').classList.remove('hidden');
+    document.getElementById('wbEmoji').textContent = f.weaponEmoji;
+    document.getElementById('wbName').textContent = f.weapon;
+
+    document.getElementById('btnMapRes').classList.remove('hidden');
+    document.getElementById('btnRetryRes').classList.add('hidden');
+
+    if (save.cleared.length === 4) {
+      setTimeout(() => { renderEnding(); showScreen('endingScreen'); }, 2600);
+    }
+  } else {
+    document.getElementById('resBig').textContent = '💀';
+    const rt = document.getElementById('resTitle');
+    rt.textContent = 'たおれてしまった…';
+    rt.className = 'res-title lose';
+    document.getElementById('resMsg').textContent =
+      `${f.monsterName} にやられてしまった。\nもう一度チャレンジしよう！`;
+    document.getElementById('weaponBox').classList.add('hidden');
+    document.getElementById('btnMapRes').classList.add('hidden');
+    document.getElementById('btnRetryRes').classList.remove('hidden');
+  }
+}
+
+function retryFloor() { startFloor(gs.floorIndex); }
+
+// ══════════════════════════════════════════
+//  エンディング
+// ══════════════════════════════════════════
+function renderEnding() {
+  document.getElementById('endWeapons').innerHTML = FLOORS.map(f =>
+    `<div class="ew-item">
+       <div class="ew-emoji">${f.weaponEmoji}</div>
+       <div class="ew-name">${f.weapon}</div>
+     </div>`
+  ).join('');
+}
+
+function resetAll() {
+  save = { cleared: [], weapons: [] };
+  writeSave();
+  renderMap();
+  showScreen('mapScreen');
+}
+
+// ══════════════════════════════════════════
+//  起動
+// ══════════════════════════════════════════
+loadSave();
+initTitle();
+</script>
+</body>
+</html>
