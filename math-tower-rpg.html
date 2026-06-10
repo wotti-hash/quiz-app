@@ -186,7 +186,14 @@ body {
 
 /* ══ BATTLE ══ */
 #battleScreen { max-width: 440px; margin: 0 auto; padding: 12px 14px 240px; min-height: 100vh; }
-.b-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+.b-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
+.b-retreat-btn {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  background: transparent; border: 1px solid rgba(255,68,68,0.4);
+  color: rgba(255,100,100,0.8); cursor: pointer; margin-left: auto;
+  transition: border-color 0.2s, color 0.2s;
+}
+.b-retreat-btn:hover { border-color: rgba(255,68,68,0.8); color: #ff6464; }
 .b-floor-tag {
   font-size: 12px; color: var(--sub);
   background: var(--card); border: 1px solid var(--border);
@@ -448,17 +455,79 @@ body {
   position: fixed; inset: 0; background: #550000;
   opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.12s;
 }
+
+/* ══ USER SELECT ══ */
+#userScreen {
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 40px 24px; text-align: center;
+  max-width: 440px; margin: 0 auto;
+}
+.user-castle { font-size: 72px; animation: floatAnim 3s ease-in-out infinite; margin-bottom: 10px; }
+.user-main { font-family: 'Kaisei Decol', serif; font-size: 30px; color: var(--gold); margin-bottom: 6px; }
+.user-sub { font-size: 13px; color: var(--sub); margin-bottom: 28px; letter-spacing: 1px; }
+.user-section-title { font-size: 11px; color: var(--sub); letter-spacing: 2px; margin-bottom: 12px; }
+.user-list { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.user-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 18px; cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s; text-align: left;
+}
+.user-card:hover { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.15); }
+.user-card-icon { font-size: 28px; }
+.user-card-name { font-family: 'Kaisei Decol', serif; font-size: 17px; color: var(--gold); }
+.user-card-stats { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.user-divider { width: 100%; border: none; border-top: 1px solid var(--border); margin: 4px 0 20px; }
+.user-input-row { display: flex; gap: 10px; width: 100%; }
+.user-input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 15px; padding: 10px 14px;
+  font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s;
+}
+.user-input:focus { border-color: var(--gold); }
+.user-input::placeholder { color: var(--sub); opacity: 0.7; }
+.user-err { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 18px; }
+.ts-user { font-size: 13px; color: var(--sub); margin-bottom: 16px; }
+.ts-user b { color: var(--gold); }
+.btn-switch {
+  font-size: 12px; color: var(--sub); background: none;
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 14px; cursor: pointer; margin-top: 14px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-switch:hover { border-color: var(--sub); color: var(--text); }
 </style>
 </head>
 <body>
 
 <div id="flashOverlay"></div>
 
+<!-- ══ USER SELECT ══ -->
+<div id="userScreen" class="hidden">
+  <div class="user-castle">🏰</div>
+  <div class="user-main">算数の塔</div>
+  <div class="user-sub">冒険者を選んでください</div>
+  <div id="userListWrap">
+    <div class="user-section-title">— セーブデータ —</div>
+    <div class="user-list" id="userList"></div>
+    <hr class="user-divider">
+  </div>
+  <div class="user-section-title">— 新しい冒険者を登録 —</div>
+  <div class="user-input-row">
+    <input class="user-input" id="userNameInput" maxlength="10"
+      placeholder="なまえ（10文字まで）"
+      onkeydown="if(event.key==='Enter')createUser()" />
+    <button class="btn-gold" onclick="createUser()">決定</button>
+  </div>
+  <div class="user-err" id="userErr"></div>
+</div>
+
 <!-- ══ TITLE ══ -->
-<div id="titleScreen">
+<div id="titleScreen" class="hidden">
   <div class="title-castle">🏰</div>
   <div class="title-main">算数の塔</div>
   <div class="title-sub">問題を解いて塔を攻略せよ！</div>
+  <div class="ts-user">冒険者: <b id="tsName">—</b></div>
   <div class="title-status" id="titleStatus">
     <div class="ts-item">
       <div class="ts-label">LEVEL</div>
@@ -475,6 +544,7 @@ body {
   </div>
   <button class="btn-gold" onclick="goToMap()">冒険をはじめる</button>
   <div class="title-weapons" id="titleWeapons"></div>
+  <button class="btn-switch" onclick="switchUser()">ユーザーを切り替える</button>
 </div>
 
 <!-- ══ MAP ══ -->
@@ -531,6 +601,7 @@ body {
     <span class="b-mode-tag normal" id="bModeTag">通常</span>
     <span class="b-timer hidden" id="bTimer">2:00</span>
     <span class="b-combo hidden" id="bCombo">COMBO x2</span>
+    <button class="b-retreat-btn" onclick="retreatBattle()">退却</button>
   </div>
   <div class="b-stats">
     <span class="b-lv" id="bLv">Lv.1</span>
@@ -631,7 +702,7 @@ const CHALLENGE_TIME = 120;
 // ══════════════════════════════════════════
 const FLOORS = [
   {
-    floor: 1,
+    floor: 1, name: "計算の間",
     monsterName: "ぬめりスライム", monsterEmoji: "🟢", monsterHP: 20,
     bossName: "玄武", bossEmoji: "🐢", bossHP: 40, bossCls: "boss-genbu", bossTitle: "四神・玄武",
     bossLightning: false, bossFlame: false,
@@ -730,7 +801,7 @@ const FLOORS = [
     ]
   },
   {
-    floor: 2,
+    floor: 2, name: "数理の回廊",
     monsterName: "もりのおおかみ", monsterEmoji: "🐺", monsterHP: 30,
     bossName: "白虎", bossEmoji: "🐅", bossHP: 60, bossCls: "boss-byakko", bossTitle: "四神・白虎",
     bossLightning: true, bossFlame: false,
@@ -829,7 +900,7 @@ const FLOORS = [
     ]
   },
   {
-    floor: 3,
+    floor: 3, name: "龍の試練場",
     monsterName: "かずのドラゴン", monsterEmoji: "🐉", monsterHP: 40,
     bossName: "青龍", bossEmoji: "🐲", bossHP: 85, bossCls: "boss-seiryu", bossTitle: "四神・青龍",
     bossLightning: false, bossFlame: false,
@@ -928,7 +999,7 @@ const FLOORS = [
     ]
   },
   {
-    floor: 4,
+    floor: 4, name: "魔王の頂",
     monsterName: "ちしきの魔王", monsterEmoji: "👿", monsterHP: 55,
     bossName: "朱雀", bossEmoji: "🦅", bossHP: 120, bossCls: "boss-suzaku", bossTitle: "四神・朱雀",
     bossLightning: false, bossFlame: true,
@@ -1029,25 +1100,110 @@ const FLOORS = [
 ];
 
 // ══════════════════════════════════════════
-//  セーブデータ管理
+//  セーブデータ管理（ユーザー別）
 // ══════════════════════════════════════════
-const SAVE_KEY = 'mathTowerSave_v2';
+const USERS_KEY   = 'mathTowerUsers_v3';
+const CUR_USR_KEY = 'mathTowerCurUser_v3';
+let currentUser = null;
 let save = {
   playerLevel: 1,
   playerEXP: 0,
   weaponLevels: [0, 0, 0, 0],  // 0=未所持 1=Lv1 2=Lv2 3=Lv3MAX
-  clearedFloors: []             // フロアマスター撃破済みインデックス
+  clearedFloors: [],            // フロアマスター撃破済みインデックス
+  lastScreen: 'titleScreen'     // 最後にいた画面
 };
 
+function _getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch(e) { return {}; }
+}
+
 function loadSave() {
-  try {
-    const d = localStorage.getItem(SAVE_KEY);
-    if (d) save = Object.assign(save, JSON.parse(d));
-  } catch(e) {}
+  if (!currentUser) return;
+  const u = _getUsers();
+  const defaults = { playerLevel:1, playerEXP:0, weaponLevels:[0,0,0,0], clearedFloors:[], lastScreen:'titleScreen' };
+  save = Object.assign({}, defaults, u[currentUser] || {});
 }
 
 function writeSave() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e) {}
+  if (!currentUser) return;
+  try {
+    const u = _getUsers();
+    u[currentUser] = save;
+    localStorage.setItem(USERS_KEY, JSON.stringify(u));
+  } catch(e) {}
+}
+
+// ── ユーザー管理 ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderUserScreen() {
+  const users = _getUsers();
+  const names  = Object.keys(users);
+  const wrapEl = document.getElementById('userListWrap');
+  const listEl = document.getElementById('userList');
+  if (names.length === 0) {
+    wrapEl.style.display = 'none';
+  } else {
+    wrapEl.style.display = '';
+    listEl.innerHTML = names.map(n => {
+      const d = users[n];
+      const safeN = escHtml(n).replace(/'/g, '\\\'');
+      return `<div class="user-card" onclick="selectUser('${safeN}')">
+        <div class="user-card-icon">⚔️</div>
+        <div>
+          <div class="user-card-name">${escHtml(n)}</div>
+          <div class="user-card-stats">Lv.${d.playerLevel||1} ／ ${(d.clearedFloors||[]).length}/4 フロアクリア</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('userErr').textContent = '';
+  document.getElementById('userNameInput').value = '';
+  showScreen('userScreen');
+}
+
+function restoreLastScreen() {
+  const s = save.lastScreen || 'titleScreen';
+  if (s === 'mapScreen') {
+    renderMap();
+    showScreen('mapScreen');
+  } else if (s === 'endingScreen') {
+    renderEnding();
+    showScreen('endingScreen');
+  } else {
+    renderTitle();
+    showScreen('titleScreen');
+  }
+}
+
+function selectUser(name) {
+  currentUser = name;
+  localStorage.setItem(CUR_USR_KEY, name);
+  loadSave();
+  restoreLastScreen();
+}
+
+function createUser() {
+  const name  = document.getElementById('userNameInput').value.trim();
+  const errEl = document.getElementById('userErr');
+  if (!name) { errEl.textContent = '名前を入力してください'; return; }
+  const users = _getUsers();
+  if (users[name]) { errEl.textContent = 'その名前はすでに使われています'; return; }
+  users[name] = { playerLevel:1, playerEXP:0, weaponLevels:[0,0,0,0], clearedFloors:[] };
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  currentUser = name;
+  localStorage.setItem(CUR_USR_KEY, name);
+  loadSave();
+  renderTitle();
+  showScreen('titleScreen');
+}
+
+function switchUser() {
+  currentUser = null;
+  localStorage.removeItem(CUR_USR_KEY);
+  renderUserScreen();
 }
 
 function isFloorCleared(i)  { return save.clearedFloors.includes(i); }
@@ -1098,7 +1254,7 @@ function upgradeWeapon(fi) {
 // ══════════════════════════════════════════
 //  画面管理
 // ══════════════════════════════════════════
-const SCREENS = ['titleScreen','mapScreen','modeScreen','battleScreen','resultScreen','endingScreen'];
+const SCREENS = ['userScreen','titleScreen','mapScreen','modeScreen','battleScreen','resultScreen','endingScreen'];
 function showScreen(id) {
   SCREENS.forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
   window.scrollTo(0, 0);
@@ -1160,11 +1316,21 @@ function updateTimerUI() {
 // ══════════════════════════════════════════
 //  ナビゲーション
 // ══════════════════════════════════════════
+function retreatBattle() {
+  if (!confirm('バトルを中断してマップに戻りますか？\n（進捗は保存されません）')) return;
+  clearTimer();
+  save.lastScreen = 'mapScreen'; writeSave();
+  renderMap(); showScreen('mapScreen');
+}
+
 function goToMap() {
   clearTimer();
-  if (save.clearedFloors.length === 4) { renderEnding(); showScreen('endingScreen'); return; }
-  renderMap();
-  showScreen('mapScreen');
+  if (save.clearedFloors.length === 4) {
+    save.lastScreen = 'endingScreen'; writeSave();
+    renderEnding(); showScreen('endingScreen'); return;
+  }
+  save.lastScreen = 'mapScreen'; writeSave();
+  renderMap(); showScreen('mapScreen');
 }
 
 function enterFloor(fi) {
@@ -1440,7 +1606,7 @@ function showResult(opts) {
     if (isBoss) {
       document.getElementById('btnMapRes').classList.remove('hidden');
       if (save.clearedFloors.length === 4)
-        setTimeout(() => { renderEnding(); showScreen('endingScreen'); }, 2800);
+        setTimeout(() => { save.lastScreen = 'endingScreen'; writeSave(); renderEnding(); showScreen('endingScreen'); }, 2800);
     } else {
       const btn = document.getElementById('btnContinue');
       btn.textContent = opts.doChance ? '⚡ チャンスに挑む！' : '▶ 次のバトルへ';
@@ -1577,6 +1743,7 @@ function renderMap() {
 //  タイトル描画
 // ══════════════════════════════════════════
 function renderTitle() {
+  document.getElementById('tsName').textContent   = currentUser || '—';
   document.getElementById('tsLv').textContent     = save.playerLevel;
   document.getElementById('tsAtk').textContent    = getBaseAtk();
   document.getElementById('tsFloors').textContent = `${save.clearedFloors.length}/4`;
@@ -1602,17 +1769,26 @@ function renderEnding() {
 //  リセット・初期化
 // ══════════════════════════════════════════
 function resetAll() {
-  if (!confirm('全データをリセットします。よろしいですか？')) return;
-  localStorage.removeItem(SAVE_KEY);
-  save = { playerLevel:1, playerEXP:0, weaponLevels:[0,0,0,0], clearedFloors:[] };
+  if (!confirm(`${currentUser} のデータをリセットします。よろしいですか？`)) return;
+  const users = _getUsers();
+  const fresh = { playerLevel:1, playerEXP:0, weaponLevels:[0,0,0,0], clearedFloors:[], lastScreen:'titleScreen' };
+  users[currentUser] = fresh;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  save = Object.assign({}, fresh);
   renderTitle();
   showScreen('titleScreen');
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  loadSave();
-  renderTitle();
-  showScreen('titleScreen');
+  const last  = localStorage.getItem(CUR_USR_KEY);
+  const users = _getUsers();
+  if (last && users[last]) {
+    currentUser = last;
+    loadSave();
+    restoreLastScreen();
+  } else {
+    renderUserScreen();
+  }
 });
 </script>
 </body>
