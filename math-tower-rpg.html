@@ -16,6 +16,7 @@
   --gold: #ffd700;
   --red: #ff4444;
   --green: #44dd88;
+  --purple: #d7a0ff;
 }
 body {
   font-family: 'Noto Sans JP', sans-serif;
@@ -28,400 +29,429 @@ body {
 }
 .hidden { display: none !important; }
 
+/* ══ COMMON ══ */
+.screen-wrap { max-width: 440px; margin: 0 auto; padding: 20px 16px 60px; }
+.btn-gold {
+  padding: 14px 40px;
+  border: none; border-radius: 50px;
+  background: linear-gradient(135deg, #ffd700, #ff9f43);
+  color: #1a1000;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 20px; font-weight: 700; letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(255,215,0,0.4);
+  transition: all 0.2s;
+}
+.btn-gold:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(255,215,0,0.6); }
+.btn-outline {
+  padding: 12px 28px;
+  border: 1.5px solid var(--border); border-radius: 50px;
+  background: transparent; color: var(--sub);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  display: inline-block; text-align: center;
+}
+.btn-outline:hover { border-color: rgba(255,255,255,0.35); color: var(--text); }
+
 /* ══ TITLE ══ */
 #titleScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 24px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px;
   text-align: center;
   background: radial-gradient(ellipse at 50% 30%, #1a1a3a 0%, #0a0a12 70%);
 }
 .title-castle { font-size: 80px; animation: floatAnim 3s ease-in-out infinite; margin-bottom: 12px; }
 @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
 .title-main {
-  font-family: 'Kaisei Decol', serif;
-  font-size: 38px;
-  font-weight: 700;
+  font-family: 'Kaisei Decol', serif; font-size: 38px; font-weight: 700;
   background: linear-gradient(135deg, #ffd700, #ff9f43, #ff6b35);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 6px;
-  margin-bottom: 8px;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 6px; margin-bottom: 8px;
 }
-.title-sub { font-size: 13px; color: var(--sub); margin-bottom: 52px; }
-.btn-start {
-  padding: 16px 52px;
-  border: none;
-  border-radius: 50px;
-  background: linear-gradient(135deg, #ffd700, #ff9f43);
-  color: #1a1000;
-  font-family: 'Kaisei Decol', serif;
-  font-size: 22px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 28px rgba(255,215,0,0.45);
-  transition: all 0.2s;
-  letter-spacing: 3px;
+.title-sub { font-size: 13px; color: var(--sub); margin-bottom: 36px; }
+.title-status {
+  display: flex; gap: 20px; margin-bottom: 32px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 28px;
 }
-.btn-start:hover { transform: translateY(-3px); box-shadow: 0 8px 36px rgba(255,215,0,0.6); }
-.title-weapons {
-  margin-top: 52px;
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-}
-.title-weapon { font-size: 30px; opacity: 0.25; transition: opacity 0.4s; }
+.ts-item { text-align: center; }
+.ts-label { font-size: 10px; color: var(--sub); letter-spacing: 1px; margin-bottom: 4px; }
+.ts-val { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--gold); }
+.ts-val.lv { color: #d7a0ff; }
+.title-weapons { display: flex; gap: 18px; justify-content: center; margin-top: 28px; }
+.title-weapon { font-size: 28px; opacity: 0.2; transition: opacity 0.4s; }
 .title-weapon.earned { opacity: 1; }
+.tw-item { font-size: 13px; color: var(--sub); }
+.end-weapon-item { font-size: 14px; color: var(--gold); text-align: center; }
 
 /* ══ MAP ══ */
-#mapScreen { max-width: 420px; margin: 0 auto; padding: 24px 20px 48px; }
-.map-header { text-align: center; padding: 12px 0 24px; }
+#mapScreen { overflow-y: auto; }
+.map-header { text-align: center; padding: 16px 0 20px; }
 .map-title { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--gold); }
 .map-sub { font-size: 12px; color: var(--sub); margin-top: 4px; }
-.floor-list { display: flex; flex-direction: column-reverse; gap: 12px; }
+.player-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 18px;
+  display: flex; gap: 18px; align-items: center;
+  margin-bottom: 20px;
+}
+.pc-lv {
+  font-family: 'Kaisei Decol', serif; font-size: 28px;
+  color: var(--purple); min-width: 56px; text-align: center;
+}
+.pc-lv span { display: block; font-size: 10px; color: var(--sub); margin-bottom: 2px; }
+.pc-right { flex: 1; min-width: 0; }
+.pc-exp-label { font-size: 11px; color: var(--sub); margin-bottom: 4px; }
+.pc-exp-track { background: #1c1c2a; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+.pc-exp-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #d7a0ff, #9f7aea); transition: width 0.5s; }
+.pc-atk { font-size: 12px; color: var(--sub); }
+.pc-atk b { color: var(--gold); }
+.floor-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
 .floor-card {
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: all 0.25s;
-  position: relative;
+  border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 16px 18px; position: relative; overflow: hidden;
 }
-.floor-card.can-enter { background: var(--card); border-color: rgba(255,215,0,0.3); cursor: pointer; }
+.floor-card.can-enter { background: var(--card); border-color: rgba(255,215,0,0.3); cursor: pointer; transition: all 0.25s; }
 .floor-card.can-enter:hover { transform: translateY(-2px); border-color: rgba(255,215,0,0.6); box-shadow: 0 4px 20px rgba(255,215,0,0.15); }
-.floor-card.cleared { background: rgba(68,221,136,0.08); border-color: rgba(68,221,136,0.35); cursor: pointer; }
-.floor-card.cleared:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(68,221,136,0.15); }
-.floor-card.locked { opacity: 0.38; cursor: default; }
-.floor-num { font-size: 12px; color: var(--sub); min-width: 20px; text-align: center; }
-.floor-monster { font-size: 40px; flex-shrink: 0; }
-.floor-info { flex: 1; min-width: 0; }
-.floor-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
-.floor-card.can-enter .floor-name { color: var(--gold); }
-.floor-card.cleared .floor-name { color: var(--green); }
-.floor-card.locked .floor-name { color: var(--sub); }
-.floor-desc { font-size: 11px; color: var(--sub); line-height: 1.5; }
-.floor-badge { font-size: 22px; flex-shrink: 0; }
-.map-weapons-box {
-  margin-top: 28px;
-  padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+.floor-card.cleared { background: rgba(68,221,136,0.06); border-color: rgba(68,221,136,0.3); cursor: pointer; transition: all 0.25s; }
+.floor-card.cleared:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(68,221,136,0.12); }
+.floor-card.locked { opacity: 0.35; cursor: default; }
+.fc-top { display: flex; align-items: center; gap: 14px; }
+.fc-num { font-size: 11px; color: var(--sub); min-width: 20px; }
+.fc-monster { font-size: 44px; flex-shrink: 0; }
+.fc-info { flex: 1; min-width: 0; }
+.fc-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.floor-card.can-enter .fc-name { color: var(--gold); }
+.floor-card.cleared .fc-name { color: var(--green); }
+.floor-card.locked .fc-name { color: var(--sub); }
+.fc-desc { font-size: 11px; color: var(--sub); line-height: 1.5; }
+.fc-badge { font-size: 24px; flex-shrink: 0; }
+.fc-weapon {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
 }
-.mw-title { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 12px; }
-.mw-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.fc-wlv-pips { display: flex; gap: 3px; }
+.wlv-pip { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,215,0,0.4); background: transparent; }
+.wlv-pip.filled { background: var(--gold); border-color: var(--gold); }
+.wlv-pip.max { background: #ff9f43; border-color: #ff6b35; box-shadow: 0 0 6px rgba(255,107,53,0.8); }
+.map-weapons-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 14px;
+}
+.mw-title { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 10px; }
+.mw-row { display: flex; gap: 14px; flex-wrap: wrap; }
 .mw-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 .mw-item.earned { color: var(--gold); }
-.mw-item.not-earned { color: var(--sub); opacity: 0.45; }
-.mw-emoji { font-size: 20px; }
-.btn-back-index {
-  display: block;
+.mw-item.not-earned { color: var(--sub); opacity: 0.4; }
+
+/* ══ MODE SELECT ══ */
+#modeScreen {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 20px;
   text-align: center;
-  padding: 13px;
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--sub);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  cursor: pointer;
-  margin-top: 20px;
-  text-decoration: none;
-  transition: all 0.2s;
 }
-.btn-back-index:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.mode-floor-tag {
+  font-size: 13px; color: var(--sub);
+  background: var(--card); border: 1px solid var(--border);
+  padding: 4px 16px; border-radius: 20px; margin-bottom: 24px;
+}
+.mode-monster { font-size: 72px; margin-bottom: 12px; }
+.mode-title { font-family: 'Kaisei Decol', serif; font-size: 24px; color: var(--gold); margin-bottom: 6px; }
+.mode-hp { font-size: 13px; color: var(--sub); margin-bottom: 32px; }
+.mode-cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 340px; margin-bottom: 24px; }
+.mode-card {
+  border: 1.5px solid var(--border); border-radius: 18px;
+  padding: 20px 22px; text-align: left; cursor: pointer;
+  transition: all 0.2s; background: var(--card);
+}
+.mode-card:hover { transform: translateY(-3px); }
+.mode-card.mode-normal:hover { border-color: rgba(68,221,136,0.5); box-shadow: 0 4px 20px rgba(68,221,136,0.12); }
+.mode-card.mode-challenge:hover { border-color: rgba(255,107,53,0.5); box-shadow: 0 4px 20px rgba(255,107,53,0.15); }
+.mc-icon { font-size: 32px; margin-bottom: 8px; }
+.mc-name { font-family: 'Kaisei Decol', serif; font-size: 18px; margin-bottom: 6px; }
+.mode-normal .mc-name { color: var(--green); }
+.mode-challenge .mc-name { color: #ff9f43; }
+.mc-desc { font-size: 12px; color: var(--sub); line-height: 1.6; }
+.mc-tag {
+  display: inline-block; margin-top: 8px;
+  font-size: 11px; font-weight: 700; padding: 2px 10px;
+  border-radius: 20px; border: 1px solid;
+}
+.mode-normal .mc-tag { color: var(--green); border-color: rgba(68,221,136,0.4); background: rgba(68,221,136,0.1); }
+.mode-challenge .mc-tag { color: #ff9f43; border-color: rgba(255,107,53,0.4); background: rgba(255,107,53,0.1); }
 
 /* ══ BATTLE ══ */
-#battleScreen { max-width: 420px; margin: 0 auto; padding: 14px 16px 230px; min-height: 100vh; }
-.b-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
+#battleScreen { max-width: 440px; margin: 0 auto; padding: 12px 14px 240px; min-height: 100vh; }
+.b-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
 .b-floor-tag {
-  font-size: 12px;
-  color: var(--sub);
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 4px 12px;
-  border-radius: 20px;
+  font-size: 12px; color: var(--sub);
+  background: var(--card); border: 1px solid var(--border);
+  padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
 }
-.b-q-count { font-size: 12px; color: var(--sub); }
-.player-hp { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
-.php-label { font-size: 12px; color: var(--sub); margin-right: 2px; }
-.heart { font-size: 20px; transition: transform 0.2s; }
-.heart.lost { animation: heartPop 0.3s; }
-@keyframes heartPop { 0%{transform:scale(1.4)} 100%{transform:scale(1)} }
+.b-timer {
+  font-family: 'Kaisei Decol', serif; font-size: 15px;
+  color: #ff9f43; background: rgba(255,107,53,0.12);
+  border: 1px solid rgba(255,107,53,0.35); padding: 4px 12px;
+  border-radius: 20px; letter-spacing: 1px;
+}
+.b-timer.urgent { color: var(--red); border-color: rgba(255,68,68,0.5); animation: timerPulse 0.6s ease-in-out infinite; }
+@keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.b-mode-tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700;
+}
+.b-mode-tag.normal { color: var(--green); background: rgba(68,221,136,0.12); border: 1px solid rgba(68,221,136,0.3); }
+.b-mode-tag.challenge { color: #ff9f43; background: rgba(255,107,53,0.12); border: 1px solid rgba(255,107,53,0.3); }
+.b-stats {
+  display: flex; gap: 8px; margin-bottom: 10px; align-items: center;
+}
+.b-lv { font-size: 12px; color: var(--purple); background: rgba(215,160,255,0.1); border: 1px solid rgba(215,160,255,0.25); padding: 3px 10px; border-radius: 20px; }
+.b-atk { font-size: 12px; color: var(--gold); }
+.b-combo {
+  margin-left: auto; font-family: 'Kaisei Decol', serif;
+  font-size: 15px; color: #ff9f43;
+  background: rgba(255,107,53,0.12); border: 1px solid rgba(255,107,53,0.3);
+  padding: 3px 12px; border-radius: 20px;
+  transition: all 0.2s;
+}
+.b-combo.active { color: #ff6b35; border-color: rgba(255,107,53,0.6); box-shadow: 0 0 12px rgba(255,107,53,0.3); }
+
+/* ══ MONSTER AREA ══ */
 .monster-area {
-  text-align: center;
-  padding: 16px 16px 14px;
+  text-align: center; padding: 18px 16px 16px;
+  border: 1px solid var(--border); border-radius: 18px;
+  margin-bottom: 12px; position: relative; overflow: hidden;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  margin-bottom: 14px;
-  position: relative;
+  transition: border-color 0.3s;
 }
-.monster-area.shake { animation: monsterShake 0.4s; }
-@keyframes monsterShake {
-  0%{transform:translateX(0)}
-  20%{transform:translateX(-10px) scale(1.06)}
-  40%{transform:translateX(10px)}
-  60%{transform:translateX(-6px)}
-  80%{transform:translateX(6px)}
-  100%{transform:translateX(0)}
+.monster-area.shake { animation: mShake 0.4s; }
+@keyframes mShake {
+  0%{transform:translateX(0)} 20%{transform:translateX(-10px) scale(1.06)}
+  40%{transform:translateX(10px)} 60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)} 100%{transform:translateX(0)}
 }
-.m-emoji { font-size: 60px; display: block; margin-bottom: 6px; }
-.m-name { font-family: 'Kaisei Decol', serif; font-size: 16px; color: #ff9f43; margin-bottom: 10px; }
-.hp-bar-track { background: #1c1c2a; border-radius: 8px; height: 12px; overflow: hidden; }
-.hp-bar-fill {
-  height: 100%;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #ff4444, #ff9f43);
-  transition: width 0.5s;
+.m-emoji { font-size: 64px; display: block; margin-bottom: 6px; position: relative; z-index: 2; }
+.m-name { font-family: 'Kaisei Decol', serif; font-size: 15px; color: #ff9f43; margin-bottom: 10px; position: relative; z-index: 2; }
+.hp-bar-track { background: #1c1c2a; border-radius: 8px; height: 12px; overflow: hidden; position: relative; z-index: 2; }
+.hp-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #ff4444, #ff9f43); transition: width 0.5s; }
+.hp-label { font-size: 11px; color: var(--sub); text-align: right; margin-top: 4px; position: relative; z-index: 2; }
+.dmg-float {
+  position: absolute; top: 10px; right: 18px;
+  font-family: 'Kaisei Decol', serif; font-size: 24px; font-weight: 700;
+  color: #ff6b35; z-index: 10; pointer-events: none;
+  animation: dmgPop 0.8s forwards;
 }
-.hp-label { font-size: 11px; color: var(--sub); text-align: right; margin-top: 4px; }
+@keyframes dmgPop {
+  0%{opacity:1;transform:translateY(0) scale(1.2)}
+  60%{opacity:1;transform:translateY(-30px) scale(1)}
+  100%{opacity:0;transform:translateY(-50px) scale(0.8)}
+}
+
+/* ── Boss aura BG effects ── */
+.monster-area::before {
+  content: ''; position: absolute; inset: 0;
+  opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 0;
+}
+/* 玄武 */
+.boss-genbu { border-color: rgba(0,200,80,0.5) !important; }
+.boss-genbu::before {
+  background: radial-gradient(ellipse at 50% 100%, rgba(0,180,60,0.25) 0%, transparent 70%);
+  opacity: 1;
+  animation: genbuPulse 2.5s ease-in-out infinite;
+}
+@keyframes genbuPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+.boss-genbu .m-name { color: #44ff88; }
+/* 白虎 */
+.boss-byakko { border-color: rgba(200,220,255,0.5) !important; }
+.boss-byakko::before {
+  background: radial-gradient(ellipse at 50% 50%, rgba(180,210,255,0.15) 0%, transparent 70%);
+  opacity: 1;
+}
+.boss-byakko .m-name { color: #c8dcff; }
+.lightning-bolt {
+  position: absolute; top: 4px; font-size: 18px; z-index: 1;
+  animation: lightningFlash 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.lb1 { left: 10%; animation-delay: 0s; }
+.lb2 { left: 80%; animation-delay: 0.6s; }
+.lb3 { left: 45%; top: 8px; animation-delay: 1.1s; }
+@keyframes lightningFlash { 0%,100%{opacity:0} 8%{opacity:1} 16%{opacity:0} }
+/* 青龍 */
+.boss-seiryu { border-color: rgba(0,180,255,0.5) !important; }
+.boss-seiryu::before {
+  background: radial-gradient(ellipse at 30% 80%, rgba(0,180,255,0.2) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(0,120,200,0.15) 0%, transparent 50%);
+  opacity: 1; animation: seiryuWave 3s ease-in-out infinite;
+}
+@keyframes seiryuWave { 0%,100%{opacity:0.7;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.04)} }
+.boss-seiryu .m-name { color: #00d4ff; }
+/* 朱雀 */
+.boss-suzaku { border-color: rgba(255,100,20,0.6) !important; }
+.boss-suzaku::before {
+  background: radial-gradient(ellipse at 50% 110%, rgba(255,80,0,0.35) 0%, rgba(255,180,0,0.1) 40%, transparent 70%);
+  opacity: 1; animation: suzakuFlame 1.2s ease-in-out infinite alternate;
+}
+@keyframes suzakuFlame { 0%{opacity:0.7;transform:scaleY(1)} 100%{opacity:1;transform:scaleY(1.08)} }
+.boss-suzaku .m-name { color: #ff7722; }
+.flame-particle {
+  position: absolute; bottom: 0; font-size: 14px; z-index: 1;
+  pointer-events: none; animation: flameFly 1.6s ease-in infinite;
+}
+.fp1 { left: 15%; animation-delay: 0s; }
+.fp2 { left: 40%; animation-delay: 0.4s; }
+.fp3 { left: 65%; animation-delay: 0.8s; }
+.fp4 { left: 85%; animation-delay: 1.2s; }
+@keyframes flameFly {
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-50px) scale(0.5)}
+}
+
+/* ══ FEEDBACK & QUESTION ══ */
 .answer-feedback {
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 10px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
 }
-.answer-feedback.correct { background: rgba(68,221,136,0.15); color: var(--green); border: 1px solid rgba(68,221,136,0.4); }
-.answer-feedback.wrong { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid rgba(255,68,68,0.4); }
+.answer-feedback.correct { background: rgba(68,221,136,0.12); color: var(--green); border: 1px solid rgba(68,221,136,0.4); }
+.answer-feedback.wrong { background: rgba(255,68,68,0.12); color: var(--red); border: 1px solid rgba(255,68,68,0.4); }
 .fb-icon { font-size: 20px; flex-shrink: 0; }
+.fb-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
 .q-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px;
 }
 .q-cat { font-size: 11px; color: var(--sub); margin-bottom: 8px; }
-.q-text {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 2.1;
-  color: var(--text);
+.q-chance-tag {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  color: #ffd700; background: rgba(255,215,0,0.12);
+  border: 1px solid rgba(255,215,0,0.4); padding: 2px 10px;
+  border-radius: 20px; margin-left: 8px;
 }
+.q-text { font-size: 15px; font-weight: 700; line-height: 2.2; color: var(--text); }
 .q-blank {
-  display: inline-block;
-  min-width: 48px;
-  height: 32px;
-  line-height: 30px;
-  border: 2px dashed rgba(255,215,0,0.6);
-  border-radius: 8px;
-  color: var(--gold);
-  text-align: center;
-  font-size: 16px;
-  font-weight: 900;
-  background: rgba(255,215,0,0.07);
-  padding: 0 6px;
-}
-.q-hint {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #b8900a;
-  background: rgba(255,215,0,0.09);
-  border: 1px solid rgba(255,215,0,0.2);
-  border-radius: 8px;
-  padding: 8px 12px;
-  line-height: 1.6;
+  display: inline-block; min-width: 52px; height: 34px; line-height: 32px;
+  border: 2px dashed rgba(255,215,0,0.6); border-radius: 8px;
+  color: var(--gold); text-align: center; font-size: 17px; font-weight: 900;
+  background: rgba(255,215,0,0.07); padding: 0 6px;
 }
 .hint-btn {
-  background: transparent;
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 8px;
-  color: rgba(255,215,0,0.7);
-  font-size: 11px;
-  padding: 4px 10px;
-  cursor: pointer;
-  margin-top: 10px;
-  font-family: 'Noto Sans JP', sans-serif;
-  display: block;
+  background: transparent; border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 8px; color: rgba(255,215,0,0.7); font-size: 11px;
+  padding: 4px 12px; cursor: pointer; margin-top: 10px;
+  font-family: 'Noto Sans JP', sans-serif; display: block;
 }
+.q-hint {
+  margin-top: 10px; font-size: 12px; color: #b8900a;
+  background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 8px; padding: 8px 12px; line-height: 1.7;
+}
+.q-steps { margin-top: 8px; }
+.q-steps li { font-size: 12px; color: var(--sub); margin-left: 16px; line-height: 1.8; }
 
-/* Fixed input bar */
+/* ══ BATTLE BAR ══ */
 .battle-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 420px;
-  background: #0d0d1a;
-  border-top: 1px solid var(--border);
-  padding: 10px 14px 14px;
-  z-index: 100;
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 440px;
+  background: #0d0d1a; border-top: 1px solid var(--border);
+  padding: 8px 12px 14px; z-index: 100;
 }
 .input-disp {
-  width: 100%;
-  height: 44px;
-  background: var(--card);
-  border: 2px solid rgba(255,215,0,0.35);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-family: 'Kaisei Decol', serif;
-  font-weight: 700;
-  color: var(--gold);
-  margin-bottom: 8px;
-  letter-spacing: 1px;
+  width: 100%; height: 44px;
+  background: var(--card); border: 2px solid rgba(255,215,0,0.35);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-family: 'Kaisei Decol', serif; font-weight: 700;
+  color: var(--gold); margin-bottom: 7px; letter-spacing: 1px;
 }
 .input-disp.empty { color: rgba(255,215,0,0.3); }
-.numpad {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-}
+.numpad { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
 .numpad button {
-  padding: 9px 4px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Kaisei Decol', serif;
-  transition: all 0.1s;
+  padding: 9px 4px; border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--card); color: var(--text); font-size: 17px; font-weight: 700;
+  cursor: pointer; font-family: 'Kaisei Decol', serif; transition: all 0.1s;
   touch-action: manipulation;
 }
-.numpad button:active { background: rgba(255,215,0,0.2); border-color: var(--gold); transform: scale(0.93); }
-.numpad .np-attack {
+.numpad button:active { background: rgba(255,215,0,0.18); border-color: var(--gold); transform: scale(0.93); }
+.np-attack {
   grid-column: span 2;
-  background: linear-gradient(135deg, #ff6b35, #ff4444);
-  border-color: #ff6b35;
-  color: #fff;
-  font-size: 15px;
+  background: linear-gradient(135deg, #ff6b35, #ff4444) !important;
+  border-color: #ff6b35 !important; color: #fff !important; font-size: 15px !important;
 }
-.numpad .np-attack:disabled { opacity: 0.35; cursor: default; }
-.numpad .np-attack:active:not(:disabled) { background: linear-gradient(135deg, #ff4444, #cc2222); transform: scale(0.95); }
-
-/* Flash overlay */
-#flashOverlay {
-  position: fixed;
-  inset: 0;
-  background: #550000;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 999;
-  transition: opacity 0.12s;
-}
+.np-attack:disabled { opacity: 0.35; cursor: default !important; }
+.np-attack:active:not(:disabled) { background: linear-gradient(135deg,#ff4444,#cc2222) !important; transform: scale(0.95); }
 
 /* ══ RESULT ══ */
 #resultScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 24px;
-  text-align: center;
-  max-width: 420px;
-  margin: 0 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px;
+  text-align: center; max-width: 440px; margin: 0 auto;
 }
-.res-big { font-size: 76px; margin-bottom: 16px; }
-.res-title { font-family: 'Kaisei Decol', serif; font-size: 30px; margin-bottom: 10px; }
+.res-big { font-size: 72px; margin-bottom: 14px; }
+.res-title { font-family: 'Kaisei Decol', serif; font-size: 28px; margin-bottom: 8px; }
 .res-title.win { color: var(--gold); }
 .res-title.lose { color: var(--red); }
-.res-msg { font-size: 14px; color: var(--sub); margin-bottom: 28px; line-height: 1.8; white-space: pre-line; }
+.res-msg { font-size: 14px; color: var(--sub); margin-bottom: 20px; line-height: 1.9; white-space: pre-line; }
+.res-exp-box {
+  background: rgba(215,160,255,0.1); border: 1px solid rgba(215,160,255,0.3);
+  border-radius: 14px; padding: 14px 24px; margin-bottom: 16px;
+  min-width: 220px; text-align: center;
+}
+.reb-label { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 8px; }
+.reb-val { font-family: 'Kaisei Decol', serif; font-size: 26px; color: var(--purple); }
+.reb-lv { font-size: 13px; color: var(--sub); margin-top: 4px; }
+.reb-lv b { color: var(--purple); }
 .weapon-box {
-  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,159,67,0.08));
-  border: 1px solid rgba(255,215,0,0.4);
-  border-radius: 16px;
-  padding: 20px 32px;
-  margin-bottom: 28px;
-  text-align: center;
+  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,159,67,0.07));
+  border: 1px solid rgba(255,215,0,0.4); border-radius: 16px;
+  padding: 16px 32px; margin-bottom: 20px; text-align: center;
 }
-.wb-label { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 8px; }
-.wb-emoji { font-size: 52px; margin-bottom: 8px; }
-.wb-name { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--gold); }
-.res-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
-.btn-map-res, .btn-retry-res {
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  font-family: 'Kaisei Decol', serif;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 1px;
+.wb-label { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 6px; }
+.wb-emoji { font-size: 48px; margin-bottom: 6px; }
+.wb-name { font-family: 'Kaisei Decol', serif; font-size: 20px; color: var(--gold); }
+.wb-lv { font-size: 12px; color: var(--sub); margin-top: 4px; }
+.res-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 4px; }
+.btn-primary-res, .btn-red-res {
+  padding: 14px; border: none; border-radius: 12px;
+  font-family: 'Kaisei Decol', serif; font-size: 17px; font-weight: 700;
+  cursor: pointer; letter-spacing: 1px;
 }
-.btn-map-res { background: linear-gradient(135deg, #ffd700, #ff9f43); color: #1a1000; }
-.btn-retry-res { background: linear-gradient(135deg, #ff4444, #cc2222); color: #fff; }
+.btn-primary-res { background: linear-gradient(135deg, #ffd700, #ff9f43); color: #1a1000; }
+.btn-red-res { background: linear-gradient(135deg, #ff4444, #cc2222); color: #fff; }
 .btn-sub-res {
-  padding: 12px;
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--sub);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  cursor: pointer;
+  padding: 12px; border: 1.5px solid var(--border); border-radius: 12px;
+  background: transparent; color: var(--sub);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer;
 }
 
 /* ══ ENDING ══ */
 #endingScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 24px;
-  text-align: center;
-  max-width: 420px;
-  margin: 0 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px;
+  text-align: center; max-width: 440px; margin: 0 auto;
   background: radial-gradient(ellipse at 50% 30%, #2a2000 0%, #0a0a12 70%);
 }
-.end-icon { font-size: 64px; margin-bottom: 16px; animation: floatAnim 2s ease-in-out infinite; }
-.end-title { font-family: 'Kaisei Decol', serif; font-size: 30px; color: var(--gold); margin-bottom: 10px; }
-.end-msg { font-size: 14px; color: var(--sub); margin-bottom: 32px; line-height: 1.8; }
-.end-weapons { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 36px; }
+.end-icon { font-size: 64px; margin-bottom: 14px; animation: floatAnim 2s ease-in-out infinite; }
+.end-title { font-family: 'Kaisei Decol', serif; font-size: 30px; color: var(--gold); margin-bottom: 8px; }
+.end-msg { font-size: 14px; color: var(--sub); margin-bottom: 28px; line-height: 1.8; }
+.end-weapons { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 32px; }
 .ew-item { text-align: center; }
-.ew-emoji { font-size: 40px; }
+.ew-emoji { font-size: 38px; }
 .ew-name { font-size: 11px; color: var(--gold); margin-top: 6px; }
-.btn-reset {
-  padding: 14px 44px;
-  border: none;
-  border-radius: 50px;
-  background: linear-gradient(135deg, #ffd700, #ff9f43);
-  color: #1a1000;
-  font-family: 'Kaisei Decol', serif;
-  font-size: 19px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(255,215,0,0.4);
-  margin-bottom: 14px;
-}
-.btn-end-home {
-  display: block;
-  padding: 12px 36px;
-  border: 1.5px solid var(--border);
-  border-radius: 50px;
-  background: transparent;
-  color: var(--sub);
-  font-size: 13px;
-  cursor: pointer;
-  text-decoration: none;
-  font-family: 'Noto Sans JP', sans-serif;
+
+/* ══ FLASH OVERLAY ══ */
+#flashOverlay {
+  position: fixed; inset: 0; background: #550000;
+  opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.12s;
 }
 </style>
 </head>
 <body>
 
-<!-- flash overlay for damage -->
 <div id="flashOverlay"></div>
 
 <!-- ══ TITLE ══ -->
@@ -429,42 +459,89 @@ body {
   <div class="title-castle">🏰</div>
   <div class="title-main">算数の塔</div>
   <div class="title-sub">問題を解いて塔を攻略せよ！</div>
-  <button class="btn-start" onclick="goToMap()">冒険をはじめる</button>
+  <div class="title-status" id="titleStatus">
+    <div class="ts-item">
+      <div class="ts-label">LEVEL</div>
+      <div class="ts-val lv" id="tsLv">1</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-label">ATTACK</div>
+      <div class="ts-val" id="tsAtk">2</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-label">FLOORS</div>
+      <div class="ts-val" id="tsFloors">0/4</div>
+    </div>
+  </div>
+  <button class="btn-gold" onclick="goToMap()">冒険をはじめる</button>
   <div class="title-weapons" id="titleWeapons"></div>
 </div>
 
 <!-- ══ MAP ══ -->
 <div id="mapScreen" class="hidden">
-  <div style="max-width:420px;margin:0 auto;padding:24px 20px 48px">
+  <div class="screen-wrap">
     <div class="map-header">
       <div class="map-title">🏰 算数の塔</div>
       <div class="map-sub">挑戦するフロアを選ぼう</div>
+    </div>
+    <div class="player-card">
+      <div class="pc-lv"><span>LV</span><span id="pcLvNum">1</span></div>
+      <div class="pc-right">
+        <div class="pc-exp-label" id="pcExpLabel">EXP 0 / 50</div>
+        <div class="pc-exp-track"><div class="pc-exp-fill" id="pcExpFill" style="width:0%"></div></div>
+        <div class="pc-atk">基本攻撃力 <b id="pcAtk">2</b>　通常攻撃 <b id="pcTotalAtk">2</b></div>
+      </div>
     </div>
     <div class="floor-list" id="floorList"></div>
     <div class="map-weapons-box" id="mapWeaponsBox">
       <div class="mw-title">WEAPONS</div>
       <div class="mw-row" id="mwRow"></div>
     </div>
-    <a class="btn-back-index" href="index.html">← QUIZ HUB に戻る</a>
+    <a class="btn-outline" href="index.html" style="width:100%;margin-top:4px;">← QUIZ HUB に戻る</a>
   </div>
+</div>
+
+<!-- ══ MODE SELECT ══ -->
+<div id="modeScreen" class="hidden">
+  <div class="mode-floor-tag" id="modeFloorTag">1F</div>
+  <div class="mode-monster" id="modeMonster">🟢</div>
+  <div class="mode-title" id="modeMonsterName">ぬめりスライム</div>
+  <div class="mode-hp" id="modeMonsterHp">HP 20 ／ 問題 6問</div>
+  <div class="mode-cards">
+    <div class="mode-card mode-normal" onclick="startBattle(false)">
+      <div class="mc-icon">🛡️</div>
+      <div class="mc-name">通常バトル</div>
+      <div class="mc-desc">制限時間なし。じっくり問題に取り組もう。<br>モンスターを倒すたびに経験値がたまる。</div>
+      <span class="mc-tag">時間制限なし</span>
+    </div>
+    <div class="mode-card mode-challenge" id="challengeCard" onclick="startBattle(true)">
+      <div class="mc-icon">⚔️</div>
+      <div class="mc-name">フロアマスターに挑戦</div>
+      <div class="mc-desc" id="challengeDesc">制限時間2分以内にフロアマスターを倒そう！<br>クリアでフロアを解放できる。</div>
+      <span class="mc-tag">2分以内クリア</span>
+    </div>
+  </div>
+  <button class="btn-outline" onclick="goToMap()">← マップに戻る</button>
 </div>
 
 <!-- ══ BATTLE ══ -->
 <div id="battleScreen" class="hidden">
   <div class="b-header">
     <span class="b-floor-tag" id="bFloorTag">1F</span>
-    <span class="b-q-count" id="bQCount">1 / 6</span>
+    <span class="b-mode-tag normal" id="bModeTag">通常</span>
+    <span class="b-timer hidden" id="bTimer">2:00</span>
+    <span class="b-combo hidden" id="bCombo">COMBO x2</span>
   </div>
-
-  <div class="player-hp" id="playerHpRow">
-    <span class="php-label">勇者HP</span>
+  <div class="b-stats">
+    <span class="b-lv" id="bLv">Lv.1</span>
+    <span class="b-atk" id="bAtk">⚔️ ATK 2</span>
   </div>
 
   <div class="monster-area" id="monsterArea">
     <span class="m-emoji" id="mEmoji">🟢</span>
     <div class="m-name" id="mName">ぬめりスライム</div>
     <div class="hp-bar-track"><div class="hp-bar-fill" id="mHpBar" style="width:100%"></div></div>
-    <div class="hp-label" id="mHpLabel">HP: 3 / 3</div>
+    <div class="hp-label" id="mHpLabel">HP 20 / 20</div>
   </div>
 
   <div id="feedbackArea"></div>
@@ -474,6 +551,7 @@ body {
     <div class="q-text" id="qText"></div>
     <button class="hint-btn hidden" id="hintBtn" onclick="toggleHint()">💡 ヒントを見る</button>
     <div class="q-hint hidden" id="hintText"></div>
+    <div class="q-steps hidden" id="qSteps"></div>
   </div>
 
   <div class="battle-bar">
@@ -500,17 +578,24 @@ body {
 <!-- ══ RESULT ══ -->
 <div id="resultScreen" class="hidden">
   <div class="res-big" id="resBig">🎉</div>
-  <div class="res-title" id="resTitle">クリア！</div>
+  <div class="res-title" id="resTitle">モンスター撃破！</div>
   <div class="res-msg" id="resMsg"></div>
+  <div class="res-exp-box hidden" id="resExpBox">
+    <div class="reb-label">EXP 獲得</div>
+    <div class="reb-val" id="rebVal">+25</div>
+    <div class="reb-lv" id="rebLv"></div>
+  </div>
   <div class="weapon-box hidden" id="weaponBox">
-    <div class="wb-label">武器を獲得！</div>
+    <div class="wb-label" id="wbLabel">武器レベルアップ！</div>
     <div class="wb-emoji" id="wbEmoji"></div>
     <div class="wb-name" id="wbName"></div>
+    <div class="wb-lv" id="wbLv"></div>
   </div>
   <div class="res-btns">
-    <button class="btn-map-res hidden" id="btnMapRes" onclick="goToMap()">マップに戻る</button>
-    <button class="btn-retry-res hidden" id="btnRetryRes" onclick="retryFloor()">もう一度挑戦</button>
-    <button class="btn-sub-res" onclick="goToMap()">マップに戻る</button>
+    <button class="btn-primary-res hidden" id="btnContinue" onclick="continueNormal()">▶ 次のバトルへ</button>
+    <button class="btn-primary-res hidden" id="btnMapRes" onclick="goToMap()">マップに戻る</button>
+    <button class="btn-red-res hidden" id="btnRetryRes" onclick="retryBattle()">もう一度挑戦</button>
+    <button class="btn-sub-res hidden" id="btnSubMap" onclick="goToMap()">マップに戻る</button>
   </div>
 </div>
 
@@ -518,281 +603,688 @@ body {
 <div id="endingScreen" class="hidden">
   <div class="end-icon">👑</div>
   <div class="end-title">塔を制覇した！</div>
-  <div class="end-msg">全4フロアをクリアした！<br>君は真の算数マスターだ！</div>
+  <div class="end-msg">全4フロアの四神を打ち破り、<br>君は真の算数マスターとなった！</div>
   <div class="end-weapons" id="endWeapons"></div>
-  <button class="btn-reset" onclick="resetAll()">最初からはじめる</button>
-  <a class="btn-end-home" href="index.html">← QUIZ HUB に戻る</a>
+  <button class="btn-gold" onclick="resetAll()" style="margin-bottom:14px;">最初からはじめる</button>
+  <a class="btn-outline" href="index.html">← QUIZ HUB に戻る</a>
 </div>
 
 <script>
 // ══════════════════════════════════════════
-//  フロア & 問題データ
+//  定数
+// ══════════════════════════════════════════
+const EXP_TABLE  = [0, 50, 130, 240, 380, 550, 750, 980, 1240, 1530]; // Lv1〜10 の必要累計EXP
+const BASE_ATK   = [2,  3,   4,   5,   7,   9,  11,  14,   17,   20]; // Lv1〜10 の基本攻撃力
+const MAX_LV = 10;
+
+// EXP
+const EXP_CORRECT  = 5;   // 正解
+const EXP_KILL     = 25;  // モンスター撃破
+const EXP_BOSS     = 80;  // ボス撃破
+const EXP_CHANCE   = 15;  // チャンス問題正解
+
+// 制限時間 (秒)
+const CHALLENGE_TIME = 120;
+
+// ══════════════════════════════════════════
+//  フロアデータ
 // ══════════════════════════════════════════
 const FLOORS = [
   {
-    floor: 1, monsterName: "ぬめりスライム", monsterEmoji: "🟢",
-    monsterMaxHP: 3, weapon: "木の剣", weaponEmoji: "🗡️",
+    floor: 1,
+    monsterName: "ぬめりスライム", monsterEmoji: "🟢", monsterHP: 20,
+    bossName: "玄武", bossEmoji: "🐢", bossHP: 40, bossCls: "boss-genbu", bossTitle: "四神・玄武",
+    bossLightning: false, bossFlame: false,
+    weapon: "木の剣", weaponEmoji: "🗡️", weaponBonus: [2, 4, 7],
     questions: [
       { cat:"整数・計算",  template:"23 × 47 = □",
         answer:1081, hint:"20×47 と 3×47 に分けて計算しよう",
         steps:["20 × 47 = 940","3 × 47 = 141","940 + 141 = 1081"] },
+      { cat:"整数・計算",  template:"34 × 56 = □",
+        answer:1904, hint:"30×56 と 4×56 に分けて計算しよう",
+        steps:["30 × 56 = 1680","4 × 56 = 224","1680 + 224 = 1904"] },
+      { cat:"整数・計算",  template:"45 × 38 = □",
+        answer:1710, hint:"40×38 と 5×38 に分けて計算しよう",
+        steps:["40 × 38 = 1520","5 × 38 = 190","1520 + 190 = 1710"] },
+      { cat:"整数・計算",  template:"62 × 35 = □",
+        answer:2170, hint:"60×35 と 2×35 に分けて計算しよう",
+        steps:["60 × 35 = 2100","2 × 35 = 70","2100 + 70 = 2170"] },
+      { cat:"整数・計算",  template:"27 × 43 = □",
+        answer:1161, hint:"20×43 と 7×43 に分けて計算しよう",
+        steps:["20 × 43 = 860","7 × 43 = 301","860 + 301 = 1161"] },
       { cat:"約数・倍数",  template:"36 の約数の個数 = □",
         answer:9, hint:"36 = 2² × 3² と素因数分解しよう",
         steps:["36 = 2² × 3²","約数の個数 = (2+1)×(2+1) = 9"] },
+      { cat:"約数・倍数",  template:"24 の約数の個数 = □",
+        answer:8, hint:"24 = 2³ × 3 と素因数分解しよう",
+        steps:["24 = 2³ × 3","約数の個数 = (3+1)×(1+1) = 8"] },
+      { cat:"約数・倍数",  template:"48 の約数の個数 = □",
+        answer:10, hint:"48 = 2⁴ × 3 と素因数分解しよう",
+        steps:["48 = 2⁴ × 3","約数の個数 = (4+1)×(1+1) = 10"] },
+      { cat:"約数・倍数",  template:"100 の約数の個数 = □",
+        answer:9, hint:"100 = 2² × 5² と素因数分解しよう",
+        steps:["100 = 2² × 5²","約数の個数 = (2+1)×(2+1) = 9"] },
+      { cat:"約数・倍数",  template:"60 の約数の個数 = □",
+        answer:12, hint:"60 = 2² × 3 × 5 と素因数分解しよう",
+        steps:["60 = 2² × 3 × 5","約数の個数 = (2+1)×(1+1)×(1+1) = 12"] },
       { cat:"割合・比",    template:"A : B = 3 : 5 で A = 24 のとき B = □",
         answer:40, hint:"3単位 = 24 → 1単位 = 8",
         steps:["A = 24 → 3単位 = 24","1単位 = 8","B = 5 × 8 = 40"] },
+      { cat:"割合・比",    template:"A : B = 2 : 7 で A = 16 のとき B = □",
+        answer:56, hint:"2単位 = 16 → 1単位 = 8",
+        steps:["A = 16 → 2単位 = 16","1単位 = 8","B = 7 × 8 = 56"] },
+      { cat:"割合・比",    template:"A : B = 4 : 3 で A = 36 のとき B = □",
+        answer:27, hint:"4単位 = 36 → 1単位 = 9",
+        steps:["A = 36 → 4単位 = 36","1単位 = 9","B = 3 × 9 = 27"] },
+      { cat:"割合・比",    template:"A : B = 5 : 8 で A = 30 のとき B = □",
+        answer:48, hint:"5単位 = 30 → 1単位 = 6",
+        steps:["A = 30 → 5単位 = 30","1単位 = 6","B = 8 × 6 = 48"] },
+      { cat:"割合・比",    template:"A : B = 3 : 7 で A = 21 のとき B = □",
+        answer:49, hint:"3単位 = 21 → 1単位 = 7",
+        steps:["A = 21 → 3単位 = 21","1単位 = 7","B = 7 × 7 = 49"] },
       { cat:"速さ",        template:"時速 60km で 2時間30分走った道のり = □ km",
         answer:150, hint:"2時間30分 = 2.5時間",
         steps:["2時間30分 = 2.5時間","60 × 2.5 = 150 km"] },
+      { cat:"速さ",        template:"時速 80km で 1時間30分走った道のり = □ km",
+        answer:120, hint:"1時間30分 = 1.5時間",
+        steps:["1時間30分 = 1.5時間","80 × 1.5 = 120 km"] },
+      { cat:"速さ",        template:"時速 90km で 2時間20分走った道のり = □ km",
+        answer:210, hint:"2時間で 180km、残り 20分 = 1/3時間",
+        steps:["2時間で 90 × 2 = 180 km","20分 = 1/3時間 → 90 × 1/3 = 30 km","180 + 30 = 210 km"] },
+      { cat:"速さ",        template:"時速 72km で 2時間30分走った道のり = □ km",
+        answer:180, hint:"2時間30分 = 2.5時間",
+        steps:["2時間30分 = 2.5時間","72 × 2.5 = 180 km"] },
+      { cat:"速さ",        template:"時速 54km で 1時間40分走った道のり = □ km",
+        answer:90, hint:"1時間で 54km、残り 40分 = 2/3時間",
+        steps:["1時間で 54 km","40分 = 2/3時間 → 54 × 2/3 = 36 km","54 + 36 = 90 km"] },
       { cat:"面積・図形",  template:"底辺 8cm、高さ 5cm の\n三角形の面積 = □ cm²",
         answer:20, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
         steps:["8 × 5 ÷ 2 = 20 cm²"] },
+      { cat:"面積・図形",  template:"底辺 12cm、高さ 7cm の\n三角形の面積 = □ cm²",
+        answer:42, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+        steps:["12 × 7 ÷ 2 = 42 cm²"] },
+      { cat:"面積・図形",  template:"底辺 10cm、高さ 8cm の\n三角形の面積 = □ cm²",
+        answer:40, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+        steps:["10 × 8 ÷ 2 = 40 cm²"] },
+      { cat:"面積・図形",  template:"底辺 14cm、高さ 5cm の\n三角形の面積 = □ cm²",
+        answer:35, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+        steps:["14 × 5 ÷ 2 = 35 cm²"] },
+      { cat:"面積・図形",  template:"底辺 9cm、高さ 6cm の\n三角形の面積 = □ cm²",
+        answer:27, hint:"三角形の面積 = 底辺 × 高さ ÷ 2",
+        steps:["9 × 6 ÷ 2 = 27 cm²"] },
       { cat:"規則性・数列", template:"等差数列 3, 7, 11, 15, … の第20項 = □",
         answer:79, hint:"第n項 = 初項 + 公差 × (n−1)",
-        steps:["初項=3、公差=4","第20項 = 3 + 4 × 19 = 79"] }
+        steps:["初項=3、公差=4","第20項 = 3 + 4 × 19 = 79"] },
+      { cat:"規則性・数列", template:"等差数列 5, 8, 11, 14, … の第15項 = □",
+        answer:47, hint:"第n項 = 初項 + 公差 × (n−1)",
+        steps:["初項=5、公差=3","第15項 = 5 + 3 × 14 = 47"] },
+      { cat:"規則性・数列", template:"等差数列 2, 8, 14, 20, … の第12項 = □",
+        answer:68, hint:"第n項 = 初項 + 公差 × (n−1)",
+        steps:["初項=2、公差=6","第12項 = 2 + 6 × 11 = 68"] },
+      { cat:"規則性・数列", template:"等差数列 4, 9, 14, 19, … の第18項 = □",
+        answer:89, hint:"第n項 = 初項 + 公差 × (n−1)",
+        steps:["初項=4、公差=5","第18項 = 4 + 5 × 17 = 89"] },
+      { cat:"規則性・数列", template:"等差数列 7, 9, 11, 13, … の第25項 = □",
+        answer:55, hint:"第n項 = 初項 + 公差 × (n−1)",
+        steps:["初項=7、公差=2","第25項 = 7 + 2 × 24 = 55"] }
     ]
   },
   {
-    floor: 2, monsterName: "もりのおおかみ", monsterEmoji: "🐺",
-    monsterMaxHP: 4, weapon: "鉄の剣", weaponEmoji: "⚔️",
+    floor: 2,
+    monsterName: "もりのおおかみ", monsterEmoji: "🐺", monsterHP: 30,
+    bossName: "白虎", bossEmoji: "🐅", bossHP: 60, bossCls: "boss-byakko", bossTitle: "四神・白虎",
+    bossLightning: true, bossFlame: false,
+    weapon: "鉄の剣", weaponEmoji: "⚔️", weaponBonus: [4, 7, 11],
     questions: [
       { cat:"整数・計算",  template:"1から100までの整数の和 = □",
         answer:5050, hint:"(1+100)×100÷2（ガウスの方法）",
         steps:["= 101 × 50 = 5050"] },
+      { cat:"整数・計算",  template:"1から50までの整数の和 = □",
+        answer:1275, hint:"(1+50)×50÷2（ガウスの方法）",
+        steps:["= 51 × 25 = 1275"] },
+      { cat:"整数・計算",  template:"1から80までの整数の和 = □",
+        answer:3240, hint:"(1+80)×80÷2（ガウスの方法）",
+        steps:["= 81 × 40 = 3240"] },
+      { cat:"整数・計算",  template:"1から120までの整数の和 = □",
+        answer:7260, hint:"(1+120)×120÷2（ガウスの方法）",
+        steps:["= 121 × 60 = 7260"] },
+      { cat:"整数・計算",  template:"1から200までの整数の和 = □",
+        answer:20100, hint:"(1+200)×200÷2（ガウスの方法）",
+        steps:["= 201 × 100 = 20100"] },
       { cat:"約数・倍数",  template:"最大公約数（72, 120）= □",
         answer:24, hint:"72 = 2³×3²、120 = 2³×3×5 に分解しよう",
         steps:["72 = 2³×3²、120 = 2³×3×5","GCD = 2³×3 = 24"] },
+      { cat:"約数・倍数",  template:"最大公約数（48, 84）= □",
+        answer:12, hint:"48 = 2⁴×3、84 = 2²×3×7 に分解しよう",
+        steps:["48 = 2⁴×3、84 = 2²×3×7","GCD = 2²×3 = 12"] },
+      { cat:"約数・倍数",  template:"最大公約数（60, 90）= □",
+        answer:30, hint:"60 = 2²×3×5、90 = 2×3²×5 に分解しよう",
+        steps:["60 = 2²×3×5、90 = 2×3²×5","GCD = 2×3×5 = 30"] },
+      { cat:"約数・倍数",  template:"最大公約数（84, 126）= □",
+        answer:42, hint:"84 = 2²×3×7、126 = 2×3²×7 に分解しよう",
+        steps:["84 = 2²×3×7、126 = 2×3²×7","GCD = 2×3×7 = 42"] },
+      { cat:"約数・倍数",  template:"最大公約数（100, 150）= □",
+        answer:50, hint:"100 = 2²×5²、150 = 2×3×5² に分解しよう",
+        steps:["100 = 2²×5²、150 = 2×3×5²","GCD = 2×5² = 50"] },
       { cat:"割合・比",    template:"20% の利益を見込んで定価をつけた。\n定価が 4800 円のとき原価 = □ 円",
         answer:4000, hint:"原価 × 1.2 = 定価",
         steps:["原価 × 1.2 = 4800","原価 = 4800 ÷ 1.2 = 4000 円"] },
+      { cat:"割合・比",    template:"25% の利益を見込んで定価をつけた。\n定価が 3750 円のとき原価 = □ 円",
+        answer:3000, hint:"原価 × 1.25 = 定価",
+        steps:["原価 × 1.25 = 3750","原価 = 3750 ÷ 1.25 = 3000 円"] },
+      { cat:"割合・比",    template:"30% の利益を見込んで定価をつけた。\n定価が 5460 円のとき原価 = □ 円",
+        answer:4200, hint:"原価 × 1.3 = 定価",
+        steps:["原価 × 1.3 = 5460","原価 = 5460 ÷ 1.3 = 4200 円"] },
+      { cat:"割合・比",    template:"40% の利益を見込んで定価をつけた。\n定価が 2800 円のとき原価 = □ 円",
+        answer:2000, hint:"原価 × 1.4 = 定価",
+        steps:["原価 × 1.4 = 2800","原価 = 2800 ÷ 1.4 = 2000 円"] },
+      { cat:"割合・比",    template:"15% の利益を見込んで定価をつけた。\n定価が 3680 円のとき原価 = □ 円",
+        answer:3200, hint:"原価 × 1.15 = 定価",
+        steps:["原価 × 1.15 = 3680","原価 = 3680 ÷ 1.15 = 3200 円"] },
       { cat:"速さ",        template:"600m 離れて向かい合って歩く A（分速60m）と B（分速40m）。\n何分後に出会う = □ 分後",
         answer:6, hint:"向かい合うと速さを足す",
         steps:["合速度 = 60+40 = 100 m/分","600 ÷ 100 = 6 分"] },
+      { cat:"速さ",        template:"600m 離れて向かい合って歩く A（分速50m）と B（分速70m）。\n何分後に出会う = □ 分後",
+        answer:5, hint:"向かい合うと速さを足す",
+        steps:["合速度 = 50+70 = 120 m/分","600 ÷ 120 = 5 分"] },
+      { cat:"速さ",        template:"840m 離れて向かい合って歩く A（分速60m）と B（分速60m）。\n何分後に出会う = □ 分後",
+        answer:7, hint:"向かい合うと速さを足す",
+        steps:["合速度 = 60+60 = 120 m/分","840 ÷ 120 = 7 分"] },
+      { cat:"速さ",        template:"1000m 離れて向かい合って歩く A（分速80m）と B（分速45m）。\n何分後に出会う = □ 分後",
+        answer:8, hint:"向かい合うと速さを足す",
+        steps:["合速度 = 80+45 = 125 m/分","1000 ÷ 125 = 8 分"] },
+      { cat:"速さ",        template:"1200m 離れて向かい合って歩く A（分速90m）と B（分速30m）。\n何分後に出会う = □ 分後",
+        answer:10, hint:"向かい合うと速さを足す",
+        steps:["合速度 = 90+30 = 120 m/分","1200 ÷ 120 = 10 分"] },
       { cat:"面積・図形",  template:"対角線が 8cm と 12cm の\nひし形の面積 = □ cm²",
         answer:48, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
         steps:["8 × 12 ÷ 2 = 48 cm²"] },
+      { cat:"面積・図形",  template:"対角線が 6cm と 10cm の\nひし形の面積 = □ cm²",
+        answer:30, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+        steps:["6 × 10 ÷ 2 = 30 cm²"] },
+      { cat:"面積・図形",  template:"対角線が 9cm と 14cm の\nひし形の面積 = □ cm²",
+        answer:63, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+        steps:["9 × 14 ÷ 2 = 63 cm²"] },
+      { cat:"面積・図形",  template:"対角線が 10cm と 16cm の\nひし形の面積 = □ cm²",
+        answer:80, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+        steps:["10 × 16 ÷ 2 = 80 cm²"] },
+      { cat:"面積・図形",  template:"対角線が 5cm と 20cm の\nひし形の面積 = □ cm²",
+        answer:50, hint:"ひし形の面積 = 対角線 × 対角線 ÷ 2",
+        steps:["5 × 20 ÷ 2 = 50 cm²"] },
       { cat:"規則性・数列", template:"1, 1, 2, 3, 5, 8, 13, □　次の数 = □",
         answer:21, hint:"前の2項の和が次の項（フィボナッチ数列）",
-        steps:["8 + 13 = 21"] }
+        steps:["8 + 13 = 21"] },
+      { cat:"規則性・数列", template:"2, 2, 4, 6, 10, 16, □　次の数 = □",
+        answer:26, hint:"前の2項の和が次の項",
+        steps:["10 + 16 = 26"] },
+      { cat:"規則性・数列", template:"1, 3, 4, 7, 11, 18, □　次の数 = □",
+        answer:29, hint:"前の2項の和が次の項",
+        steps:["11 + 18 = 29"] },
+      { cat:"規則性・数列", template:"3, 5, 8, 13, 21, □　次の数 = □",
+        answer:34, hint:"前の2項の和が次の項",
+        steps:["13 + 21 = 34"] },
+      { cat:"規則性・数列", template:"2, 5, 7, 12, 19, □　次の数 = □",
+        answer:31, hint:"前の2項の和が次の項",
+        steps:["12 + 19 = 31"] }
     ]
   },
   {
-    floor: 3, monsterName: "かずのドラゴン", monsterEmoji: "🐉",
-    monsterMaxHP: 4, weapon: "魔法の杖", weaponEmoji: "🔱",
+    floor: 3,
+    monsterName: "かずのドラゴン", monsterEmoji: "🐉", monsterHP: 40,
+    bossName: "青龍", bossEmoji: "🐲", bossHP: 85, bossCls: "boss-seiryu", bossTitle: "四神・青龍",
+    bossLightning: false, bossFlame: false,
+    weapon: "魔法の杖", weaponEmoji: "🔱", weaponBonus: [6, 10, 15],
     questions: [
       { cat:"整数・計算",  template:"1から50までの奇数の和 = □",
         answer:625, hint:"奇数の和は（個数）² になる",
         steps:["1〜50の奇数は25個","25² = 625"] },
+      { cat:"整数・計算",  template:"1から20までの奇数の和 = □",
+        answer:100, hint:"奇数の和は（個数）² になる",
+        steps:["1〜20の奇数は10個","10² = 100"] },
+      { cat:"整数・計算",  template:"1から30までの奇数の和 = □",
+        answer:225, hint:"奇数の和は（個数）² になる",
+        steps:["1〜30の奇数は15個","15² = 225"] },
+      { cat:"整数・計算",  template:"1から40までの奇数の和 = □",
+        answer:400, hint:"奇数の和は（個数）² になる",
+        steps:["1〜40の奇数は20個","20² = 400"] },
+      { cat:"整数・計算",  template:"1から60までの奇数の和 = □",
+        answer:900, hint:"奇数の和は（個数）² になる",
+        steps:["1〜60の奇数は30個","30² = 900"] },
       { cat:"速さ",        template:"A が B を追いかける。A は分速80m、B は分速60m。\nB が 10分先に出発。A が追いつくまで = □ 分",
         answer:30, hint:"Bのリード ÷ 速さの差",
         steps:["Bのリード = 60×10 = 600m","速さの差 = 20m/分","600÷20 = 30 分"] },
+      { cat:"速さ",        template:"A が B を追いかける。A は分速90m、B は分速70m。\nB が 10分先に出発。A が追いつくまで = □ 分",
+        answer:35, hint:"Bのリード ÷ 速さの差",
+        steps:["Bのリード = 70×10 = 700m","速さの差 = 20m/分","700÷20 = 35 分"] },
+      { cat:"速さ",        template:"A が B を追いかける。A は分速75m、B は分速60m。\nB が 8分先に出発。A が追いつくまで = □ 分",
+        answer:32, hint:"Bのリード ÷ 速さの差",
+        steps:["Bのリード = 60×8 = 480m","速さの差 = 15m/分","480÷15 = 32 分"] },
+      { cat:"速さ",        template:"A が B を追いかける。A は分速70m、B は分速55m。\nB が 6分先に出発。A が追いつくまで = □ 分",
+        answer:22, hint:"Bのリード ÷ 速さの差",
+        steps:["Bのリード = 55×6 = 330m","速さの差 = 15m/分","330÷15 = 22 分"] },
+      { cat:"速さ",        template:"A が B を追いかける。A は分速100m、B は分速75m。\nB が 8分先に出発。A が追いつくまで = □ 分",
+        answer:24, hint:"Bのリード ÷ 速さの差",
+        steps:["Bのリード = 75×8 = 600m","速さの差 = 25m/分","600÷25 = 24 分"] },
       { cat:"速さ",        template:"流れ分速20mの川で船の静水速度は分速80m。\n上流へ 1800m 進む時間 = □ 分",
         answer:30, hint:"上りは（船速 − 流速）で進む",
         steps:["上り速度 = 80−20 = 60 m/分","1800 ÷ 60 = 30 分"] },
+      { cat:"速さ",        template:"流れ分速15mの川で船の静水速度は分速65m。\n上流へ 1000m 進む時間 = □ 分",
+        answer:20, hint:"上りは（船速 − 流速）で進む",
+        steps:["上り速度 = 65−15 = 50 m/分","1000 ÷ 50 = 20 分"] },
+      { cat:"速さ",        template:"流れ分速20mの川で船の静水速度は分速70m。\n上流へ 2000m 進む時間 = □ 分",
+        answer:40, hint:"上りは（船速 − 流速）で進む",
+        steps:["上り速度 = 70−20 = 50 m/分","2000 ÷ 50 = 40 分"] },
+      { cat:"速さ",        template:"流れ分速15mの川で船の静水速度は分速60m。\n上流へ 2025m 進む時間 = □ 分",
+        answer:45, hint:"上りは（船速 − 流速）で進む",
+        steps:["上り速度 = 60−15 = 45 m/分","2025 ÷ 45 = 45 分"] },
+      { cat:"速さ",        template:"流れ分速10mの川で船の静水速度は分速85m。\n上流へ 3750m 進む時間 = □ 分",
+        answer:50, hint:"上りは（船速 − 流速）で進む",
+        steps:["上り速度 = 85−10 = 75 m/分","3750 ÷ 75 = 50 分"] },
       { cat:"面積・図形",  template:"半径10cmの半円から\n底辺20cm・高さ10cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
         answer:57, hint:"半円の面積 − 三角形の面積",
         steps:["半円 = 10×10×3.14÷2 = 157","三角形 = 20×10÷2 = 100","157 − 100 = 57 cm²"] },
+      { cat:"面積・図形",  template:"半径20cmの半円から\n底辺40cm・高さ20cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
+        answer:228, hint:"半円の面積 − 三角形の面積",
+        steps:["半円 = 20×20×3.14÷2 = 628","三角形 = 40×20÷2 = 400","628 − 400 = 228 cm²"] },
+      { cat:"面積・図形",  template:"半径30cmの半円から\n底辺60cm・高さ30cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
+        answer:513, hint:"半円の面積 − 三角形の面積",
+        steps:["半円 = 30×30×3.14÷2 = 1413","三角形 = 60×30÷2 = 900","1413 − 900 = 513 cm²"] },
+      { cat:"面積・図形",  template:"半径10cmの半円から\n底辺16cm・高さ8cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
+        answer:93, hint:"半円の面積 − 三角形の面積",
+        steps:["半円 = 10×10×3.14÷2 = 157","三角形 = 16×8÷2 = 64","157 − 64 = 93 cm²"] },
+      { cat:"面積・図形",  template:"半径10cmの半円から\n底辺12cm・高さ6cmの三角形を引いた面積 = □ cm²\n（円周率は3.14）",
+        answer:121, hint:"半円の面積 − 三角形の面積",
+        steps:["半円 = 10×10×3.14÷2 = 157","三角形 = 12×6÷2 = 36","157 − 36 = 121 cm²"] },
       { cat:"規則性・数列", template:"等比数列 2, 6, 18, 54, … の第8項 = □",
         answer:4374, hint:"第n項 = 初項 × 公比^(n−1)",
         steps:["初項=2、公比=3","第8項 = 2 × 3⁷ = 2 × 2187 = 4374"] },
+      { cat:"規則性・数列", template:"等比数列 3, 6, 12, 24, … の第8項 = □",
+        answer:384, hint:"第n項 = 初項 × 公比^(n−1)",
+        steps:["初項=3、公比=2","第8項 = 3 × 2⁷ = 3 × 128 = 384"] },
+      { cat:"規則性・数列", template:"等比数列 1, 3, 9, 27, … の第7項 = □",
+        answer:729, hint:"第n項 = 初項 × 公比^(n−1)",
+        steps:["初項=1、公比=3","第7項 = 1 × 3⁶ = 729"] },
+      { cat:"規則性・数列", template:"等比数列 2, 4, 8, 16, … の第10項 = □",
+        answer:1024, hint:"第n項 = 初項 × 公比^(n−1)",
+        steps:["初項=2、公比=2","第10項 = 2 × 2⁹ = 2 × 512 = 1024"] },
+      { cat:"規則性・数列", template:"等比数列 5, 15, 45, 135, … の第6項 = □",
+        answer:1215, hint:"第n項 = 初項 × 公比^(n−1)",
+        steps:["初項=5、公比=3","第6項 = 5 × 3⁵ = 5 × 243 = 1215"] },
       { cat:"場合の数・確率", template:"赤玉3個・白玉2個から2個取り出す。\n2個とも同じ色になる確率を\n□/10 の形で答えよ（□を答えよ）",
         answer:4, hint:"赤2個 + 白2個の組み合わせを数えよう",
-        steps:["全事象 = ₅C₂ = 10","赤2個 = ₃C₂ = 3","白2個 = ₂C₂ = 1","同色 = 4 → 確率 = 4/10"] }
+        steps:["全事象 = ₅C₂ = 10","赤2個 = ₃C₂ = 3","白2個 = ₂C₂ = 1","同色 = 4 → 確率 = 4/10"] },
+      { cat:"場合の数・確率", template:"赤玉4個・白玉2個から2個取り出す。\n2個とも同じ色になる確率を\n□/15 の形で答えよ（□を答えよ）",
+        answer:7, hint:"赤2個 + 白2個の組み合わせを数えよう",
+        steps:["全事象 = ₆C₂ = 15","赤2個 = ₄C₂ = 6","白2個 = ₂C₂ = 1","同色 = 7 → 確率 = 7/15"] },
+      { cat:"場合の数・確率", template:"赤玉3個・白玉3個から2個取り出す。\n2個とも同じ色になる確率を\n□/15 の形で答えよ（□を答えよ）",
+        answer:6, hint:"赤2個 + 白2個の組み合わせを数えよう",
+        steps:["全事象 = ₆C₂ = 15","赤2個 = ₃C₂ = 3","白2個 = ₃C₂ = 3","同色 = 6 → 確率 = 6/15"] },
+      { cat:"場合の数・確率", template:"赤玉2個・白玉2個から2個取り出す。\n2個とも同じ色になる確率を\n□/6 の形で答えよ（□を答えよ）",
+        answer:2, hint:"赤2個 + 白2個の組み合わせを数えよう",
+        steps:["全事象 = ₄C₂ = 6","赤2個 = ₂C₂ = 1","白2個 = ₂C₂ = 1","同色 = 2 → 確率 = 2/6"] },
+      { cat:"場合の数・確率", template:"赤玉4個・白玉3個から2個取り出す。\n2個とも同じ色になる確率を\n□/21 の形で答えよ（□を答えよ）",
+        answer:9, hint:"赤2個 + 白2個の組み合わせを数えよう",
+        steps:["全事象 = ₇C₂ = 21","赤2個 = ₄C₂ = 6","白2個 = ₃C₂ = 3","同色 = 9 → 確率 = 9/21"] }
     ]
   },
   {
-    floor: 4, monsterName: "ちしきの魔王", monsterEmoji: "👿",
-    monsterMaxHP: 5, weapon: "知識の剣", weaponEmoji: "💫",
+    floor: 4,
+    monsterName: "ちしきの魔王", monsterEmoji: "👿", monsterHP: 55,
+    bossName: "朱雀", bossEmoji: "🦅", bossHP: 120, bossCls: "boss-suzaku", bossTitle: "四神・朱雀",
+    bossLightning: false, bossFlame: true,
+    weapon: "知識の剣", weaponEmoji: "💫", weaponBonus: [9, 14, 20],
     questions: [
       { cat:"整数・計算",  template:"2025 を連続整数の和で表すとき\n最も多い項数 = □ 項",
         answer:45, hint:"2025 = 45²。n項の連続整数の和 = n×（中央値）",
         steps:["2025 = 45²","45項の連続整数（中央値45）の和 = 45×45 = 2025"] },
+      { cat:"整数・計算",  template:"81 を連続整数の和で表すとき\n最も多い項数 = □ 項",
+        answer:9, hint:"81 = 9²。n項の連続整数の和 = n×（中央値）",
+        steps:["81 = 9²","9項の連続整数（中央値9）の和 = 9×9 = 81"] },
+      { cat:"整数・計算",  template:"225 を連続整数の和で表すとき\n最も多い項数 = □ 項",
+        answer:15, hint:"225 = 15²。n項の連続整数の和 = n×（中央値）",
+        steps:["225 = 15²","15項の連続整数（中央値15）の和 = 15×15 = 225"] },
+      { cat:"整数・計算",  template:"441 を連続整数の和で表すとき\n最も多い項数 = □ 項",
+        answer:21, hint:"441 = 21²。n項の連続整数の和 = n×（中央値）",
+        steps:["441 = 21²","21項の連続整数（中央値21）の和 = 21×21 = 441"] },
+      { cat:"整数・計算",  template:"625 を連続整数の和で表すとき\n最も多い項数 = □ 項",
+        answer:25, hint:"625 = 25²。n項の連続整数の和 = n×（中央値）",
+        steps:["625 = 25²","25項の連続整数（中央値25）の和 = 25×25 = 625"] },
       { cat:"速さ",        template:"A は8分、B は12分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
         answer:24, hint:"速さの差を使う：1/8 − 1/12",
         steps:["速さの差 = 1/8 − 1/12 = 1/24 周/分","追い越し時間 = 1 ÷ (1/24) = 24 分"] },
+      { cat:"速さ",        template:"A は6分、B は10分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
+        answer:15, hint:"速さの差を使う：1/6 − 1/10",
+        steps:["速さの差 = 1/6 − 1/10 = 1/15 周/分","追い越し時間 = 1 ÷ (1/15) = 15 分"] },
+      { cat:"速さ",        template:"A は4分、B は6分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
+        answer:12, hint:"速さの差を使う：1/4 − 1/6",
+        steps:["速さの差 = 1/4 − 1/6 = 1/12 周/分","追い越し時間 = 1 ÷ (1/12) = 12 分"] },
+      { cat:"速さ",        template:"A は6分、B は9分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
+        answer:18, hint:"速さの差を使う：1/6 − 1/9",
+        steps:["速さの差 = 1/6 − 1/9 = 1/18 周/分","追い越し時間 = 1 ÷ (1/18) = 18 分"] },
+      { cat:"速さ",        template:"A は10分、B は15分で池を一周。\n同地点・同方向・同時出発。\nA が B を初めて追い越すのは □ 分後",
+        answer:30, hint:"速さの差を使う：1/10 − 1/15",
+        steps:["速さの差 = 1/10 − 1/15 = 1/30 周/分","追い越し時間 = 1 ÷ (1/30) = 30 分"] },
       { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 20cm のとき\n内接円の半径 = □ cm",
         answer:4, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
         steps:["各辺 = 12, 16, 20 cm","r = (12+16−20) ÷ 2 = 4 cm"] },
+      { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 15cm のとき\n内接円の半径 = □ cm",
+        answer:3, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
+        steps:["各辺 = 9, 12, 15 cm","r = (9+12−15) ÷ 2 = 3 cm"] },
+      { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 25cm のとき\n内接円の半径 = □ cm",
+        answer:5, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
+        steps:["各辺 = 15, 20, 25 cm","r = (15+20−25) ÷ 2 = 5 cm"] },
+      { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 30cm のとき\n内接円の半径 = □ cm",
+        answer:6, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
+        steps:["各辺 = 18, 24, 30 cm","r = (18+24−30) ÷ 2 = 6 cm"] },
+      { cat:"面積・図形",  template:"直角三角形の3辺の比が3:4:5、\n斜辺が 35cm のとき\n内接円の半径 = □ cm",
+        answer:7, hint:"r = (直角辺の和 − 斜辺) ÷ 2",
+        steps:["各辺 = 21, 28, 35 cm","r = (21+28−35) ÷ 2 = 7 cm"] },
       { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + … + 10×11 = □",
         answer:440, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
         steps:["= (1/3) × 10 × 11 × 12","= 10 × 11 × 4 = 440"] },
+      { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + 4×5 + 5×6 = □",
+        answer:70, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
+        steps:["= (1/3) × 5 × 6 × 7","= 5 × 2 × 7 = 70"] },
+      { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + … + 8×9 = □",
+        answer:240, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
+        steps:["= (1/3) × 8 × 9 × 10","= 8 × 3 × 10 = 240"] },
+      { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + … + 12×13 = □",
+        answer:728, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
+        steps:["= (1/3) × 12 × 13 × 14","= 4 × 13 × 14 = 728"] },
+      { cat:"規則性・数列", template:"1×2 + 2×3 + 3×4 + … + 15×16 = □",
+        answer:1360, hint:"Σk(k+1) = (1/3)×n(n+1)(n+2)",
+        steps:["= (1/3) × 15 × 16 × 17","= 5 × 16 × 17 = 1360"] },
       { cat:"場合の数・確率", template:"A, B, C, D, E の5人が\n円形に並ぶ並び方 = □ 通り",
         answer:24, hint:"円順列は (n−1)! で求める",
         steps:["円順列 = (5−1)! = 4!","= 4×3×2×1 = 24 通り"] },
+      { cat:"場合の数・確率", template:"A, B, C の3人が\n円形に並ぶ並び方 = □ 通り",
+        answer:2, hint:"円順列は (n−1)! で求める",
+        steps:["円順列 = (3−1)! = 2!","= 2×1 = 2 通り"] },
+      { cat:"場合の数・確率", template:"A, B, C, D の4人が\n円形に並ぶ並び方 = □ 通り",
+        answer:6, hint:"円順列は (n−1)! で求める",
+        steps:["円順列 = (4−1)! = 3!","= 3×2×1 = 6 通り"] },
+      { cat:"場合の数・確率", template:"A, B, C, D, E, F の6人が\n円形に並ぶ並び方 = □ 通り",
+        answer:120, hint:"円順列は (n−1)! で求める",
+        steps:["円順列 = (6−1)! = 5!","= 5×4×3×2×1 = 120 通り"] },
+      { cat:"場合の数・確率", template:"A, B, C, D, E, F, G の7人が\n円形に並ぶ並び方 = □ 通り",
+        answer:720, hint:"円順列は (n−1)! で求める",
+        steps:["円順列 = (7−1)! = 6!","= 6×5×4×3×2×1 = 720 通り"] },
       { cat:"立体図形",    template:"1辺 6cm の正四面体の体積 = □√2 cm³",
         answer:18, hint:"体積 = (√2/12) × a³",
-        steps:["= (√2/12) × 6³ = (√2/12) × 216","= 18√2 cm³　→ □ = 18"] }
+        steps:["= (√2/12) × 6³ = (√2/12) × 216","= 18√2 cm³　→ □ = 18"] },
+      { cat:"立体図形",    template:"1辺 12cm の正四面体の体積 = □√2 cm³",
+        answer:144, hint:"体積 = (√2/12) × a³",
+        steps:["= (√2/12) × 12³ = (√2/12) × 1728","= 144√2 cm³　→ □ = 144"] },
+      { cat:"立体図形",    template:"1辺 18cm の正四面体の体積 = □√2 cm³",
+        answer:486, hint:"体積 = (√2/12) × a³",
+        steps:["= (√2/12) × 18³ = (√2/12) × 5832","= 486√2 cm³　→ □ = 486"] },
+      { cat:"立体図形",    template:"1辺 24cm の正四面体の体積 = □√2 cm³",
+        answer:1152, hint:"体積 = (√2/12) × a³",
+        steps:["= (√2/12) × 24³ = (√2/12) × 13824","= 1152√2 cm³　→ □ = 1152"] },
+      { cat:"立体図形",    template:"1辺 30cm の正四面体の体積 = □√2 cm³",
+        answer:2250, hint:"体積 = (√2/12) × a³",
+        steps:["= (√2/12) × 30³ = (√2/12) × 27000","= 2250√2 cm³　→ □ = 2250"] }
     ]
   }
 ];
 
 // ══════════════════════════════════════════
-//  セーブデータ
+//  セーブデータ管理
 // ══════════════════════════════════════════
-const SAVE_KEY = 'mathTowerSave_v1';
-let save = { cleared: [], weapons: [] };
+const SAVE_KEY = 'mathTowerSave_v2';
+let save = {
+  playerLevel: 1,
+  playerEXP: 0,
+  weaponLevels: [0, 0, 0, 0],  // 0=未所持 1=Lv1 2=Lv2 3=Lv3MAX
+  clearedFloors: []             // フロアマスター撃破済みインデックス
+};
 
 function loadSave() {
   try {
     const d = localStorage.getItem(SAVE_KEY);
-    if (d) save = JSON.parse(d);
+    if (d) save = Object.assign(save, JSON.parse(d));
   } catch(e) {}
 }
+
 function writeSave() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e) {}
 }
-function isCleared(i) { return save.cleared.includes(i); }
-function hasWeapon(i) { return save.weapons.includes(i); }
-function isUnlocked(i) { return i === 0 || isCleared(i - 1); }
+
+function isFloorCleared(i)  { return save.clearedFloors.includes(i); }
+function isFloorUnlocked(i) { return i === 0 || isFloorCleared(i - 1); }
+function getWeaponLv(i)     { return save.weaponLevels[i] || 0; }
+
+function getBaseAtk()  { return BASE_ATK[save.playerLevel - 1]; }
+function getWeaponBonus(fi) {
+  const lv = getWeaponLv(fi);
+  if (lv === 0) return 0;
+  return FLOORS[fi].weaponBonus[lv - 1];
+}
+function getTotalAtk(fi) {
+  return getBaseAtk() + getWeaponBonus(fi);
+}
+
+function getExpToNext() {
+  if (save.playerLevel >= MAX_LV) return null;
+  return EXP_TABLE[save.playerLevel] - save.playerEXP;
+}
+function getExpProgress() {
+  if (save.playerLevel >= MAX_LV) return 1;
+  const cur  = save.playerLevel >= 2 ? EXP_TABLE[save.playerLevel - 1] : 0;
+  const next = EXP_TABLE[save.playerLevel];
+  return (save.playerEXP - cur) / (next - cur);
+}
+
+function addEXP(amount) {
+  if (save.playerLevel >= MAX_LV) return { leveled: false, newLv: MAX_LV };
+  const prevLv = save.playerLevel;
+  save.playerEXP += amount;
+  while (save.playerLevel < MAX_LV && save.playerEXP >= EXP_TABLE[save.playerLevel]) {
+    save.playerLevel++;
+  }
+  writeSave();
+  return { leveled: save.playerLevel > prevLv, newLv: save.playerLevel };
+}
+
+function upgradeWeapon(fi) {
+  if (save.weaponLevels[fi] < 3) {
+    save.weaponLevels[fi]++;
+    writeSave();
+    return true;
+  }
+  return false;
+}
 
 // ══════════════════════════════════════════
-//  ゲーム状態
+//  画面管理
 // ══════════════════════════════════════════
-let gs = {
-  floorIndex: 0,
-  qIndex: 0,
-  playerHP: 5,
-  monsterHP: 0,
-  monsterMaxHP: 0,
-  answered: false,
-  inputVal: '',
-  hintVisible: false
-};
-
-// ══════════════════════════════════════════
-//  画面切り替え
-// ══════════════════════════════════════════
-const SCREENS = ['titleScreen','mapScreen','battleScreen','resultScreen','endingScreen'];
+const SCREENS = ['titleScreen','mapScreen','modeScreen','battleScreen','resultScreen','endingScreen'];
 function showScreen(id) {
   SCREENS.forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
   window.scrollTo(0, 0);
 }
 
 // ══════════════════════════════════════════
-//  タイトル
+//  ゲーム状態
 // ══════════════════════════════════════════
-function initTitle() {
-  const tw = document.getElementById('titleWeapons');
-  tw.innerHTML = FLOORS.map((f, i) =>
-    `<span class="title-weapon ${hasWeapon(i) ? 'earned' : ''}">${f.weaponEmoji}</span>`
-  ).join('');
+let gs = {};
+let timerInterval = null;
+
+function initBattle(fi, isChallenge) {
+  clearTimer();
+  const f = FLOORS[fi];
+  gs = {
+    floorIndex: fi,
+    isChallenge: isChallenge,
+    isChanceMode: false,
+    chanceQ: null,
+    monsterHP: isChallenge ? f.bossHP : f.monsterHP,
+    monsterMaxHP: isChallenge ? f.bossHP : f.monsterHP,
+    qIndex: 0,
+    combo: 0,
+    answered: false,
+    inputVal: '',
+    hintVisible: false,
+    killCount: 0,
+    timerSec: CHALLENGE_TIME,
+    lastResult: null,
+  };
+  if (isChallenge) startTimer();
 }
 
 // ══════════════════════════════════════════
-//  マップ
+//  タイマー
+// ══════════════════════════════════════════
+function startTimer() {
+  clearTimer();
+  timerInterval = setInterval(tickTimer, 1000);
+  updateTimerUI();
+}
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+function tickTimer() {
+  gs.timerSec = Math.max(0, gs.timerSec - 1);
+  updateTimerUI();
+  if (gs.timerSec <= 0) { clearTimer(); showResult({ win: false, reason: 'timeout' }); }
+}
+function updateTimerUI() {
+  const el = document.getElementById('bTimer');
+  if (!el) return;
+  const m = Math.floor(gs.timerSec / 60);
+  const s = gs.timerSec % 60;
+  el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+  el.classList.toggle('urgent', gs.timerSec <= 30);
+}
+
+// ══════════════════════════════════════════
+//  ナビゲーション
 // ══════════════════════════════════════════
 function goToMap() {
-  if (save.cleared.length === 4) {
-    renderEnding();
-    showScreen('endingScreen');
-    return;
-  }
+  clearTimer();
+  if (save.clearedFloors.length === 4) { renderEnding(); showScreen('endingScreen'); return; }
   renderMap();
   showScreen('mapScreen');
 }
 
-function renderMap() {
-  const list = document.getElementById('floorList');
-  list.innerHTML = '';
-  FLOORS.forEach((f, i) => {
-    const cleared = isCleared(i);
-    const unlocked = isUnlocked(i);
-    const cls = cleared ? 'cleared' : (unlocked ? 'can-enter' : 'locked');
-    const badge = cleared ? '✅' : (unlocked ? '▶️' : '🔒');
-    const desc = unlocked
-      ? `HP ${f.monsterMaxHP} | 全${f.questions.length}問 | 武器: ${f.weaponEmoji}${f.weapon}`
-      : '前のフロアをクリアしよう';
-    const card = document.createElement('div');
-    card.className = `floor-card ${cls}`;
-    card.innerHTML = `
-      <div class="floor-num">${i+1}F</div>
-      <div class="floor-monster">${f.monsterEmoji}</div>
-      <div class="floor-info">
-        <div class="floor-name">${f.monsterName}</div>
-        <div class="floor-desc">${desc}</div>
-      </div>
-      <div class="floor-badge">${badge}</div>
-    `;
-    if (unlocked) card.onclick = () => startFloor(i);
-    list.appendChild(card);
-  });
-
-  const row = document.getElementById('mwRow');
-  row.innerHTML = FLOORS.map((f, i) =>
-    `<div class="mw-item ${hasWeapon(i) ? 'earned' : 'not-earned'}">
-       <span class="mw-emoji">${f.weaponEmoji}</span>
-       <span>${hasWeapon(i) ? f.weapon : '？？？'}</span>
-     </div>`
-  ).join('');
+function enterFloor(fi) {
+  gs = { floorIndex: fi };
+  const f = FLOORS[fi];
+  document.getElementById('modeFloorTag').textContent = `${fi + 1}F`;
+  document.getElementById('modeMonster').textContent = f.bossEmoji;
+  document.getElementById('modeMonsterName').textContent = f.bossName;
+  document.getElementById('modeMonsterHp').textContent =
+    `通常HP ${f.monsterHP}　ボスHP ${f.bossHP} ／ 問題 ${f.questions.length}問`;
+  showScreen('modeScreen');
 }
 
-// ══════════════════════════════════════════
-//  バトル開始
-// ══════════════════════════════════════════
-function startFloor(fi) {
-  gs = {
-    floorIndex: fi,
-    qIndex: 0,
-    playerHP: 5,
-    monsterHP: FLOORS[fi].monsterMaxHP,
-    monsterMaxHP: FLOORS[fi].monsterMaxHP,
-    answered: false,
-    inputVal: '',
-    hintVisible: false
-  };
-  showScreen('battleScreen');
+function startBattle(isChallenge) {
+  initBattle(gs.floorIndex, isChallenge);
   renderBattle();
+  showScreen('battleScreen');
 }
 
 // ══════════════════════════════════════════
 //  バトル描画
 // ══════════════════════════════════════════
-function renderBattle() {
+function currentQ() {
+  if (gs.isChanceMode) return gs.chanceQ;
   const f = FLOORS[gs.floorIndex];
-  const q = f.questions[gs.qIndex];
-
-  document.getElementById('bFloorTag').textContent = `${gs.floorIndex+1}F`;
-  document.getElementById('bQCount').textContent = `${gs.qIndex+1} / ${f.questions.length}`;
-
-  // Player HP
-  const hpRow = document.getElementById('playerHpRow');
-  hpRow.innerHTML = '<span class="php-label">勇者HP</span>' +
-    Array.from({length:5}, (_,i) => `<span class="heart">${i < gs.playerHP ? '❤️' : '🖤'}</span>`).join('');
-
-  // Monster
-  document.getElementById('mEmoji').textContent = f.monsterEmoji;
-  document.getElementById('mName').textContent = f.monsterName;
-  document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
-  document.getElementById('mHpLabel').textContent = `HP: ${gs.monsterHP} / ${gs.monsterMaxHP}`;
-
-  // Clear feedback
-  document.getElementById('feedbackArea').innerHTML = '';
-
-  // Question
-  document.getElementById('qCat').textContent = q.cat;
-  document.getElementById('qText').innerHTML = renderTmpl(q.template);
-  document.getElementById('hintBtn').classList.remove('hidden');
-  document.getElementById('hintBtn').textContent = '💡 ヒントを見る';
-  document.getElementById('hintText').textContent = q.hint;
-  document.getElementById('hintText').classList.add('hidden');
-  gs.hintVisible = false;
-
-  // Input
-  gs.inputVal = '';
-  gs.answered = false;
-  updateDisp();
-  document.getElementById('attackBtn').disabled = false;
-  document.getElementById('attackBtn').textContent = '⚔️ こうげき！';
+  return f.questions[gs.qIndex % f.questions.length];
 }
 
-function renderTmpl(t) {
-  return t.replace(/\n/g, '<br>').replace(/□/g, '<span class="q-blank">□</span>');
+function renderBattle() {
+  const fi = gs.floorIndex;
+  const f = FLOORS[fi];
+  const isBoss = gs.isChallenge && !gs.isChanceMode;
+
+  // header tags
+  document.getElementById('bFloorTag').textContent = `${fi + 1}F`;
+  const modeTag = document.getElementById('bModeTag');
+  if (gs.isChanceMode) {
+    modeTag.textContent = 'CHANCE'; modeTag.className = 'b-mode-tag challenge';
+  } else if (gs.isChallenge) {
+    modeTag.textContent = '挑戦';   modeTag.className = 'b-mode-tag challenge';
+  } else {
+    modeTag.textContent = '通常';   modeTag.className = 'b-mode-tag normal';
+  }
+  const timerEl = document.getElementById('bTimer');
+  timerEl.classList.toggle('hidden', !gs.isChallenge || gs.isChanceMode);
+  if (gs.isChallenge && !gs.isChanceMode) updateTimerUI();
+
+  // stats
+  document.getElementById('bLv').textContent = `Lv.${save.playerLevel}`;
+  document.getElementById('bAtk').textContent = `⚔️ ATK ${getTotalAtk(fi)}`;
+
+  // combo
+  const comboEl = document.getElementById('bCombo');
+  comboEl.classList.toggle('hidden', gs.combo < 2);
+  if (gs.combo >= 2) {
+    comboEl.textContent = `COMBO ×${gs.combo}`;
+    comboEl.classList.toggle('active', gs.combo >= 3);
+  }
+
+  // monster area
+  const ma = document.getElementById('monsterArea');
+  ma.className = 'monster-area';
+  ma.querySelectorAll('.lightning-bolt,.flame-particle').forEach(e => e.remove());
+  const hpTrack = ma.querySelector('.hp-bar-track');
+
+  if (gs.isChanceMode) {
+    document.getElementById('mEmoji').textContent = f.weaponEmoji;
+    document.getElementById('mName').textContent = '⚡ チャンス問題！ ⚡';
+    hpTrack.style.visibility = 'hidden';
+    document.getElementById('mHpLabel').textContent = '正解で武器レベルアップ！';
+  } else {
+    hpTrack.style.visibility = 'visible';
+    document.getElementById('mEmoji').textContent = isBoss ? f.bossEmoji : f.monsterEmoji;
+    document.getElementById('mName').textContent = isBoss ? f.bossTitle : f.monsterName;
+    document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
+    document.getElementById('mHpLabel').textContent = `HP ${gs.monsterHP} / ${gs.monsterMaxHP}`;
+    if (isBoss) {
+      ma.classList.add(f.bossCls);
+      if (f.bossLightning) ['lb1','lb2','lb3'].forEach(c => {
+        const el = document.createElement('span');
+        el.className = `lightning-bolt ${c}`; el.textContent = '⚡'; ma.appendChild(el);
+      });
+      if (f.bossFlame) ['fp1','fp2','fp3','fp4'].forEach(c => {
+        const el = document.createElement('span');
+        el.className = `flame-particle ${c}`; el.textContent = '🔥'; ma.appendChild(el);
+      });
+    }
+  }
+
+  // feedback clear
+  document.getElementById('feedbackArea').innerHTML = '';
+
+  // question
+  const q = currentQ();
+  document.getElementById('qCat').innerHTML =
+    q.cat + (gs.isChanceMode ? '<span class="q-chance-tag">CHANCE</span>' : '');
+  document.getElementById('qText').innerHTML =
+    q.template.replace(/\n/g, '<br>').replace(/□/g, '<span class="q-blank">□</span>');
+  const hintBtn = document.getElementById('hintBtn');
+  hintBtn.classList.remove('hidden');
+  hintBtn.textContent = '💡 ヒントを見る';
+  document.getElementById('hintText').textContent = q.hint;
+  document.getElementById('hintText').classList.add('hidden');
+  const stepsEl = document.getElementById('qSteps');
+  stepsEl.innerHTML = '<ol>' + q.steps.map(s => `<li>${s}</li>`).join('') + '</ol>';
+  stepsEl.classList.add('hidden');
+  gs.hintVisible = false;
+
+  // input reset
+  gs.inputVal = ''; gs.answered = false;
+  updateDisp();
+  const ab = document.getElementById('attackBtn');
+  ab.disabled = false;
+  ab.textContent = gs.isChanceMode ? '✨ こたえる！' : '⚔️ こうげき！';
 }
 
 function toggleHint() {
   gs.hintVisible = !gs.hintVisible;
   document.getElementById('hintText').classList.toggle('hidden', !gs.hintVisible);
+  document.getElementById('qSteps').classList.toggle('hidden', !gs.hintVisible);
   document.getElementById('hintBtn').textContent = gs.hintVisible ? '💡 ヒントを隠す' : '💡 ヒントを見る';
 }
 
@@ -803,15 +1295,13 @@ function ni(v) {
   if (gs.answered) return;
   if (v === '-' && gs.inputVal !== '') return;
   if (v === '.' && gs.inputVal.includes('.')) return;
-  if (gs.inputVal.length >= 7) return;
+  if (gs.inputVal.length >= 8) return;
   if (gs.inputVal === '' && v === '.') v = '0.';
-  gs.inputVal += v;
-  updateDisp();
+  gs.inputVal += v; updateDisp();
 }
 function nd() {
   if (gs.answered) return;
-  gs.inputVal = gs.inputVal.slice(0, -1);
-  updateDisp();
+  gs.inputVal = gs.inputVal.slice(0, -1); updateDisp();
 }
 function updateDisp() {
   const d = document.getElementById('inputDisp');
@@ -821,141 +1311,309 @@ function updateDisp() {
 }
 
 // ══════════════════════════════════════════
-//  回答チェック
+//  回答処理
 // ══════════════════════════════════════════
 function submitAns() {
   if (gs.answered || gs.inputVal === '') return;
-  const q = FLOORS[gs.floorIndex].questions[gs.qIndex];
+  const q = currentQ();
   const userVal = parseFloat(gs.inputVal);
   const correct = !isNaN(userVal) && Math.abs(userVal - q.answer) < 0.01;
 
   gs.answered = true;
   document.getElementById('attackBtn').disabled = true;
   document.getElementById('hintBtn').classList.add('hidden');
-  // Always show hint after answering
   document.getElementById('hintText').classList.remove('hidden');
+  document.getElementById('qSteps').classList.remove('hidden');
 
+  // ── チャンス問題 ──
+  if (gs.isChanceMode) {
+    showFeedback(correct, q.answer, 0, correct ? '武器レベルアップ！' : '');
+    const upgraded = correct ? upgradeWeapon(gs.floorIndex) : false;
+    const expRes = correct ? addEXP(EXP_CHANCE) : null;
+    setTimeout(() => showResult({
+      win: 'chance', weaponUpgraded: upgraded,
+      expGain: correct ? EXP_CHANCE : 0, expResult: expRes
+    }), 1800);
+    return;
+  }
+
+  // ── 通常/挑戦バトル ──
   if (correct) {
-    gs.monsterHP = Math.max(0, gs.monsterHP - 1);
-    monsterHit();
-    document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
-    document.getElementById('mHpLabel').textContent = `HP: ${gs.monsterHP} / ${gs.monsterMaxHP}`;
-    showFeedback(true, q.answer);
+    gs.combo++;
+    const dmg = calcDamage();
+    gs.monsterHP = Math.max(0, gs.monsterHP - dmg);
+    monsterShake(dmg);
+    updateMonsterHpUI();
+    showFeedback(true, q.answer, dmg);
   } else {
-    gs.playerHP = Math.max(0, gs.playerHP - 1);
-    playerHit();
-    const hpRow = document.getElementById('playerHpRow');
-    hpRow.innerHTML = '<span class="php-label">勇者HP</span>' +
-      Array.from({length:5}, (_,i) => `<span class="heart${i >= gs.playerHP ? ' lost' : ''}">${i < gs.playerHP ? '❤️' : '🖤'}</span>`).join('');
-    showFeedback(false, q.answer);
+    gs.combo = 0;
+    playerFlash();
+    showFeedback(false, q.answer, 0);
+  }
+
+  const comboEl = document.getElementById('bCombo');
+  comboEl.classList.toggle('hidden', gs.combo < 2);
+  if (gs.combo >= 2) {
+    comboEl.textContent = `COMBO ×${gs.combo}`;
+    comboEl.classList.toggle('active', gs.combo >= 3);
   }
 
   setTimeout(() => {
-    if (gs.playerHP <= 0) {
-      showFloorResult(false);
-    } else if (gs.monsterHP <= 0) {
-      showFloorResult(true);
-    } else {
-      gs.qIndex++;
-      const f = FLOORS[gs.floorIndex];
-      if (gs.qIndex >= f.questions.length) {
-        // All questions done: win only if monster is dead
-        showFloorResult(gs.monsterHP <= 0);
-      } else {
-        renderBattle();
+    if (gs.monsterHP <= 0) {
+      const killExp = gs.isChallenge ? EXP_BOSS : EXP_KILL;
+      const totalExp = EXP_CORRECT + killExp;
+      const expRes = addEXP(totalExp);
+      gs.killCount++;
+      const doChance = !gs.isChallenge && gs.killCount % 2 === 0 && getWeaponLv(gs.floorIndex) < 3;
+      if (doChance) {
+        const f = FLOORS[gs.floorIndex];
+        gs.chanceQ = f.questions[Math.floor(Math.random() * f.questions.length)];
       }
+      if (gs.isChallenge && !save.clearedFloors.includes(gs.floorIndex)) {
+        save.clearedFloors.push(gs.floorIndex);
+        writeSave();
+      }
+      showResult({ win: true, expGain: totalExp, expResult: expRes, doChance });
+    } else {
+      if (correct) addEXP(EXP_CORRECT);
+      gs.qIndex++;
+      renderBattle();
     }
-  }, 1900);
+  }, 1800);
 }
 
-function monsterHit() {
+function calcDamage() {
+  return getTotalAtk(gs.floorIndex) + Math.max(0, gs.combo - 1);
+}
+function updateMonsterHpUI() {
+  document.getElementById('mHpBar').style.width = (gs.monsterHP / gs.monsterMaxHP * 100) + '%';
+  document.getElementById('mHpLabel').textContent = `HP ${gs.monsterHP} / ${gs.monsterMaxHP}`;
+}
+function monsterShake(dmg) {
   const ma = document.getElementById('monsterArea');
-  ma.classList.remove('shake');
-  void ma.offsetWidth;
-  ma.classList.add('shake');
+  ma.classList.remove('shake'); void ma.offsetWidth; ma.classList.add('shake');
   setTimeout(() => ma.classList.remove('shake'), 450);
+  const d = document.createElement('div');
+  d.className = 'dmg-float'; d.textContent = `-${dmg}`;
+  ma.appendChild(d); setTimeout(() => d.remove(), 850);
 }
-function playerHit() {
-  const overlay = document.getElementById('flashOverlay');
-  overlay.style.opacity = '0.45';
-  setTimeout(() => { overlay.style.opacity = '0'; }, 380);
+function playerFlash() {
+  const o = document.getElementById('flashOverlay');
+  o.style.opacity = '0.45'; setTimeout(() => { o.style.opacity = '0'; }, 380);
 }
-function showFeedback(ok, ans) {
+function showFeedback(ok, ans, dmg, extra) {
+  const comboLine = ok && gs.combo >= 2
+    ? `<div class="fb-sub">COMBO ×${gs.combo}! (+${gs.combo - 1}ボーナス)</div>` : '';
+  const msg = ok
+    ? `せいかい！ ${dmg > 0 ? dmg + ' ダメージ！' : ''}${extra || ''}`
+    : `ちがう！ こたえは <strong>${ans}</strong>`;
   document.getElementById('feedbackArea').innerHTML =
     `<div class="answer-feedback ${ok ? 'correct' : 'wrong'}">
        <span class="fb-icon">${ok ? '✨' : '💔'}</span>
-       <span>${ok ? 'せいかい！ダメージをあたえた！' : `ちがう！こたえは <strong>${ans}</strong>`}</span>
+       <div><div>${msg}</div>${comboLine}</div>
      </div>`;
 }
 
 // ══════════════════════════════════════════
-//  フロア結果
+//  結果画面
 // ══════════════════════════════════════════
-function showFloorResult(win) {
-  const f = FLOORS[gs.floorIndex];
+function showResult(opts) {
+  clearTimer();
+  gs.lastResult = opts;
   showScreen('resultScreen');
+  ['resExpBox','weaponBox','btnContinue','btnMapRes','btnRetryRes','btnSubMap'].forEach(id =>
+    document.getElementById(id).classList.add('hidden')
+  );
 
-  if (win) {
-    if (!save.cleared.includes(gs.floorIndex)) save.cleared.push(gs.floorIndex);
-    if (!save.weapons.includes(gs.floorIndex)) save.weapons.push(gs.floorIndex);
-    writeSave();
+  if (opts.win === 'chance') { renderChanceResult(opts); return; }
 
-    document.getElementById('resBig').textContent = '🎉';
-    const rt = document.getElementById('resTitle');
-    rt.textContent = `${gs.floorIndex+1}F クリア！`;
-    rt.className = 'res-title win';
-    document.getElementById('resMsg').textContent =
-      `${f.monsterName} をたおした！\n${f.weaponEmoji} ${f.weapon} を手に入れた！`;
-
-    document.getElementById('weaponBox').classList.remove('hidden');
-    document.getElementById('wbEmoji').textContent = f.weaponEmoji;
-    document.getElementById('wbName').textContent = f.weapon;
-
-    document.getElementById('btnMapRes').classList.remove('hidden');
-    document.getElementById('btnRetryRes').classList.add('hidden');
-
-    if (save.cleared.length === 4) {
-      setTimeout(() => { renderEnding(); showScreen('endingScreen'); }, 2600);
+  if (opts.win) {
+    const f = FLOORS[gs.floorIndex];
+    const isBoss = gs.isChallenge;
+    document.getElementById('resBig').textContent = isBoss ? '🎉' : '⚔️';
+    document.getElementById('resTitle').textContent = isBoss
+      ? `${gs.floorIndex + 1}F クリア！` : `${f.monsterName} を倒した！`;
+    document.getElementById('resTitle').className = 'res-title win';
+    document.getElementById('resMsg').textContent = isBoss
+      ? `${f.bossTitle} を撃破！\nフロア${gs.floorIndex + 1}を解放！` : 'よくやった！';
+    renderExpBox(opts.expGain, opts.expResult);
+    if (isBoss) {
+      document.getElementById('btnMapRes').classList.remove('hidden');
+      if (save.clearedFloors.length === 4)
+        setTimeout(() => { renderEnding(); showScreen('endingScreen'); }, 2800);
+    } else {
+      const btn = document.getElementById('btnContinue');
+      btn.textContent = opts.doChance ? '⚡ チャンスに挑む！' : '▶ 次のバトルへ';
+      btn.classList.remove('hidden');
+      document.getElementById('btnSubMap').classList.remove('hidden');
     }
   } else {
     document.getElementById('resBig').textContent = '💀';
-    const rt = document.getElementById('resTitle');
-    rt.textContent = 'たおれてしまった…';
-    rt.className = 'res-title lose';
-    document.getElementById('resMsg').textContent =
-      `${f.monsterName} にやられてしまった。\nもう一度チャレンジしよう！`;
-    document.getElementById('weaponBox').classList.add('hidden');
-    document.getElementById('btnMapRes').classList.add('hidden');
+    document.getElementById('resTitle').textContent =
+      opts.reason === 'timeout' ? '時間切れ…' : 'やられてしまった…';
+    document.getElementById('resTitle').className = 'res-title lose';
+    document.getElementById('resMsg').textContent = 'もう一度挑戦しよう！';
     document.getElementById('btnRetryRes').classList.remove('hidden');
+    document.getElementById('btnSubMap').classList.remove('hidden');
   }
 }
 
-function retryFloor() { startFloor(gs.floorIndex); }
+function renderChanceResult(opts) {
+  const f = FLOORS[gs.floorIndex];
+  const wlv = getWeaponLv(gs.floorIndex);
+  document.getElementById('resBig').textContent = opts.weaponUpgraded ? '⭐' : '😓';
+  document.getElementById('resTitle').textContent =
+    opts.weaponUpgraded ? '武器レベルアップ！' : 'チャンス問題　不正解';
+  document.getElementById('resTitle').className =
+    opts.weaponUpgraded ? 'res-title win' : 'res-title lose';
+  document.getElementById('resMsg').textContent =
+    opts.weaponUpgraded ? `${f.weaponEmoji} ${f.weapon} が強くなった！` : '次回また挑戦しよう！';
+  if (opts.weaponUpgraded) {
+    document.getElementById('weaponBox').classList.remove('hidden');
+    document.getElementById('wbLabel').textContent = '武器レベルアップ！';
+    document.getElementById('wbEmoji').textContent = f.weaponEmoji;
+    document.getElementById('wbName').textContent = f.weapon;
+    document.getElementById('wbLv').textContent = wlv >= 3 ? 'Lv.MAX ✨' : `Lv.${wlv}`;
+  }
+  if (opts.expGain > 0) renderExpBox(opts.expGain, opts.expResult);
+  document.getElementById('btnContinue').textContent = '▶ 次のバトルへ';
+  document.getElementById('btnContinue').classList.remove('hidden');
+  document.getElementById('btnSubMap').classList.remove('hidden');
+}
+
+function renderExpBox(expGain, expResult) {
+  if (!expGain) return;
+  document.getElementById('resExpBox').classList.remove('hidden');
+  document.getElementById('rebVal').textContent = `+${expGain} EXP`;
+  if (expResult && expResult.leveled) {
+    document.getElementById('rebLv').innerHTML = `<b>レベルアップ！ Lv.${expResult.newLv}</b> になった！`;
+  } else {
+    const toNext = getExpToNext();
+    document.getElementById('rebLv').textContent = toNext ? `次のレベルまで ${toNext} EXP` : 'MAX LEVEL';
+  }
+}
 
 // ══════════════════════════════════════════
-//  エンディング
+//  ボタンアクション
+// ══════════════════════════════════════════
+function continueNormal() {
+  const opts = gs.lastResult || {};
+  gs.answered = false; gs.inputVal = '';
+  if (!gs.isChanceMode && opts.doChance) {
+    gs.isChanceMode = true;
+  } else {
+    gs.isChanceMode = false;
+    const f = FLOORS[gs.floorIndex];
+    gs.monsterHP = f.monsterHP;
+    gs.monsterMaxHP = f.monsterHP;
+    gs.qIndex++;
+  }
+  renderBattle(); showScreen('battleScreen');
+}
+
+function retryBattle() {
+  initBattle(gs.floorIndex, gs.isChallenge);
+  renderBattle(); showScreen('battleScreen');
+}
+
+// ══════════════════════════════════════════
+//  マップ描画
+// ══════════════════════════════════════════
+function renderMap() {
+  const list = document.getElementById('floorList');
+  list.innerHTML = '';
+  FLOORS.forEach((f, i) => {
+    const unlocked = isFloorUnlocked(i);
+    const cleared  = isFloorCleared(i);
+    const wlv      = getWeaponLv(i);
+    const pips = [0,1,2].map(p =>
+      `<span class="wlv-pip${p < wlv ? (wlv >= 3 ? ' max' : ' filled') : ''}"></span>`
+    ).join('');
+    const cls = 'floor-card' +
+      (cleared ? ' cleared' : unlocked ? ' can-enter' : ' locked');
+    const card = document.createElement('div');
+    card.className = cls;
+    card.innerHTML = `
+      <div class="fc-top">
+        <div class="fc-num">${i + 1}F</div>
+        <div class="fc-monster">${f.bossEmoji}</div>
+        <div class="fc-info">
+          <div class="fc-name">${f.name} ${cleared ? '✅' : !unlocked ? '🔒' : ''}</div>
+          <div class="fc-desc">ボス: ${f.bossTitle}　ATK ${getTotalAtk(i)}</div>
+        </div>
+      </div>
+      <div class="fc-weapon">
+        <span>${f.weaponEmoji}</span>
+        <span>${f.weapon}</span>
+        <span class="fc-wlv-pips">${pips}</span>
+        <span style="font-size:11px;color:var(--gold)">${wlv >= 3 ? 'MAX' : `Lv.${wlv}`}</span>
+      </div>`;
+    if (unlocked) card.onclick = () => enterFloor(i);
+    list.appendChild(card);
+  });
+  // player card
+  document.getElementById('pcLvNum').textContent = save.playerLevel;
+  document.getElementById('pcAtk').textContent   = getBaseAtk();
+  document.getElementById('pcTotalAtk').textContent = getBaseAtk();
+  const prog = getExpProgress();
+  document.getElementById('pcExpFill').style.width = prog + '%';
+  const toNext = getExpToNext();
+  const nextThreshold = save.playerLevel < MAX_LV ? EXP_TABLE[save.playerLevel] : save.playerEXP;
+  document.getElementById('pcExpLabel').textContent = toNext
+    ? `EXP ${save.playerEXP} / ${nextThreshold} (あと${toNext})`
+    : 'EXP MAX';
+  // weapon row
+  const mwRow = document.getElementById('mwRow');
+  if (mwRow) {
+    mwRow.innerHTML = FLOORS.map((f, i) => {
+      const lv = getWeaponLv(i);
+      const cls = lv > 0 ? 'mw-item earned' : 'mw-item not-earned';
+      return `<div class="${cls}">${f.weaponEmoji} ${f.weapon} ${lv >= 3 ? 'MAX' : `Lv.${lv}`}</div>`;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+//  タイトル描画
+// ══════════════════════════════════════════
+function renderTitle() {
+  document.getElementById('tsLv').textContent     = save.playerLevel;
+  document.getElementById('tsAtk').textContent    = getBaseAtk();
+  document.getElementById('tsFloors').textContent = `${save.clearedFloors.length}/4`;
+  // weapon badges on title
+  const tw = document.getElementById('titleWeapons');
+  tw.innerHTML = FLOORS.map((f, i) => {
+    const lv = getWeaponLv(i);
+    return `<span class="tw-item">${f.weaponEmoji} ${lv >= 3 ? 'MAX' : `Lv.${lv}`}</span>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  エンディング描画
 // ══════════════════════════════════════════
 function renderEnding() {
-  document.getElementById('endWeapons').innerHTML = FLOORS.map(f =>
-    `<div class="ew-item">
-       <div class="ew-emoji">${f.weaponEmoji}</div>
-       <div class="ew-name">${f.weapon}</div>
-     </div>`
-  ).join('');
+  document.getElementById('endWeapons').innerHTML = FLOORS.map((f, i) => {
+    const lv = getWeaponLv(i);
+    return `<div class="end-weapon-item">${f.weaponEmoji} ${f.weapon} ${lv >= 3 ? '<b>MAX</b>' : `Lv.${lv}`}</div>`;
+  }).join('');
 }
 
+// ══════════════════════════════════════════
+//  リセット・初期化
+// ══════════════════════════════════════════
 function resetAll() {
-  save = { cleared: [], weapons: [] };
-  writeSave();
-  renderMap();
-  showScreen('mapScreen');
+  if (!confirm('全データをリセットします。よろしいですか？')) return;
+  localStorage.removeItem(SAVE_KEY);
+  save = { playerLevel:1, playerEXP:0, weaponLevels:[0,0,0,0], clearedFloors:[] };
+  renderTitle();
+  showScreen('titleScreen');
 }
 
-// ══════════════════════════════════════════
-//  起動
-// ══════════════════════════════════════════
-loadSave();
-initTitle();
+window.addEventListener('DOMContentLoaded', () => {
+  loadSave();
+  renderTitle();
+  showScreen('titleScreen');
+});
 </script>
 </body>
 </html>
