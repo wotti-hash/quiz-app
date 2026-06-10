@@ -703,8 +703,8 @@ const CHALLENGE_TIME = 120;
 const FLOORS = [
   {
     floor: 1, name: "計算の間",
-    monsterName: "ぬめりスライム", monsterEmoji: "🟢", monsterHP: 20,
-    bossName: "玄武", bossEmoji: "🐢", bossHP: 40, bossCls: "boss-genbu", bossTitle: "四神・玄武",
+    monsterName: "ぬめりスライム", monsterEmoji: "🟢", monsterHP: 8, monsterHPGrowth: 2,
+    bossName: "玄武", bossEmoji: "🐢", bossHP: 20, bossHPGrowth: 4, bossCls: "boss-genbu", bossTitle: "四神・玄武",
     bossLightning: false, bossFlame: false,
     weapon: "木の剣", weaponEmoji: "🗡️", weaponBonus: [2, 4, 7],
     questions: [
@@ -802,8 +802,8 @@ const FLOORS = [
   },
   {
     floor: 2, name: "数理の回廊",
-    monsterName: "もりのおおかみ", monsterEmoji: "🐺", monsterHP: 30,
-    bossName: "白虎", bossEmoji: "🐅", bossHP: 60, bossCls: "boss-byakko", bossTitle: "四神・白虎",
+    monsterName: "もりのおおかみ", monsterEmoji: "🐺", monsterHP: 14, monsterHPGrowth: 3,
+    bossName: "白虎", bossEmoji: "🐅", bossHP: 35, bossHPGrowth: 6, bossCls: "boss-byakko", bossTitle: "四神・白虎",
     bossLightning: true, bossFlame: false,
     weapon: "鉄の剣", weaponEmoji: "⚔️", weaponBonus: [4, 7, 11],
     questions: [
@@ -901,8 +901,8 @@ const FLOORS = [
   },
   {
     floor: 3, name: "龍の試練場",
-    monsterName: "かずのドラゴン", monsterEmoji: "🐉", monsterHP: 40,
-    bossName: "青龍", bossEmoji: "🐲", bossHP: 85, bossCls: "boss-seiryu", bossTitle: "四神・青龍",
+    monsterName: "かずのドラゴン", monsterEmoji: "🐉", monsterHP: 20, monsterHPGrowth: 4,
+    bossName: "青龍", bossEmoji: "🐲", bossHP: 50, bossHPGrowth: 9, bossCls: "boss-seiryu", bossTitle: "四神・青龍",
     bossLightning: false, bossFlame: false,
     weapon: "魔法の杖", weaponEmoji: "🔱", weaponBonus: [6, 10, 15],
     questions: [
@@ -1000,8 +1000,8 @@ const FLOORS = [
   },
   {
     floor: 4, name: "魔王の頂",
-    monsterName: "ちしきの魔王", monsterEmoji: "👿", monsterHP: 55,
-    bossName: "朱雀", bossEmoji: "🦅", bossHP: 120, bossCls: "boss-suzaku", bossTitle: "四神・朱雀",
+    monsterName: "ちしきの魔王", monsterEmoji: "👿", monsterHP: 28, monsterHPGrowth: 5,
+    bossName: "朱雀", bossEmoji: "🦅", bossHP: 70, bossHPGrowth: 12, bossCls: "boss-suzaku", bossTitle: "四神・朱雀",
     bossLightning: false, bossFlame: true,
     weapon: "知識の剣", weaponEmoji: "💫", weaponBonus: [9, 14, 20],
     questions: [
@@ -1131,6 +1131,15 @@ function writeSave() {
     u[currentUser] = save;
     localStorage.setItem(USERS_KEY, JSON.stringify(u));
   } catch(e) {}
+}
+
+function getMonsterHP(fi) {
+  const f = FLOORS[fi];
+  return f.monsterHP + (save.playerLevel - 1) * (f.monsterHPGrowth || 0);
+}
+function getBossHP(fi) {
+  const f = FLOORS[fi];
+  return f.bossHP + (save.playerLevel - 1) * (f.bossHPGrowth || 0);
 }
 
 // ── ユーザー管理 ──
@@ -1266,17 +1275,28 @@ function showScreen(id) {
 let gs = {};
 let timerInterval = null;
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function initBattle(fi, isChallenge) {
   clearTimer();
   const f = FLOORS[fi];
+  const order = shuffleArray(f.questions.map((_, i) => i));
   gs = {
     floorIndex: fi,
     isChallenge: isChallenge,
     isChanceMode: false,
     chanceQ: null,
-    monsterHP: isChallenge ? f.bossHP : f.monsterHP,
-    monsterMaxHP: isChallenge ? f.bossHP : f.monsterHP,
+    monsterHP: isChallenge ? getBossHP(fi) : getMonsterHP(fi),
+    monsterMaxHP: isChallenge ? getBossHP(fi) : getMonsterHP(fi),
     qIndex: 0,
+    qOrder: order,
     combo: 0,
     answered: false,
     inputVal: '',
@@ -1340,7 +1360,7 @@ function enterFloor(fi) {
   document.getElementById('modeMonster').textContent = f.bossEmoji;
   document.getElementById('modeMonsterName').textContent = f.bossName;
   document.getElementById('modeMonsterHp').textContent =
-    `通常HP ${f.monsterHP}　ボスHP ${f.bossHP} ／ 問題 ${f.questions.length}問`;
+    `通常HP ${getMonsterHP(fi)}　ボスHP ${getBossHP(fi)} ／ 問題 ${f.questions.length}問`;
   showScreen('modeScreen');
 }
 
@@ -1356,7 +1376,7 @@ function startBattle(isChallenge) {
 function currentQ() {
   if (gs.isChanceMode) return gs.chanceQ;
   const f = FLOORS[gs.floorIndex];
-  return f.questions[gs.qIndex % f.questions.length];
+  return f.questions[gs.qOrder[gs.qIndex % gs.qOrder.length]];
 }
 
 function renderBattle() {
@@ -1670,8 +1690,8 @@ function continueNormal() {
   } else {
     gs.isChanceMode = false;
     const f = FLOORS[gs.floorIndex];
-    gs.monsterHP = f.monsterHP;
-    gs.monsterMaxHP = f.monsterHP;
+    gs.monsterHP = getMonsterHP(gs.floorIndex);
+    gs.monsterMaxHP = getMonsterHP(gs.floorIndex);
     gs.qIndex++;
   }
   renderBattle(); showScreen('battleScreen');
