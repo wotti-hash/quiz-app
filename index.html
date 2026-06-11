@@ -20,6 +20,7 @@
   --card-pmp: #1a1025;
   --card-math: #1a1208;
   --accent-geo: #00c6ff;
+  --accent-geo-rpg: #00d4aa;
   --accent-pmp: #60a5fa;
   --accent-math: #ff6b35;
   --text: #f0eee8;
@@ -173,6 +174,21 @@ body {
 .rpg-title  { color: #d7a0ff; }
 .tag-rpg { color: #d7a0ff; border-color: rgba(215,160,255,0.3); background: rgba(215,160,255,0.08); }
 
+/* 地理の塔 */
+.card-geo-rpg {
+  background: linear-gradient(135deg, #081a17 0%, #050f0e 100%);
+  box-shadow: 0 4px 24px rgba(0,212,170,0.08);
+}
+.card-geo-rpg:hover {
+  border-color: rgba(0,212,170,0.4);
+  box-shadow: 0 8px 40px rgba(0,212,170,0.18);
+}
+.card-geo-rpg::before {
+  background: radial-gradient(ellipse at 80% 20%, rgba(0,212,170,0.08), transparent 60%);
+}
+.geo-rpg-title { color: var(--accent-geo-rpg); }
+.tag-geo-rpg { color: var(--accent-geo-rpg); border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.08); }
+
 
 .card-inner {
   display: flex;
@@ -250,6 +266,7 @@ body {
 .fade-in:nth-child(2) { animation-delay: 0.25s; }
 .fade-in:nth-child(3) { animation-delay: 0.4s; }
 .fade-in:nth-child(4) { animation-delay: 0.55s; }
+.fade-in:nth-child(5) { animation-delay: 0.70s; }
 @keyframes fadeIn {
   to { opacity: 1; transform: translateY(0); }
 }
@@ -311,6 +328,22 @@ body {
             <span class="tag tag-rpg">🏰 全4フロア</span>
             <span class="tag tag-rpg">⚔️ バトル形式</span>
             <span class="tag tag-rpg">小5・小6レベル</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-geo-rpg fade-in" href="geography-tower.html?v=5">
+      <div class="card-inner">
+        <div class="card-icon">🗺️</div>
+        <div class="card-body">
+          <div class="card-title geo-rpg-title">地理の塔</div>
+          <div class="card-desc">RPG風バトルゲーム。地理の問題を解いて敵を倒し、全4フロアを踏破せよ！都道府県から世界の地形まで。</div>
+          <div class="card-tags">
+            <span class="tag tag-geo-rpg">🗺️ 全4フロア</span>
+            <span class="tag tag-geo-rpg">⚔️ バトル形式</span>
+            <span class="tag tag-geo-rpg">🌍 地理全般</span>
           </div>
         </div>
         <div class="card-arrow">›</div>

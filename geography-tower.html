@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>地理の塔</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080d14;
+  --card: #0f1824;
+  --border: rgba(255,255,255,0.1);
+  --text: #f0eee8;
+  --sub: #7a8a9a;
+  --accent: #00c6ff;
+  --gold: #ffd700;
+  --red: #ff4444;
+  --green: #44dd88;
+  --purple: #d7a0ff;
+  --orange: #ff9f43;
+}
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.hidden { display: none !important; }
+
+/* ══ COMMON ══ */
+.btn-gold {
+  padding: 14px 40px;
+  border: none; border-radius: 50px;
+  background: linear-gradient(135deg, #00c6ff, #0095cc);
+  color: #001a2e;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 20px; font-weight: 700; letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0,198,255,0.4);
+  transition: all 0.2s;
+}
+.btn-gold:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,198,255,0.6); }
+.btn-outline {
+  padding: 12px 28px;
+  border: 1.5px solid var(--border); border-radius: 50px;
+  background: transparent; color: var(--sub);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all 0.2s; text-decoration: none;
+  display: inline-block; text-align: center;
+}
+.btn-outline:hover { border-color: rgba(255,255,255,0.35); color: var(--text); }
+.btn-switch {
+  font-size: 12px; color: var(--sub); background: none;
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 14px; cursor: pointer; margin-top: 14px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-switch:hover { border-color: var(--sub); color: var(--text); }
+
+@keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+/* ══ USER SCREEN ══ */
+#userScreen {
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 40px 24px; text-align: center;
+  max-width: 440px; margin: 0 auto;
+}
+.user-castle { font-size: 72px; animation: floatAnim 3s ease-in-out infinite; margin-bottom: 10px; }
+.user-main { font-family: 'Kaisei Decol', serif; font-size: 30px; color: var(--accent); margin-bottom: 6px; }
+.user-sub { font-size: 13px; color: var(--sub); margin-bottom: 28px; letter-spacing: 1px; }
+.user-section-title { font-size: 11px; color: var(--sub); letter-spacing: 2px; margin-bottom: 12px; }
+.user-list { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.user-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 18px; cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s; text-align: left;
+}
+.user-card:hover { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,198,255,0.15); }
+.user-card-icon { font-size: 28px; }
+.user-card-name { font-family: 'Kaisei Decol', serif; font-size: 17px; color: var(--accent); }
+.user-card-stats { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.user-divider { width: 100%; border: none; border-top: 1px solid var(--border); margin: 4px 0 20px; }
+.user-input-row { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.user-input {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 16px; padding: 12px 14px;
+  font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s;
+}
+.user-input:focus { border-color: var(--accent); }
+.user-input::placeholder { color: var(--sub); opacity: 0.7; }
+.user-input-row .btn-gold { width: 100%; font-size: 17px; padding: 13px 20px; }
+.user-err { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 18px; }
+
+/* ══ TITLE ══ */
+#titleScreen {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 30%, #001a30 0%, #080d14 70%);
+}
+.title-icon { font-size: 80px; animation: floatAnim 3s ease-in-out infinite; margin-bottom: 12px; }
+.title-main {
+  font-family: 'Kaisei Decol', serif; font-size: 38px; font-weight: 700;
+  background: linear-gradient(135deg, #00c6ff, #38bdf8, #0ea5e9);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 6px; margin-bottom: 8px;
+}
+.title-sub { font-size: 13px; color: var(--sub); margin-bottom: 12px; }
+.ts-user { font-size: 13px; color: var(--sub); margin-bottom: 20px; }
+.ts-user b { color: var(--accent); }
+.title-status {
+  display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; justify-content: center;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 20px;
+}
+.ts-item { text-align: center; min-width: 50px; }
+.ts-label { font-size: 10px; color: var(--sub); letter-spacing: 1px; margin-bottom: 4px; }
+.ts-val { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--accent); }
+.ts-val.lv { color: var(--purple); }
+.ts-val.hp { color: var(--green); }
+.title-items { display: flex; gap: 14px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+.ti-item { font-size: 12px; color: var(--sub); text-align: center; }
+.ti-item.earned { color: var(--accent); }
+
+/* ══ MAP ══ */
+#mapScreen { overflow-y: auto; }
+.map-wrap { max-width: 440px; margin: 0 auto; padding: 20px 16px 60px; }
+.map-header { text-align: center; padding: 16px 0 20px; }
+.map-title { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--accent); }
+.map-sub { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+/* プレイヤーカード */
+.player-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 18px;
+  display: flex; gap: 18px; align-items: center;
+  margin-bottom: 20px;
+}
+.pc-lv {
+  font-family: 'Kaisei Decol', serif; font-size: 28px;
+  color: var(--purple); min-width: 56px; text-align: center;
+}
+.pc-lv span { display: block; font-size: 10px; color: var(--sub); margin-bottom: 2px; }
+.pc-right { flex: 1; min-width: 0; }
+.pc-exp-label { font-size: 11px; color: var(--sub); margin-bottom: 4px; }
+.pc-exp-track { background: #0a1a28; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+.pc-exp-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #00c6ff, #38bdf8); transition: width 0.5s; }
+.pc-hp-label { font-size: 11px; color: var(--sub); margin-bottom: 4px; }
+.pc-hp-track { background: #0a1a1a; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+.pc-hp-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #44dd88, #22cc66); transition: width 0.5s; }
+.pc-stats { font-size: 12px; color: var(--sub); }
+.pc-stats b { color: var(--gold); }
+
+/* フロアカード */
+.floor-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.floor-card {
+  border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 16px 18px; position: relative; overflow: hidden;
+}
+.floor-card.can-enter { background: var(--card); cursor: pointer; transition: all 0.25s; }
+.floor-card.cleared   { background: rgba(68,221,136,0.05); border-color: rgba(68,221,136,0.3); cursor: pointer; transition: all 0.25s; }
+.floor-card.locked    { opacity: 0.35; cursor: default; background: var(--card); }
+.floor-card.can-enter:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,198,255,0.12); }
+.floor-card.cleared:hover   { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(68,221,136,0.12); }
+
+.fc-top { display: flex; align-items: center; gap: 14px; }
+.fc-num { font-size: 11px; color: var(--sub); min-width: 22px; }
+.fc-monster { font-size: 44px; flex-shrink: 0; }
+.fc-info { flex: 1; min-width: 0; }
+.fc-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.floor-card.locked .fc-name  { color: var(--sub); }
+.floor-card.cleared .fc-name { color: var(--green); }
+.fc-theme { font-size: 11px; color: var(--sub); line-height: 1.5; }
+.fc-badge { font-size: 22px; flex-shrink: 0; }
+.fc-item {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+}
+.fc-item-pips { display: flex; gap: 3px; }
+.item-pip { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,198,255,0.4); background: transparent; }
+.item-pip.filled { background: var(--accent); border-color: var(--accent); }
+.item-pip.max { background: #0ea5e9; border-color: #0284c7; box-shadow: 0 0 6px rgba(0,198,255,0.8); }
+
+/* フロア別アクセントカラー */
+.fc-f0.can-enter { border-color: rgba(56,189,248,0.4); }
+.fc-f0.can-enter:hover { border-color: rgba(56,189,248,0.7); }
+.fc-f0 .fc-name { color: #38bdf8; }
+.fc-f1.can-enter { border-color: rgba(74,222,128,0.4); }
+.fc-f1.can-enter:hover { border-color: rgba(74,222,128,0.7); }
+.fc-f1 .fc-name { color: #4ade80; }
+.fc-f2.can-enter { border-color: rgba(251,146,60,0.4); }
+.fc-f2.can-enter:hover { border-color: rgba(251,146,60,0.7); }
+.fc-f2 .fc-name { color: #fb923c; }
+.fc-f3.can-enter { border-color: rgba(215,160,255,0.4); }
+.fc-f3.can-enter:hover { border-color: rgba(215,160,255,0.7); }
+.fc-f3 .fc-name { color: var(--purple); }
+
+/* アイテムボックス */
+.map-items-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 14px;
+}
+.mi-title { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 10px; }
+.mi-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.mi-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.mi-item.earned     { color: var(--accent); }
+.mi-item.not-earned { color: var(--sub); opacity: 0.4; }
+
+/* ══ MODE SELECT ══ */
+#modeScreen { overflow-y: auto; }
+.mode-wrap {
+  max-width: 440px; margin: 0 auto; padding: 20px 16px 60px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.mode-header { display: flex; width: 100%; align-items: center; gap: 12px; }
+.mode-back {
+  background: none; border: 1px solid var(--border); border-radius: 50%;
+  width: 36px; height: 36px; color: var(--sub); font-size: 16px;
+  cursor: pointer; flex-shrink: 0; transition: border-color 0.2s, color 0.2s;
+}
+.mode-back:hover { border-color: var(--sub); color: var(--text); }
+.mode-floor-title { font-family: 'Kaisei Decol', serif; font-size: 20px; color: var(--accent); }
+.mode-floor-theme { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.mode-cleared-badge {
+  font-size: 12px; color: var(--green);
+  background: rgba(68,221,136,0.08); border: 1px solid rgba(68,221,136,0.3);
+  border-radius: 20px; padding: 5px 16px;
+}
+.mode-cards { display: flex; gap: 12px; width: 100%; }
+.mode-card {
+  flex: 1; background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 18px 12px; cursor: pointer;
+  transition: all 0.2s; text-align: center;
+}
+.mode-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,198,255,0.18); border-color: var(--accent); }
+.mode-card.boss-mode:hover { box-shadow: 0 6px 24px rgba(255,159,67,0.2); border-color: var(--orange); }
+.mc-enemy { font-size: 48px; margin-bottom: 8px; }
+.mc-name { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.mode-card.boss-mode .mc-name { color: var(--orange); }
+.mc-hp { font-size: 11px; color: var(--sub); margin-bottom: 12px; }
+.mc-label {
+  font-family: 'Kaisei Decol', serif; font-size: 14px; border-radius: 20px;
+  padding: 6px 0; background: rgba(0,198,255,0.1); color: var(--accent); margin-bottom: 6px;
+}
+.mode-card.boss-mode .mc-label { background: rgba(255,159,67,0.1); color: var(--orange); }
+.mc-desc { font-size: 11px; color: var(--sub); }
+.mode-player-info {
+  font-size: 13px; color: var(--sub);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 20px;
+}
+.mode-player-info b { color: var(--text); }
+
+/* ══ BATTLE SCREEN ══ */
+#battleScreen { overflow-y: auto; }
+.battle-wrap { max-width: 440px; margin: 0 auto; padding: 12px 16px 40px; }
+.battle-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.bh-floor { font-size: 13px; color: var(--sub); }
+.bh-retreat {
+  font-size: 12px; background: none; border: 1px solid var(--border);
+  border-radius: 20px; color: var(--sub); padding: 5px 14px; cursor: pointer; transition: all 0.2s;
+}
+.bh-retreat:hover { border-color: var(--red); color: var(--red); }
+.enemy-area {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; margin-bottom: 12px; text-align: center; position: relative; overflow: hidden;
+}
+.enemy-emoji { font-size: 64px; line-height: 1; margin-bottom: 8px; }
+.enemy-name { font-family: 'Kaisei Decol', serif; font-size: 17px; margin-bottom: 10px; }
+.enemy-hp-wrap { display: flex; align-items: center; gap: 10px; }
+.enemy-hp-track { flex: 1; background: #0a1020; border-radius: 6px; height: 12px; overflow: hidden; }
+.enemy-hp-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg,#ff4444,#ff8800); transition: width 0.4s; }
+.enemy-hp-label { font-size: 12px; color: var(--sub); min-width: 60px; text-align: right; }
+.battle-effect {
+  position: absolute; inset: 0; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; pointer-events: none;
+  animation: effectFade 0.6s ease-out forwards;
+}
+.battle-effect.atk { background: rgba(0,198,255,0.18); color: var(--accent); }
+.battle-effect.hit { background: rgba(255,68,68,0.18); color: var(--red); }
+@keyframes effectFade { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.4)} }
+.question-area {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; margin-bottom: 10px;
+}
+.q-count { font-size: 11px; color: var(--sub); margin-bottom: 8px; letter-spacing: 1px; }
+.q-text  { font-size: 17px; font-weight: 700; line-height: 1.6; }
+.hint-area {
+  background: rgba(255,159,67,0.08); border: 1px solid rgba(255,159,67,0.3);
+  border-radius: 10px; padding: 8px 14px; margin-bottom: 8px;
+  font-size: 12px; color: var(--orange);
+}
+.choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.choice-btn {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 10px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  color: var(--text); text-align: left; transition: all 0.15s;
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;
+}
+.choice-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,198,255,0.06); }
+.choice-btn:disabled { cursor: default; }
+.choice-btn.correct { border-color: var(--green); background: rgba(68,221,136,0.12); color: var(--green); }
+.choice-btn.wrong   { border-color: var(--red);   background: rgba(255,68,68,0.12);   color: var(--red); }
+.choice-label { font-family: 'Kaisei Decol', serif; font-size: 15px; color: var(--sub); flex-shrink: 0; margin-top: 1px; }
+.choice-btn.correct .choice-label { color: var(--green); }
+.choice-btn.wrong   .choice-label { color: var(--red); }
+.player-battle-status {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+}
+.pbs-inf { flex: 1; font-size: 12px; color: var(--green); }
+.pbs-wrong { display: flex; align-items: center; gap: 6px; flex: 1; font-size: 12px; color: var(--sub); }
+#pbsWrongDots { font-size: 16px; letter-spacing: 2px; }
+.pbs-score { font-size: 12px; color: var(--sub); white-space: nowrap; }
+.pbs-score b { color: var(--gold); }
+
+/* ══ RESULT SCREEN ══ */
+#resultScreen { overflow-y: auto; }
+.result-wrap {
+  max-width: 440px; margin: 0 auto; padding: 40px 20px 60px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+}
+.result-title { font-family: 'Kaisei Decol', serif; font-size: 32px; letter-spacing: 4px; }
+.result-title.win    { color: var(--gold); }
+.result-title.defeat { color: var(--red); }
+.result-title.retreat { color: var(--sub); }
+.result-enemy-emoji { font-size: 64px; }
+.result-stats {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 20px; width: 100%; display: flex; justify-content: space-around;
+}
+.rs-item { text-align: center; }
+.rs-label { font-size: 10px; color: var(--sub); letter-spacing: 1px; margin-bottom: 6px; }
+.rs-val { font-family: 'Kaisei Decol', serif; font-size: 22px; color: var(--accent); }
+.result-exp-box {
+  background: rgba(0,198,255,0.06); border: 1px solid rgba(0,198,255,0.2);
+  border-radius: 12px; padding: 12px 20px; width: 100%; font-size: 14px; color: var(--accent);
+}
+.result-levelup-box {
+  background: rgba(215,160,255,0.08); border: 1px solid rgba(215,160,255,0.3);
+  border-radius: 12px; padding: 12px 20px; width: 100%; font-size: 14px; color: var(--purple);
+}
+.result-item-box {
+  background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 12px; padding: 12px 20px; width: 100%; font-size: 14px; color: var(--gold);
+}
+.result-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+/* ══ ENDING SCREEN ══ */
+#endingScreen { overflow-y: auto; }
+.ending-wrap {
+  max-width: 440px; margin: 0 auto; padding: 60px 20px 60px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center;
+}
+.ending-title {
+  font-family: 'Kaisei Decol', serif; font-size: 36px; letter-spacing: 6px;
+  background: linear-gradient(135deg, #00c6ff, #38bdf8, #ffd700);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.ending-sub { font-size: 14px; color: var(--sub); line-height: 1.9; }
+.ending-stats { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.es-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 20px; text-align: center;
+}
+.es-label { font-size: 10px; color: var(--sub); letter-spacing: 1px; margin-bottom: 6px; }
+.es-val { font-family: 'Kaisei Decol', serif; font-size: 24px; color: var(--accent); }
+
+/* ══ DEFEAT POPUP ══ */
+.defeat-popup {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.72); animation: dpFadeIn 0.18s ease-out;
+}
+.defeat-popup.hidden { display: none; }
+@keyframes dpFadeIn { from { opacity:0 } to { opacity:1 } }
+.dp-inner {
+  background: var(--card); border: 2.5px solid var(--gold);
+  border-radius: 22px; padding: 30px 38px; text-align: center; max-width: 300px;
+  animation: dpPopIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes dpPopIn { from { transform:scale(0.55);opacity:0 } to { transform:scale(1);opacity:1 } }
+.dp-emoji { font-size: 54px; margin-bottom: 10px; }
+.dp-msg   { font-family:'Kaisei Decol',serif; font-size:18px; color:var(--gold); font-weight:700; margin-bottom:14px; }
+.dp-exp   { font-size:15px; color:var(--accent); margin-bottom:4px; }
+.dp-lv    { font-size:14px; color:var(--purple); margin-top:6px; min-height:1em; }
+.dp-hp    { font-size:12px; color:var(--green); margin-top:4px; }
+</style>
+</head>
+<body>
+
+<!-- ══ USER SELECT ══ -->
+<div id="userScreen" class="hidden">
+  <div class="user-castle">🗺️</div>
+  <div class="user-main">地理の塔</div>
+  <div class="user-sub">冒険者を選んでください</div>
+  <div id="userListWrap">
+    <div class="user-section-title">— セーブデータ —</div>
+    <div class="user-list" id="userList"></div>
+    <hr class="user-divider">
+  </div>
+  <div class="user-section-title">— 新しい冒険者を登録 —</div>
+  <div class="user-input-row">
+    <input class="user-input" id="userNameInput" maxlength="10"
+      placeholder="なまえ（10文字まで）"
+      onkeydown="if(event.key==='Enter')createUser()" />
+    <button class="btn-gold" onclick="createUser()">決定</button>
+  </div>
+  <div class="user-err" id="userErr"></div>
+</div>
+
+<!-- ══ TITLE ══ -->
+<div id="titleScreen" class="hidden">
+  <div class="title-icon">🗺️</div>
+  <div class="title-main">地理の塔</div>
+  <div class="title-sub">問題を解いて世界を制覇せよ！</div>
+  <div class="ts-user">冒険者: <b id="tsName">—</b></div>
+  <div class="title-status">
+    <div class="ts-item"><div class="ts-label">LEVEL</div><div class="ts-val lv" id="tsLv">1</div></div>
+    <div class="ts-item"><div class="ts-label">HP</div><div class="ts-val hp" id="tsHp">10</div></div>
+    <div class="ts-item"><div class="ts-label">ATK</div><div class="ts-val" id="tsAtk">2</div></div>
+    <div class="ts-item"><div class="ts-label">FLOORS</div><div class="ts-val" id="tsFloors">0/4</div></div>
+  </div>
+  <button class="btn-gold" onclick="goToMap()">冒険をはじめる</button>
+  <div class="title-items" id="titleItems"></div>
+  <button class="btn-switch" onclick="switchUser()">ユーザーを切り替える</button>
+</div>
+
+<!-- ══ MAP ══ -->
+<div id="mapScreen" class="hidden">
+  <div class="map-wrap">
+    <div class="map-header">
+      <div class="map-title">🗺️ 地理の塔</div>
+      <div class="map-sub" id="mapSub">フロアを選んでください</div>
+    </div>
+    <div class="player-card">
+      <div class="pc-lv"><span>LV</span><span id="pcLv">1</span></div>
+      <div class="pc-right">
+        <div class="pc-exp-label">EXP <span id="pcExpLabel">0 / 10</span></div>
+        <div class="pc-exp-track"><div class="pc-exp-fill" id="pcExpFill" style="width:0%"></div></div>
+        <div class="pc-hp-label">HP <span id="pcHpLabel">10 / 10</span></div>
+        <div class="pc-hp-track"><div class="pc-hp-fill" id="pcHpFill" style="width:100%"></div></div>
+        <div class="pc-stats">ATK <b id="pcAtk">2</b></div>
+      </div>
+    </div>
+    <div class="floor-list" id="floorList"></div>
+    <div class="map-items-box">
+      <div class="mi-title">— 入手アイテム —</div>
+      <div class="mi-row" id="mapItemsRow"></div>
+    </div>
+    <div style="text-align:center; margin-top:8px;">
+      <button class="btn-outline" onclick="showScreen('titleScreen'); renderTitle()">タイトルへ戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODE SELECT ══ -->
+<div id="modeScreen" class="hidden">
+  <div class="mode-wrap">
+    <div class="mode-header">
+      <button class="mode-back" onclick="renderMap(); showScreen('mapScreen')">←</button>
+      <div>
+        <div class="mode-floor-title" id="modeFloorTitle"></div>
+        <div class="mode-floor-theme" id="modeFloorTheme"></div>
+      </div>
+    </div>
+    <div id="modeClearedBadge" class="mode-cleared-badge hidden">✅ クリア済み — 再挑戦できます</div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startBattle('normal')">
+        <div class="mc-enemy" id="mcNormalEmoji"></div>
+        <div class="mc-name"  id="mcNormalName"></div>
+        <div class="mc-hp"   id="mcNormalHP"></div>
+        <div class="mc-label">通常バトル</div>
+        <div class="mc-desc">敵を倒してEXPを稼ごう</div>
+      </div>
+      <div class="mode-card boss-mode" onclick="startBattle('boss')">
+        <div class="mc-enemy" id="mcBossEmoji"></div>
+        <div class="mc-name"  id="mcBossName"></div>
+        <div class="mc-hp"   id="mcBossHP"></div>
+        <div class="mc-label">ボス挑戦</div>
+        <div class="mc-desc">3問ミスで失格！ボスを倒せ</div>
+      </div>
+    </div>
+    <div class="mode-player-info" id="modePlayerInfo"></div>
+  </div>
+</div>
+
+<!-- ══ BATTLE ══ -->
+<div id="battleScreen" class="hidden">
+  <div class="battle-wrap">
+    <div class="battle-header">
+      <div class="bh-floor" id="bhFloor"></div>
+      <button class="bh-retreat" onclick="retreat()">逃げる</button>
+    </div>
+    <div class="enemy-area" id="enemyArea">
+      <div class="enemy-emoji" id="enemyEmoji"></div>
+      <div class="enemy-name"  id="enemyName"></div>
+      <div class="enemy-hp-wrap">
+        <div class="enemy-hp-track">
+          <div class="enemy-hp-fill" id="enemyHpFill" style="width:100%"></div>
+        </div>
+        <div class="enemy-hp-label" id="enemyHpLabel"></div>
+      </div>
+    </div>
+    <div class="question-area">
+      <div class="q-count" id="qCount"></div>
+      <div class="q-text"  id="qText"></div>
+    </div>
+    <div id="hintArea" class="hint-area hidden"></div>
+    <div class="choices-grid" id="choicesGrid"></div>
+    <div class="player-battle-status">
+      <div id="pbsInfArea" class="pbs-inf hidden">∞ 何度でも挑戦OK</div>
+      <div id="pbsWrongArea" class="pbs-wrong hidden">
+        <span>ミス</span><span id="pbsWrongDots"></span>
+      </div>
+      <div class="pbs-score" id="pbsScore"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEFEAT POPUP ══ -->
+<div id="defeatPopup" class="defeat-popup hidden">
+  <div class="dp-inner">
+    <div id="dpEmoji" class="dp-emoji"></div>
+    <div id="dpMsg"   class="dp-msg"></div>
+    <div id="dpExp"   class="dp-exp"></div>
+    <div id="dpLv"    class="dp-lv"></div>
+    <div id="dpHp"    class="dp-hp"></div>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="resultScreen" class="hidden">
+  <div class="result-wrap">
+    <div class="result-title"       id="resultTitle"></div>
+    <div class="result-enemy-emoji" id="resultEnemyEmoji"></div>
+    <div class="result-stats"       id="resultStats"></div>
+    <div id="resultExpBox"  class="result-exp-box     hidden"></div>
+    <div id="resultLvBox"   class="result-levelup-box hidden"></div>
+    <div id="resultItemBox" class="result-item-box    hidden"></div>
+    <div class="result-btns">
+      <button class="btn-gold"    id="resultMainBtn"></button>
+      <button class="btn-outline" id="resultSubBtn"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENDING ══ -->
+<div id="endingScreen" class="hidden">
+  <div class="ending-wrap">
+    <div style="font-size:80px">🌍</div>
+    <div class="ending-title">全クリア！</div>
+    <div class="ending-sub">地理の塔を制覇しました！<br>すべてのフロアのボスを倒し<br>世界の賢者となりました。</div>
+    <div class="ending-stats" id="endingStats"></div>
+    <button class="btn-gold" onclick="renderMap(); showScreen('mapScreen')">マップへ戻る</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  定数
+// ══════════════════════════════════════════
+const MAX_LV    = 10;
+const BASE_ATK  = [2, 3, 4, 5, 7, 9, 11, 14, 17, 20];
+const EXP_TABLE = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320]; // EXP_TABLE[lv] = lv到達に必要な累計EXP
+const MAX_HP_TABLE = [10, 13, 16, 20, 24, 28, 32, 36, 40, 45];  // レベル別最大HP
+
+// ══════════════════════════════════════════
+//  フロアデータ（問題は Phase 2 で追加）
+// ══════════════════════════════════════════
+const FLOORS = [
+  {
+    name: "都道府県の間",
+    theme: "都道府県・県庁所在地",
+    emoji: "🗾",
+    monsters: [
+      { name: "まよいの精霊", emoji: "👻" },
+      { name: "迷子のゾンビ",  emoji: "🧟" },
+      { name: "県境の渦",      emoji: "🌀" },
+    ],
+    monsterHP: 8,  monsterHPGrowth: 2,
+    bossName: "大地の守護神",
+    bossEmoji: "⛩️",
+    bossHP: 20, bossHPGrowth: 4,
+    bossCls: "boss-f0", bossTitle: "大地の守護神",
+    itemEmoji: "🗾", itemName: "日本地図",
+    itemBonus: [1, 2, 3],
+    questions: [
+      { q: "岩手県の県庁所在地は？", choices: ["盛岡市","一関市","花巻市","宮古市"], answer: 0, hint: "南部藩の城下町" },
+      { q: "神奈川県の県庁所在地は？", choices: ["川崎市","横浜市","相模原市","横須賀市"], answer: 1, hint: "みなとみらいが有名な港町" },
+      { q: "愛知県の県庁所在地は？", choices: ["豊橋市","岡崎市","名古屋市","一宮市"], answer: 2, hint: "名古屋城がある" },
+      { q: "沖縄県の県庁所在地は？", choices: ["宜野湾市","沖縄市","浦添市","那覇市"], answer: 3, hint: "首里城の近くにある" },
+      { q: "北海道の道庁所在地は？", choices: ["札幌市","函館市","旭川市","小樽市"], answer: 0, hint: "大通公園・すすきのがある" },
+      { q: "栃木県の県庁所在地は？", choices: ["小山市","宇都宮市","足利市","日光市"], answer: 1, hint: "餃子の消費量が多い" },
+      { q: "島根県の県庁所在地は？", choices: ["出雲市","浜田市","松江市","益田市"], answer: 2, hint: "宍道湖のほとりにある" },
+      { q: "香川県の県庁所在地は？", choices: ["丸亀市","坂出市","観音寺市","高松市"], answer: 3, hint: "うどん県の中心都市" },
+      { q: "愛媛県の県庁所在地は？", choices: ["松山市","今治市","新居浜市","西条市"], answer: 0, hint: "道後温泉がある四国の都市" },
+      { q: "高知県の県庁所在地は？", choices: ["四万十市","高知市","南国市","香南市"], answer: 1, hint: "坂本龍馬の出身地" },
+      { q: "三重県の県庁所在地は？", choices: ["四日市市","桑名市","伊勢市","津市"], answer: 3, hint: "日本一短い市名" },
+      { q: "石川県の県庁所在地は？", choices: ["金沢市","七尾市","小松市","輪島市"], answer: 0, hint: "兼六園がある北陸の城下町" },
+      { q: "日本の都道府県の数はいくつ？", choices: ["45","46","47","48"], answer: 2, hint: "1都1道2府43県" },
+      { q: "滋賀県の県庁所在地は？", choices: ["彦根市","草津市","大津市","長浜市"], answer: 2, hint: "琵琶湖の南西にある" },
+      { q: "青森県の県庁所在地は？", choices: ["弘前市","青森市","八戸市","五所川原市"], answer: 1, hint: "ねぶた祭りで有名" },
+      { q: "都道府県で面積が最も大きいのは？", choices: ["岩手県","福島県","北海道","長野県"], answer: 2, hint: "日本の国土の約22%を占める" },
+      { q: "富山県の県庁所在地は？", choices: ["高岡市","魚津市","氷見市","富山市"], answer: 3, hint: "薬の配置販売が昔から有名" },
+      { q: "宮崎県の県庁所在地は？", choices: ["宮崎市","都城市","延岡市","日南市"], answer: 0, hint: "日南海岸のフェニックスが有名" },
+      { q: "日本三景に含まれるのはどれ？", choices: ["富士山","軍艦島","松島","白神山地"], answer: 2, hint: "宮城県にある景勝地" },
+      { q: "海に面していない「内陸県」はいくつあるか？", choices: ["6","7","8","9"], answer: 2, hint: "栃木・群馬・埼玉など8県" },
+      { q: "宮城県の県庁所在地は？", choices: ["石巻市","仙台市","塩竈市","気仙沼市"], answer: 1, hint: "東北最大の都市・政令指定都市" },
+      { q: "秋田県の県庁所在地は？", choices: ["横手市","能代市","大仙市","秋田市"], answer: 3, hint: "なまはげで有名な県の中心都市" },
+      { q: "山形県の県庁所在地は？", choices: ["鶴岡市","酒田市","山形市","米沢市"], answer: 2, hint: "山形花笠まつりで有名" },
+      { q: "福島県の県庁所在地は？", choices: ["いわき市","郡山市","会津若松市","福島市"], answer: 3, hint: "阿武隈高地の北に位置する" },
+      { q: "茨城県の県庁所在地は？", choices: ["つくば市","日立市","土浦市","水戸市"], answer: 3, hint: "偕楽園の梅で有名" },
+      { q: "群馬県の県庁所在地は？", choices: ["高崎市","太田市","伊勢崎市","前橋市"], answer: 3, hint: "利根川の上流に位置する内陸の城下町" },
+      { q: "埼玉県の県庁所在地は？", choices: ["川口市","川越市","さいたま市","越谷市"], answer: 2, hint: "2001年に浦和・大宮・与野が合併して誕生" },
+      { q: "千葉県の県庁所在地は？", choices: ["船橋市","柏市","松戸市","千葉市"], answer: 3, hint: "東京湾に面した政令指定都市" },
+      { q: "新潟県の県庁所在地は？", choices: ["長岡市","上越市","三条市","新潟市"], answer: 3, hint: "本州日本海側最大の都市" },
+      { q: "長野県の県庁所在地は？", choices: ["松本市","上田市","飯田市","長野市"], answer: 3, hint: "善光寺がある内陸の県庁所在地" },
+      { q: "岐阜県の県庁所在地は？", choices: ["大垣市","各務原市","多治見市","岐阜市"], answer: 3, hint: "金華山と岐阜城がある" },
+      { q: "静岡県の県庁所在地は？", choices: ["浜松市","富士市","沼津市","静岡市"], answer: 3, hint: "駿府城跡がある東海道の要所" },
+      { q: "京都府の府庁所在地は？", choices: ["宇治市","亀岡市","福知山市","京都市"], answer: 3, hint: "千年の古都" },
+      { q: "大阪府の府庁所在地は？", choices: ["堺市","東大阪市","豊中市","大阪市"], answer: 3, hint: "「天下の台所」として栄えた" },
+      { q: "兵庫県の県庁所在地は？", choices: ["姫路市","西宮市","尼崎市","神戸市"], answer: 3, hint: "六甲山と港町で有名" },
+      { q: "奈良県の県庁所在地は？", choices: ["橿原市","大和郡山市","桜井市","奈良市"], answer: 3, hint: "東大寺・春日大社がある古都" },
+      { q: "和歌山県の県庁所在地は？", choices: ["田辺市","橋本市","新宮市","和歌山市"], answer: 3, hint: "高野山・熊野古道の玄関口" },
+      { q: "鳥取県の県庁所在地は？", choices: ["米子市","倉吉市","境港市","鳥取市"], answer: 3, hint: "鳥取砂丘に近い、人口最少の県の中心" },
+      { q: "岡山県の県庁所在地は？", choices: ["倉敷市","総社市","津山市","岡山市"], answer: 3, hint: "後楽園がある「晴れの国」" },
+      { q: "広島県の県庁所在地は？", choices: ["呉市","福山市","尾道市","広島市"], answer: 3, hint: "平和記念公園がある中国地方最大の都市" },
+      { q: "山口県の県庁所在地は？", choices: ["下関市","宇部市","防府市","山口市"], answer: 3, hint: "本州の最西端に近い県庁所在地" },
+      { q: "徳島県の県庁所在地は？", choices: ["鳴門市","阿南市","小松島市","徳島市"], answer: 3, hint: "阿波踊りで有名な四国東部の都市" },
+      { q: "福岡県の県庁所在地は？", choices: ["北九州市","久留米市","大牟田市","福岡市"], answer: 3, hint: "九州最大の都市・博多湾に面する" },
+      { q: "佐賀県の県庁所在地は？", choices: ["唐津市","伊万里市","鳥栖市","佐賀市"], answer: 3, hint: "有田焼の産地として知られる県の中心" },
+      { q: "長崎県の県庁所在地は？", choices: ["佐世保市","諫早市","島原市","長崎市"], answer: 3, hint: "出島があった江戸時代の貿易港" },
+      { q: "熊本県の県庁所在地は？", choices: ["八代市","天草市","人吉市","熊本市"], answer: 3, hint: "熊本城がある火の国の中心都市" },
+      { q: "大分県の県庁所在地は？", choices: ["別府市","中津市","佐伯市","大分市"], answer: 3, hint: "温泉県・豊後国の中心都市" },
+      { q: "鹿児島県の県庁所在地は？", choices: ["霧島市","薩摩川内市","指宿市","鹿児島市"], answer: 3, hint: "桜島が望める九州南端の都市" },
+      { q: "山梨県の県庁所在地は？", choices: ["富士吉田市","都留市","南アルプス市","甲府市"], answer: 3, hint: "甲斐国・武田信玄の城下町" },
+      { q: "福井県の県庁所在地は？", choices: ["越前市","小浜市","敦賀市","福井市"], answer: 3, hint: "眼鏡フレームの産地として有名" },
+      { q: "日本で2番目に高い山は？", choices: ["北岳","奥穂高岳","間ノ岳","槍ヶ岳"], answer: 0, hint: "南アルプス（赤石山脈）にある標高3193m" },
+      { q: "日本で最も大きい平野は？", choices: ["越後平野","濃尾平野","仙台平野","関東平野"], answer: 3, hint: "東京都を中心に広がる日本最大の平野" },
+      { q: "「リアス海岸」が見られる場所はどれ？", choices: ["関東平野の海岸","北海道の海岸","三陸海岸","富山湾岸"], answer: 2, hint: "複雑に入り組んだ湾と岬が続く" },
+      { q: "瀬戸内海に面していない都道府県はどれ？", choices: ["広島県","愛媛県","和歌山県","高知県"], answer: 3, hint: "太平洋側に面する四国南部の県" },
+      { q: "富士山がある都道府県の組み合わせは？", choices: ["山梨県と神奈川県","山梨県と長野県","静岡県と神奈川県","山梨県と静岡県"], answer: 3, hint: "山頂の境界は両県にまたがる" },
+      { q: "日本の最南端の島は？", choices: ["与那国島","石垣島","南鳥島","沖ノ鳥島"], answer: 3, hint: "東京都に属するサンゴ礁の島" },
+      { q: "日本の最東端の島は？", choices: ["与那国島","石垣島","南鳥島","沖ノ鳥島"], answer: 2, hint: "東京都に属する太平洋の孤島" },
+      { q: "北海道と本州を結ぶ海峡は？", choices: ["関門海峡","豊予海峡","鳴門海峡","津軽海峡"], answer: 3, hint: "青函トンネルが通っている" }
+    ]
+  },
+  {
+    name: "山河の間",
+    theme: "日本の地形・気候・産業",
+    emoji: "⛰️",
+    monsters: [
+      { name: "山の妖怪",   emoji: "👺" },
+      { name: "火山の悪魔", emoji: "🌋" },
+      { name: "川の水龍",   emoji: "🌊" },
+    ],
+    monsterHP: 14, monsterHPGrowth: 3,
+    bossName: "山河の竜神",
+    bossEmoji: "🐉",
+    bossHP: 35, bossHPGrowth: 6,
+    bossCls: "boss-f1", bossTitle: "山河の竜神",
+    itemEmoji: "🧭", itemName: "コンパス",
+    itemBonus: [1, 2, 3],
+    questions: [
+      { q: "日本で最も長い川は？", choices: ["信濃川","利根川","石狩川","木曽川"], answer: 0, hint: "新潟県から日本海へ注ぐ" },
+      { q: "日本で最も大きい湖は？", choices: ["諏訪湖","霞ヶ浦","琵琶湖","サロマ湖"], answer: 2, hint: "滋賀県にある" },
+      { q: "「日本アルプス」に含まれない山脈は？", choices: ["赤石山脈","飛騨山脈","木曽山脈","奥羽山脈"], answer: 3, hint: "日本アルプスは南・北・中央の三つ" },
+      { q: "日本で最も高い山は？", choices: ["北岳","富士山","穂高岳","槍ヶ岳"], answer: 1, hint: "標高3776m" },
+      { q: "米の生産量が多い地方として有名なのは？", choices: ["九州地方","東北地方","近畿地方","四国地方"], answer: 1, hint: "米どころとして有名な地方" },
+      { q: "日本の川の特徴として正しいのは？", choices: ["流れが緩やかで長い","流れが急で短い","大きな三角州が多い","滝が少ない"], answer: 1, hint: "山が多く海までの距離が短い" },
+      { q: "りんごの生産が最も多い都道府県は？", choices: ["山形県","長野県","青森県","岩手県"], answer: 2, hint: "弘前市のりんご祭りが有名" },
+      { q: "日本で最も深い湖は？", choices: ["摩周湖","田沢湖","洞爺湖","十和田湖"], answer: 1, hint: "秋田県にある水深423mの湖" },
+      { q: "関東平野に広がる赤土の層の名前は？", choices: ["ローム層","沖積層","砂礫層","泥炭層"], answer: 0, hint: "火山灰が積もってできた土壌" },
+      { q: "冬に日本海側に雪が多い主な理由は？", choices: ["シベリアからの冷たい風が山地に当たるから","偏西風が強いから","台風の影響を受けるから","黒潮の影響を受けるから"], answer: 0, hint: "大陸から吹く季節風が関係する" },
+      { q: "みかんの生産が最も多い都道府県は？", choices: ["愛媛県","和歌山県","静岡県","熊本県"], answer: 1, hint: "紀伊半島に位置する県" },
+      { q: "日本の太平洋側気候の特徴は？", choices: ["夏に雨が多く冬に乾燥する","夏に乾燥し冬に雨が多い","一年中雨が少ない","梅雨がない"], answer: 0, hint: "夏の台風の影響を受けやすい" },
+      { q: "桜島は何県にある？", choices: ["熊本県","宮崎県","鹿児島県","大分県"], answer: 2, hint: "日本を代表する活火山" },
+      { q: "日本の工業地帯で愛知県を中心とするのは？", choices: ["阪神工業地帯","中京工業地帯","京浜工業地帯","北九州工業地帯"], answer: 1, hint: "自動車工業が盛ん" },
+      { q: "北海道の気候の特徴として正しいのは？", choices: ["梅雨がない","一年中高温多雨","台風が多い","温暖な気候"], answer: 0, hint: "梅雨前線が北海道まで届きにくい" },
+      { q: "日本の主な工業地帯が集まっている地域は？", choices: ["北海道・東北","太平洋ベルト","日本海側","九州全体"], answer: 1, hint: "太平洋に面した帯状の地域" },
+      { q: "日本最大の平野は？", choices: ["濃尾平野","越後平野","関東平野","大阪平野"], answer: 2, hint: "東京を中心に広がる" },
+      { q: "「フォッサマグナ」の説明として正しいのは？", choices: ["日本最長の断層","東西日本を分ける大地溝帯","火山帯の名前","海底山脈"], answer: 1, hint: "ラテン語で「大きな溝」の意味" },
+      { q: "稲作に適した気候の特徴は？", choices: ["一年中低温","夏に高温多雨","乾燥した気候","梅雨がない"], answer: 1, hint: "水稲には夏の暖かさと雨が必要" },
+      { q: "日本の近海で暖流と寒流がぶつかる海域を何という？", choices: ["黒潮","潮目（潮境）","親潮","対馬海流"], answer: 1, hint: "魚が集まりやすい豊かな漁場" },
+      { q: "飛騨山脈の別名は？", choices: ["南アルプス","北アルプス","中央アルプス","奥羽山脈"], answer: 1, hint: "立山連峰・穂高岳を含む日本最高の山脈群" },
+      { q: "赤石山脈の別名は？", choices: ["南アルプス","北アルプス","中央アルプス","紀伊山地"], answer: 0, hint: "日本第2位の北岳がある長野・山梨・静岡の山脈" },
+      { q: "木曽山脈の別名は？", choices: ["南アルプス","北アルプス","中央アルプス","越後山脈"], answer: 2, hint: "長野県を南北に走る日本アルプス" },
+      { q: "「瀬戸内海式気候」の特徴はどれ？", choices: ["冬の降水量が多い","年間を通じて降水量が少ない","夏に霧が多い","梅雨がとても長い"], answer: 1, hint: "中国山地と四国山地に挟まれ季節風が遮られる" },
+      { q: "「中央高地の気候」の特徴はどれ？", choices: ["年中温暖多雨","夏涼しく冬寒い内陸型","一年中高温","台風が多い"], answer: 1, hint: "長野県など山に囲まれた内陸の盆地・高原" },
+      { q: "「南西諸島の気候」の特徴はどれ？", choices: ["一年中寒冷","冬も温暖で降水量が多い","夏だけ暑い","一年中乾燥している"], answer: 1, hint: "亜熱帯性気候、沖縄が代表例" },
+      { q: "「四万十川」が流れる都道府県は？", choices: ["愛媛県","徳島県","宮崎県","高知県"], answer: 3, hint: "「日本最後の清流」とも呼ばれる" },
+      { q: "「最上川」が流れる主な都道府県は？", choices: ["秋田県","岩手県","新潟県","山形県"], answer: 3, hint: "松尾芭蕉の句「五月雨をあつめて早し」で有名" },
+      { q: "「天竜川」が注ぐ海は？", choices: ["日本海","東京湾","瀬戸内海","太平洋"], answer: 3, hint: "諏訪湖から流れ出し遠州灘（太平洋）へ注ぐ" },
+      { q: "「阪神工業地帯」の中心はどこ？", choices: ["愛知・三重","東京・神奈川","広島・山口","大阪・兵庫"], answer: 3, hint: "大阪湾岸に発達した日本有数の工業地帯" },
+      { q: "「京浜工業地帯」の中心はどこ？", choices: ["大阪・兵庫","埼玉・千葉","茨城・千葉","東京・神奈川"], answer: 3, hint: "東京湾の西岸に発達した工業地帯" },
+      { q: "「北九州工業地帯（地域）」が位置するのは？", choices: ["宮崎・鹿児島","長崎・熊本","大分・熊本","福岡・北九州市"], answer: 3, hint: "明治期に八幡製鉄所が建設された地域" },
+      { q: "静岡県の主な特産品の組み合わせは？", choices: ["りんご・みかん","茶・みかん・わさび","ぶどう・もも","コンブ・ホタテ"], answer: 1, hint: "温暖な気候と豊かな自然を活かした農産品" },
+      { q: "「い草（畳の原料）」の主な産地は？", choices: ["滋賀県","鳥取県","岡山県","熊本県"], answer: 3, hint: "八代平野など熊本平野で盛んに栽培" },
+      { q: "「あきたこまち」が生産される都道府県は？", choices: ["新潟県","山形県","宮城県","秋田県"], answer: 3, hint: "秋田美人にちなんで命名されたブランド米" },
+      { q: "「コシヒカリ」の原産地として有名な都道府県は？", choices: ["北海道","宮城県","山形県","新潟県"], answer: 3, hint: "越後（新潟）が誇る日本を代表するブランド米" },
+      { q: "日本の東側を南から北に流れる寒流は？", choices: ["対馬海流","黒潮","リマン海流","親潮（千島海流）"], answer: 3, hint: "千島列島方面から南下する冷たい海流" },
+      { q: "日本の農業産出額が最も多い都道府県（近年）は？", choices: ["新潟県","鹿児島県","茨城県","北海道"], answer: 3, hint: "広大な農地と多様な農産物が強み" },
+      { q: "夏に太平洋側から吹く冷たい北東風「やませ」の影響は？", choices: ["夏に大雨をもたらす","東北の太平洋側に冷害をもたらす","西日本を温かくする","冬の日本海側に雪をもたらす"], answer: 1, hint: "北東から吹くと稲が育ちにくくなる" },
+      { q: "「フェーン現象」とはどのような現象か？", choices: ["冷たい空気が山を越えた後さらに冷える","湿った空気が山を越えた後乾燥した熱い風になる","海から吹く潮風","霧がたちこめる現象"], answer: 1, hint: "山越えで気温が上昇する現象" },
+      { q: "「リアス海岸」の特徴として正しいのは？", choices: ["砂浜が多い","砂丘が多い","平らな岩場が続く","複雑に入り組んだ湾と岬が連続する"], answer: 3, hint: "三陸海岸・志摩半島・若狭湾に見られる" },
+      { q: "「促成栽培」が盛んに行われている地域はどれ？", choices: ["北海道","東北地方","関東平野","九州南部・高知県"], answer: 3, hint: "温暖な気候を利用して野菜を早く出荷する農法" },
+      { q: "長野県の高原野菜産地として有名なのは？", choices: ["伊那谷","木曽谷","松本盆地","野辺山高原・八ヶ岳周辺"], answer: 3, hint: "夏でも涼しい高原でレタスなどを栽培（抑制栽培）" },
+      { q: "「十和田湖」があるのは何県と何県の間か？", choices: ["山形県と新潟県","北海道と青森県","岩手県と宮城県","青森県と秋田県"], answer: 3, hint: "カルデラ湖、東北の観光名所" },
+      { q: "日本の「三大急流」に含まれる川はどれ？", choices: ["木曽川","信濃川","四万十川","球磨川（熊本）"], answer: 3, hint: "ほかに最上川・富士川（常願寺川）が挙げられる" },
+      { q: "北海道の東部で「酪農」が盛んな地域は？", choices: ["石狩平野","十勝平野","上川盆地","根釧台地"], answer: 3, hint: "根室・釧路の草原地帯での乳牛飼育" },
+      { q: "日本の林業生産額が高い都道府県として有名なのは？", choices: ["岩手県","高知県","北海道","宮崎県"], answer: 3, hint: "スギ・ヒノキの人工林が多い九州の林業県" },
+      { q: "「桜前線」が日本列島を進む方向は？", choices: ["北から南へ","東から西へ","西から東へ","南から北へ"], answer: 3, hint: "九州から北海道へ向かって開花が進む" },
+      { q: "「磐梯山」がある都道府県は？", choices: ["山形県","秋田県","岩手県","福島県"], answer: 3, hint: "1888年の大噴火で磐梯高原が形成された" }
+    ]
+  },
+  {
+    name: "世界の間",
+    theme: "世界の国・首都",
+    emoji: "🌍",
+    monsters: [
+      { name: "砂漠の幻影",   emoji: "🏜️" },
+      { name: "密林の蛇使い", emoji: "🐍" },
+      { name: "嵐の精",       emoji: "🌪️" },
+    ],
+    monsterHP: 20, monsterHPGrowth: 4,
+    bossName: "謎かけのスフィンクス",
+    bossEmoji: "🦁",
+    bossHP: 50, bossHPGrowth: 9,
+    bossCls: "boss-f2", bossTitle: "謎かけのスフィンクス",
+    itemEmoji: "🔭", itemName: "望遠鏡",
+    itemBonus: [1, 2, 3],
+    questions: [
+      { q: "フランスの首都は？", choices: ["リヨン","パリ","マルセイユ","ボルドー"], answer: 1, hint: "エッフェル塔がある" },
+      { q: "ブラジルの首都は？", choices: ["サンパウロ","リオデジャネイロ","ブラジリア","サルバドール"], answer: 2, hint: "計画的に建設された新首都" },
+      { q: "オーストラリアの首都は？", choices: ["シドニー","メルボルン","キャンベラ","ブリスベン"], answer: 2, hint: "シドニーでもメルボルンでもない" },
+      { q: "カナダの首都は？", choices: ["トロント","バンクーバー","モントリオール","オタワ"], answer: 3, hint: "カナダ最大都市とは異なる" },
+      { q: "世界で最も面積が大きい国は？", choices: ["カナダ","アメリカ","中国","ロシア"], answer: 3, hint: "ユーラシア大陸北部に広がる" },
+      { q: "インドの首都は？", choices: ["ムンバイ","コルカタ","ニューデリー","チェンナイ"], answer: 2, hint: "デリーの南部に作られた計画都市" },
+      { q: "韓国の首都は？", choices: ["釜山","ソウル","仁川","大邱"], answer: 1, hint: "漢江が流れる" },
+      { q: "メキシコの首都は？", choices: ["グアダラハラ","モンテレイ","プエブラ","メキシコシティ"], answer: 3, hint: "海抜2000m以上の高地にある" },
+      { q: "世界で最も人口が多い国は？", choices: ["アメリカ","インド","インドネシア","中国"], answer: 1, hint: "2023年に中国を抜いた" },
+      { q: "エジプトの首都は？", choices: ["アレクサンドリア","カイロ","ルクソール","アスワン"], answer: 1, hint: "ナイル川デルタ地帯にある" },
+      { q: "アルゼンチンの首都は？", choices: ["ブエノスアイレス","コルドバ","ロサリオ","メンドーサ"], answer: 0, hint: "「南米のパリ」とも呼ばれる" },
+      { q: "ドイツの首都は？", choices: ["ミュンヘン","フランクフルト","ハンブルク","ベルリン"], answer: 3, hint: "ブランデンブルク門がある" },
+      { q: "イタリアの首都は？", choices: ["ミラノ","ナポリ","ローマ","フィレンツェ"], answer: 2, hint: "コロッセオがある「永遠の都」" },
+      { q: "アメリカの首都は？", choices: ["ニューヨーク","ロサンゼルス","シカゴ","ワシントンD.C."], answer: 3, hint: "ホワイトハウスがある" },
+      { q: "タイの首都は？", choices: ["チェンマイ","パタヤ","バンコク","プーケット"], answer: 2, hint: "正式名称が世界一長い首都" },
+      { q: "スペインの首都は？", choices: ["バルセロナ","マドリード","バレンシア","セビリア"], answer: 1, hint: "プラド美術館がある" },
+      { q: "ペルーの首都は？", choices: ["クスコ","アレキパ","リマ","トルヒーヨ"], answer: 2, hint: "太平洋岸にある南米の都市" },
+      { q: "ノルウェーの首都は？", choices: ["ストックホルム","コペンハーゲン","ヘルシンキ","オスロ"], answer: 3, hint: "スカンジナビア半島の南西部" },
+      { q: "アフリカで最も面積が大きい国は？", choices: ["スーダン","エジプト","アルジェリア","コンゴ民主共和国"], answer: 2, hint: "北アフリカに位置する" },
+      { q: "ナイル川が流れ込む海は？", choices: ["紅海","アラビア海","地中海","黒海"], answer: 2, hint: "エジプト北部に広がる海" },
+      { q: "中国の首都は？", choices: ["上海","深圳","香港","北京"], answer: 3, hint: "天安門広場・故宮がある" },
+      { q: "ロシアの首都は？", choices: ["サンクトペテルブルク","ウラジオストク","ノボシビルスク","モスクワ"], answer: 3, hint: "赤の広場・クレムリンがある" },
+      { q: "ベトナムの首都は？", choices: ["ホーチミン","ダナン","フエ","ハノイ"], answer: 3, hint: "北部に位置するベトナムの政治の中心" },
+      { q: "フィリピンの首都は？", choices: ["セブ","ダバオ","カガヤンデオロ","マニラ"], answer: 3, hint: "ルソン島にある群島国家の首都" },
+      { q: "インドネシアの首都は？", choices: ["スラバヤ","バリ","バンドン","ジャカルタ"], answer: 3, hint: "ジャワ島にある人口1億都市圏の首都" },
+      { q: "マレーシアの首都は？", choices: ["ジョホールバル","ペナン","コタキナバル","クアラルンプール"], answer: 3, hint: "ペトロナスツインタワーがある" },
+      { q: "パキスタンの首都は？", choices: ["カラチ","ラホール","ペシャワール","イスラマバード"], answer: 3, hint: "カラチとは別の計画都市" },
+      { q: "トルコの首都は？", choices: ["イスタンブール","イズミル","ブルサ","アンカラ"], answer: 3, hint: "最大都市とは異なる内陸の首都" },
+      { q: "サウジアラビアの首都は？", choices: ["ジッダ","メッカ","メディナ","リヤド"], answer: 3, hint: "アラビア半島中部に位置する" },
+      { q: "ポーランドの首都は？", choices: ["クラクフ","ウッチ","グダニスク","ワルシャワ"], answer: 3, hint: "ヴィスワ川沿いの東ヨーロッパの大都市" },
+      { q: "オーストリアの首都は？", choices: ["ザルツブルク","グラーツ","リンツ","ウィーン"], answer: 3, hint: "「音楽の都」、モーツァルトで有名" },
+      { q: "ギリシャの首都は？", choices: ["テッサロニキ","パトラス","ピレウス","アテネ"], answer: 3, hint: "パルテノン神殿がある古代文明の都市" },
+      { q: "ポルトガルの首都は？", choices: ["ポルト","ファロ","コインブラ","リスボン"], answer: 3, hint: "大西洋に面したヨーロッパ最西端の首都" },
+      { q: "スウェーデンの首都は？", choices: ["ゴーテボリ","マルメ","ウプサラ","ストックホルム"], answer: 3, hint: "「北欧のベニス」とも呼ばれる水の都" },
+      { q: "フィンランドの首都は？", choices: ["タンペレ","トゥルク","エスポー","ヘルシンキ"], answer: 3, hint: "バルト海に面した北欧の首都" },
+      { q: "ケニアの首都は？", choices: ["モンバサ","キスム","ナクル","ナイロビ"], answer: 3, hint: "東アフリカの経済の中心地" },
+      { q: "エチオピアの首都は？", choices: ["アスマラ","ジブチ","ハラール","アディスアベバ"], answer: 3, hint: "アフリカ連合の本部がある高原都市" },
+      { q: "南アフリカ共和国の行政首都は？", choices: ["ケープタウン","ヨハネスブルグ","ダーバン","プレトリア"], answer: 3, hint: "南アフリカは3つの首都機能都市を持つ" },
+      { q: "ナイジェリアの首都は？", choices: ["ラゴス","イバダン","カノ","アブジャ"], answer: 3, hint: "最大都市ラゴスとは別の計画首都" },
+      { q: "コロンビアの首都は？", choices: ["メデジン","カリ","バランキジャ","ボゴタ"], answer: 3, hint: "アンデス山脈の盆地に位置する高地都市" },
+      { q: "チリの首都は？", choices: ["バルパライソ","コンセプション","アントファガスタ","サンティアゴ"], answer: 3, hint: "細長い南米の国の中部に位置する" },
+      { q: "キューバの首都は？", choices: ["サンティアゴ・デ・クーバ","カマグエイ","オルギン","ハバナ"], answer: 3, hint: "カリブ海の社会主義国の首都" },
+      { q: "世界で最も人口密度が高い国は？", choices: ["バングラデシュ","シンガポール","日本","モナコ"], answer: 3, hint: "面積わずか約2km²の都市国家" },
+      { q: "アフリカで最も人口が多い国は？", choices: ["エジプト","エチオピア","コンゴ民主共和国","ナイジェリア"], answer: 3, hint: "2億人超のアフリカ最大の人口大国" },
+      { q: "「ASEAN（東南アジア諸国連合）」の加盟国数は？", choices: ["8","9","10","12"], answer: 2, hint: "タイ・インドネシア・フィリピンなど10カ国" }
+    ]
+  },
+  {
+    name: "賢者の間",
+    theme: "世界の地形・文化・統計",
+    emoji: "🌐",
+    monsters: [
+      { name: "古代の守護者", emoji: "🗿" },
+      { name: "深海の怪物",   emoji: "🦈" },
+      { name: "山脈の巨人",   emoji: "⛰️" },
+    ],
+    monsterHP: 28, monsterHPGrowth: 5,
+    bossName: "世界の大賢者",
+    bossEmoji: "🧙",
+    bossHP: 70, bossHPGrowth: 12,
+    bossCls: "boss-f3", bossTitle: "世界の大賢者",
+    itemEmoji: "📚", itemName: "世界図鑑",
+    itemBonus: [1, 2, 3],
+    questions: [
+      { q: "世界で最も高い山は？", choices: ["K2","エベレスト","マッキンリー","モンブラン"], answer: 1, hint: "標高8849m、ネパールとチベットの国境" },
+      { q: "世界で最も面積が大きい大陸は？", choices: ["アフリカ","北アメリカ","アジア","南アメリカ"], answer: 2, hint: "面積約4400万km²" },
+      { q: "地球の表面の約何%が海か？", choices: ["50%","60%","70%","80%"], answer: 2, hint: "地球を「水の星」と呼ぶ理由" },
+      { q: "世界で最も深い湖は？", choices: ["カスピ海","バイカル湖","タンガニーカ湖","スペリオル湖"], answer: 1, hint: "シベリアにある最大水深1642mの湖" },
+      { q: "サハラ砂漠がある大陸は？", choices: ["アジア","オーストラリア","アフリカ","南アメリカ"], answer: 2, hint: "世界最大の熱帯砂漠" },
+      { q: "南極大陸を領有している国は？", choices: ["アメリカ","ロシア","ノルウェー","どの国も領有していない"], answer: 3, hint: "南極条約で定められている" },
+      { q: "パナマ運河が結ぶ2つの海は？", choices: ["大西洋と地中海","太平洋と大西洋","インド洋と太平洋","北極海と大西洋"], answer: 1, hint: "中央アメリカに建設された運河" },
+      { q: "経度15度ごとに生じる時差は何時間か？", choices: ["30分","1時間","2時間","3時間"], answer: 1, hint: "地球は24時間で360度回転する" },
+      { q: "ヨーロッパで最も人口が多い国は？", choices: ["フランス","ドイツ","イギリス","イタリア"], answer: 1, hint: "約8400万人が暮らす" },
+      { q: "世界で最も多くの国と国境を接する国は？", choices: ["ロシア","中国","ブラジル","ドイツ"], answer: 0, hint: "14カ国と国境を接する" },
+      { q: "ニュージーランドの先住民族は？", choices: ["アボリジニ","マオリ","イヌイット","ズールー"], answer: 1, hint: "ハカのダンスで有名" },
+      { q: "世界で最も大きな砂漠はどれ？", choices: ["サハラ砂漠","ゴビ砂漠","アラビア砂漠","南極砂漠"], answer: 3, hint: "砂漠＝乾燥地帯（氷・雪も含む）" },
+      { q: "地中海の説明として正しいのは？", choices: ["南北アメリカを分ける海","ヨーロッパとアフリカに挟まれた海","アジアと太平洋の間の海","北極に近い海"], answer: 1, hint: "「陸に囲まれた海」の意味" },
+      { q: "地球上で人が最も多く住む大陸は？", choices: ["ヨーロッパ","北アメリカ","アジア","アフリカ"], answer: 2, hint: "世界人口の約60%が集中" },
+      { q: "国連の本部がある都市は？", choices: ["ジュネーブ","パリ","ニューヨーク","ロンドン"], answer: 2, hint: "ハドソン川沿いにある" },
+      { q: "赤道が通らない大陸はどれ？", choices: ["アフリカ","南アメリカ","アジア","オーストラリア"], answer: 3, hint: "赤道より南に位置する大陸" },
+      { q: "アンコールワットがある国は？", choices: ["タイ","ミャンマー","カンボジア","ベトナム"], answer: 2, hint: "世界遺産のクメール王朝遺跡" },
+      { q: "アマゾン川が流れる主な国は？", choices: ["アルゼンチン","コロンビア","ブラジル","ペルー"], answer: 2, hint: "流域面積が世界最大の川" },
+      { q: "ヒマラヤ山脈がある大陸は？", choices: ["アフリカ","ヨーロッパ","アジア","北アメリカ"], answer: 2, hint: "インドとチベットの間に位置する" },
+      { q: "温暖化で海面上昇が懸念される南太平洋の島国は？", choices: ["フィジー","サモア","ツバル","トンガ"], answer: 2, hint: "海抜の低い国土が水没の危機にある" },
+      { q: "世界最長の川は？", choices: ["アマゾン川","ミシシッピ川","長江","ナイル川"], answer: 3, hint: "アフリカ大陸を北へ流れエジプトで地中海へ注ぐ" },
+      { q: "流域面積が世界最大の川はどれ？", choices: ["ナイル川","ミシシッピ川","コンゴ川","アマゾン川"], answer: 3, hint: "南米の熱帯雨林を流れる水量最大の川" },
+      { q: "ヨーロッパで最も長い川は？", choices: ["ドナウ川","ライン川","ボルガ川","テムズ川"], answer: 2, hint: "ロシア西部を流れカスピ海へ注ぐ" },
+      { q: "アフリカ最高峰の山は？", choices: ["ケニア山","ルウェンゾリ山","アトラス山","キリマンジャロ"], answer: 3, hint: "タンザニアの雪を頂く孤峰" },
+      { q: "世界最大の砂漠は？", choices: ["アラビア砂漠","ゴビ砂漠","サハラ砂漠","南極大陸（寒冷砂漠）"], answer: 2, hint: "アフリカ北部に広がる熱帯砂漠" },
+      { q: "世界最大の湖は？", choices: ["スペリオル湖","バイカル湖","カスピ海","アラル海"], answer: 2, hint: "塩水の内陸湖で最大面積を誇る" },
+      { q: "世界で最も深い湖は？", choices: ["タンガニーカ湖","スペリオル湖","チチカカ湖","バイカル湖"], answer: 3, hint: "シベリア南部、最大水深1642m" },
+      { q: "グレートバリアリーフがある国は？", choices: ["フィジー","インドネシア","パプアニューギニア","オーストラリア"], answer: 3, hint: "世界最大のサンゴ礁、世界自然遺産" },
+      { q: "地球上で最も低い地点は？", choices: ["カスピ海沿岸","死海","アラル海","タリム盆地"], answer: 1, hint: "ヨルダン・イスラエル国境の塩湖、海面下約430m" },
+      { q: "「マチュ・ピチュ」がある国は？", choices: ["ボリビア","チリ","エクアドル","ペルー"], answer: 3, hint: "アンデス山中のインカ帝国遺跡" },
+      { q: "「タージ・マハル」がある国は？", choices: ["パキスタン","バングラデシュ","ネパール","インド"], answer: 3, hint: "ムガル帝国皇帝が妃のために建てた白亜の墓廟" },
+      { q: "「ストーンヘンジ」がある国は？", choices: ["フランス","アイルランド","スコットランド","イギリス"], answer: 3, hint: "英国ソールズベリー近郊の先史時代の巨石遺跡" },
+      { q: "世界の人口が最も多い国は？", choices: ["インド","アメリカ","中国","インドネシア"], answer: 0, hint: "2023年ごろ中国を抜いて世界1位に" },
+      { q: "国土面積が世界最大の国は？", choices: ["カナダ","中国","アメリカ","ロシア"], answer: 3, hint: "ユーラシア大陸に広がる世界最大の国" },
+      { q: "G7（主要7カ国）に含まれない国はどれ？", choices: ["イタリア","ドイツ","スペイン","カナダ"], answer: 2, hint: "G7は米・英・仏・独・伊・加・日の7カ国" },
+      { q: "国連の本部はどこにある？", choices: ["ジュネーブ","パリ","ウィーン","ニューヨーク"], answer: 3, hint: "マンハッタンのイースト川沿いに本部棟がある" },
+      { q: "ビクトリア湖はどの大陸にある？", choices: ["アジア","南アメリカ","ヨーロッパ","アフリカ"], answer: 3, hint: "ナイル川の源流となる世界第2位の淡水湖" },
+      { q: "チリ・アルゼンチン国境にある火山や山が連なる山脈は？", choices: ["アパラチア山脈","ロッキー山脈","カスカード山脈","アンデス山脈"], answer: 3, hint: "太平洋岸沿いを南北に走る世界最長の山脈" },
+      { q: "世界最高地点にある湖はどれ？", choices: ["バイカル湖","死海","チチカカ湖","カスピ海"], answer: 2, hint: "ペルー・ボリビア国境、海抜3810m" },
+      { q: "アフリカ大陸を縦断する世界最長の川の源流に近い国は？", choices: ["コンゴ","スーダン","エチオピア","タンザニア"], answer: 3, hint: "ビクトリア湖付近がナイル川の源流域" },
+      { q: "温帯気候のうち「地中海性気候」の特徴は？", choices: ["一年中雨が多い","夏に雨が多く冬は乾燥","夏乾燥・冬に雨が多い","一年中乾燥している"], answer: 2, hint: "地中海沿岸・カリフォルニア・南アフリカなどに見られる" },
+      { q: "EUの本部（欧州委員会）がある都市は？", choices: ["ストラスブール","ルクセンブルク","アムステルダム","ブリュッセル"], answer: 3, hint: "ベルギーの首都" },
+      { q: "国際日付変更線は主にどの海洋上を通っている？", choices: ["インド洋","大西洋","南極海","太平洋"], answer: 3, hint: "経度180度付近を曲げながら通る" },
+      { q: "本初子午線（経度0度）が通る国はどれ？", choices: ["フランス","ベルギー","アイルランド","イギリス"], answer: 3, hint: "グリニッジ天文台を通る" }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════
+//  セーブデータ管理（ユーザー別）
+// ══════════════════════════════════════════
+const USERS_KEY   = 'geoTowerUsers_v1';
+const CUR_USR_KEY = 'geoTowerCurUser_v1';
+let currentUser = null;
+let save = {
+  playerLevel:  1,
+  playerEXP:    0,
+  playerHP:     10,
+  itemLevels:   [0, 0, 0, 0],
+  clearedFloors: [],
+  lastScreen:   'titleScreen'
+};
+
+function _getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch(e) { return {}; }
+}
+
+function loadSave() {
+  if (!currentUser) return;
+  const u = _getUsers();
+  const defaults = {
+    playerLevel:1, playerEXP:0, playerHP:10,
+    itemLevels:[0,0,0,0], clearedFloors:[], lastScreen:'titleScreen'
+  };
+  save = Object.assign({}, defaults, u[currentUser] || {});
+  if (!Array.isArray(save.itemLevels)) save.itemLevels = [0,0,0,0];
+}
+
+function writeSave() {
+  if (!currentUser) return;
+  try {
+    const u = _getUsers();
+    u[currentUser] = save;
+    localStorage.setItem(USERS_KEY, JSON.stringify(u));
+  } catch(e) {}
+}
+
+// ── ステータス計算 ──
+function getBaseAtk()    { return BASE_ATK[save.playerLevel - 1]; }
+function getMaxPlayerHP(){ return MAX_HP_TABLE[save.playerLevel - 1]; }
+function getItemLv(fi)   { return save.itemLevels[fi] || 0; }
+function getItemBonus(fi){
+  const lv = getItemLv(fi);
+  return lv === 0 ? 0 : FLOORS[fi].itemBonus[lv - 1];
+}
+function getTotalAtk(fi) { return getBaseAtk() + getItemBonus(fi); }
+
+function getMonsterHP(fi){
+  const f = FLOORS[fi];
+  return f.monsterHP + (save.playerLevel - 1) * (f.monsterHPGrowth || 0);
+}
+function getBossHP(fi){
+  const f = FLOORS[fi];
+  return f.bossHP + (save.playerLevel - 1) * (f.bossHPGrowth || 0);
+}
+
+function getExpToNext(){
+  if (save.playerLevel >= MAX_LV) return null;
+  return EXP_TABLE[save.playerLevel] - save.playerEXP;
+}
+function getExpProgress(){
+  if (save.playerLevel >= MAX_LV) return 1;
+  const cur  = save.playerLevel >= 2 ? EXP_TABLE[save.playerLevel - 1] : 0;
+  const next = EXP_TABLE[save.playerLevel];
+  return (save.playerEXP - cur) / (next - cur);
+}
+
+function isFloorCleared(i)  { return save.clearedFloors.includes(i); }
+function isFloorUnlocked(i) { return i === 0 || isFloorCleared(i - 1); }
+
+// ══════════════════════════════════════════
+//  ユーザー管理
+// ══════════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderUserScreen() {
+  const users = _getUsers();
+  const names  = Object.keys(users);
+  const wrapEl = document.getElementById('userListWrap');
+  const listEl = document.getElementById('userList');
+  if (names.length === 0) {
+    wrapEl.style.display = 'none';
+  } else {
+    wrapEl.style.display = '';
+    listEl.innerHTML = names.map(n => {
+      const d = users[n];
+      const safeN = escHtml(n).replace(/'/g, '\\\'');
+      return `<div class="user-card" onclick="selectUser('${safeN}')">
+        <div class="user-card-icon">🗺️</div>
+        <div>
+          <div class="user-card-name">${escHtml(n)}</div>
+          <div class="user-card-stats">Lv.${d.playerLevel||1} ／ ${(d.clearedFloors||[]).length}/4 フロアクリア</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('userErr').textContent = '';
+  document.getElementById('userNameInput').value = '';
+  showScreen('userScreen');
+}
+
+function restoreLastScreen() {
+  const s = save.lastScreen || 'titleScreen';
+  if (s === 'mapScreen') {
+    renderMap(); showScreen('mapScreen');
+  } else if (s === 'endingScreen') {
+    showScreen('endingScreen');
+  } else {
+    renderTitle(); showScreen('titleScreen');
+  }
+}
+
+function selectUser(name) {
+  currentUser = name;
+  localStorage.setItem(CUR_USR_KEY, name);
+  loadSave();
+  restoreLastScreen();
+}
+
+function createUser() {
+  const name  = document.getElementById('userNameInput').value.trim();
+  const errEl = document.getElementById('userErr');
+  if (!name) { errEl.textContent = '名前を入力してください'; return; }
+  const users = _getUsers();
+  if (users[name]) { errEl.textContent = 'その名前はすでに使われています'; return; }
+  const fresh = { playerLevel:1, playerEXP:0, playerHP:10, itemLevels:[0,0,0,0], clearedFloors:[], lastScreen:'titleScreen' };
+  users[name] = fresh;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  currentUser = name;
+  localStorage.setItem(CUR_USR_KEY, name);
+  loadSave();
+  renderTitle();
+  showScreen('titleScreen');
+}
+
+function switchUser() {
+  currentUser = null;
+  localStorage.removeItem(CUR_USR_KEY);
+  renderUserScreen();
+}
+
+// ══════════════════════════════════════════
+//  画面管理
+// ══════════════════════════════════════════
+const SCREENS = ['userScreen','titleScreen','mapScreen','modeScreen','battleScreen','resultScreen','endingScreen'];
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════════
+//  タイトル描画
+// ══════════════════════════════════════════
+function renderTitle() {
+  document.getElementById('tsName').textContent   = currentUser || '—';
+  document.getElementById('tsLv').textContent     = save.playerLevel;
+  document.getElementById('tsHp').textContent     = `${save.playerHP}/${getMaxPlayerHP()}`;
+  document.getElementById('tsAtk').textContent    = getBaseAtk();
+  document.getElementById('tsFloors').textContent = `${save.clearedFloors.length}/4`;
+
+  const itemsEl = document.getElementById('titleItems');
+  itemsEl.innerHTML = FLOORS.map((f, i) => {
+    const lv = getItemLv(i);
+    const earned = lv > 0;
+    return `<div class="ti-item${earned ? ' earned' : ''}">
+      ${f.itemEmoji} ${lv >= 3 ? 'MAX' : lv > 0 ? `Lv.${lv}` : '—'}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  マップ描画
+// ══════════════════════════════════════════
+function renderMap() {
+  // プレイヤーカード
+  document.getElementById('pcLv').textContent = save.playerLevel;
+  const maxHP = getMaxPlayerHP();
+  const hp    = Math.min(save.playerHP, maxHP);
+  document.getElementById('pcHpLabel').textContent  = `${hp} / ${maxHP}`;
+  document.getElementById('pcHpFill').style.width   = (hp / maxHP * 100) + '%';
+  const expPct = getExpProgress();
+  const expToNext = getExpToNext();
+  document.getElementById('pcExpLabel').textContent =
+    save.playerLevel >= MAX_LV ? 'MAX' : `次のLvまで ${expToNext}`;
+  document.getElementById('pcExpFill').style.width  = (expPct * 100) + '%';
+  document.getElementById('pcAtk').textContent = getBaseAtk();
+
+  // マップサブテキスト
+  const cleared = save.clearedFloors.length;
+  document.getElementById('mapSub').textContent =
+    cleared === 4 ? '全フロアクリア！' : `${cleared} / 4 フロアクリア`;
+
+  // フロアリスト
+  const floorListEl = document.getElementById('floorList');
+  floorListEl.innerHTML = FLOORS.map((f, i) => {
+    const cleared  = isFloorCleared(i);
+    const unlocked = isFloorUnlocked(i);
+    const state    = cleared ? 'cleared' : unlocked ? 'can-enter' : 'locked';
+    const onclick  = (cleared || unlocked) ? `onclick="enterFloor(${i})"` : '';
+    const badge    = cleared ? '✅' : unlocked ? '⚔️' : '🔒';
+    const lv       = getItemLv(i);
+    const pips     = [0,1,2].map(p => {
+      const cls = p < lv ? (lv === 3 ? 'item-pip max' : 'item-pip filled') : 'item-pip';
+      return `<div class="${cls}"></div>`;
+    }).join('');
+
+    return `<div class="floor-card ${state} fc-f${i}" ${onclick}>
+      <div class="fc-top">
+        <div class="fc-num">${i + 1}F</div>
+        <div class="fc-monster">${f.emoji}</div>
+        <div class="fc-info">
+          <div class="fc-name">${f.name}</div>
+          <div class="fc-theme">${f.theme}</div>
+        </div>
+        <div class="fc-badge">${badge}</div>
+      </div>
+      <div class="fc-item">
+        <span>${f.itemEmoji}</span>
+        <span style="color:var(--sub)">${f.itemName}</span>
+        <div class="fc-item-pips">${pips}</div>
+        <span style="color:var(--sub); font-size:11px; margin-left:2px">${lv >= 3 ? 'MAX' : `Lv.${lv}`}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // アイテムボックス
+  document.getElementById('mapItemsRow').innerHTML = FLOORS.map((f, i) => {
+    const lv = getItemLv(i);
+    const earned = lv > 0;
+    return `<div class="mi-item ${earned ? 'earned' : 'not-earned'}">
+      ${f.itemEmoji} ${f.itemName} ${lv >= 3 ? 'MAX' : lv > 0 ? `Lv.${lv}` : '未'}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  ナビゲーション
+// ══════════════════════════════════════════
+function goToMap() {
+  if (save.clearedFloors.length === 4) {
+    save.lastScreen = 'endingScreen'; writeSave();
+    showScreen('endingScreen'); return;
+  }
+  save.lastScreen = 'mapScreen'; writeSave();
+  renderMap(); showScreen('mapScreen');
+}
+
+// ══════════════════════════════════════════
+//  バトルシステム
+// ══════════════════════════════════════════
+let gs = {};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickMonster(f) {
+  return f.monsters[Math.floor(Math.random() * f.monsters.length)];
+}
+
+function gainEXP(amount) {
+  if (save.playerLevel >= MAX_LV) return false;
+  save.playerEXP += amount;
+  let leveled = false;
+  while (save.playerLevel < MAX_LV && save.playerEXP >= EXP_TABLE[save.playerLevel]) {
+    save.playerLevel++;
+    save.playerHP = getMaxPlayerHP();
+    leveled = true;
+  }
+  return leveled;
+}
+
+function enterFloor(fi) {
+  gs.floorIndex = fi;
+  const f = FLOORS[fi];
+
+  document.getElementById('modeFloorTitle').textContent = f.emoji + ' ' + f.name;
+  document.getElementById('modeFloorTheme').textContent = f.theme;
+  document.getElementById('modeClearedBadge').classList.toggle('hidden', !isFloorCleared(fi));
+
+  document.getElementById('mcNormalEmoji').textContent = f.monsters[0].emoji;
+  document.getElementById('mcNormalName').textContent  = f.monsters[0].name;
+  document.getElementById('mcNormalHP').textContent    = 'HP ' + getMonsterHP(fi);
+
+  document.getElementById('mcBossEmoji').textContent = f.bossEmoji;
+  document.getElementById('mcBossName').textContent  = f.bossName;
+  document.getElementById('mcBossHP').textContent    = 'HP ' + getBossHP(fi);
+
+  const atk = getTotalAtk(fi);
+  document.getElementById('modePlayerInfo').innerHTML =
+    'ATK <b>' + atk + '</b> ／ HP <b>' + save.playerHP + '/' + getMaxPlayerHP() + '</b>';
+
+  save.lastScreen = 'mapScreen';
+  writeSave();
+  showScreen('modeScreen');
+}
+
+function startBattle(mode) {
+  const fi = gs.floorIndex;
+  const f  = FLOORS[fi];
+  const isBoss = mode === 'boss';
+
+  const initMonster = isBoss ? null : pickMonster(f);
+  gs = {
+    floorIndex:    fi,
+    isBoss:        isBoss,
+    monsterHP:     isBoss ? getBossHP(fi) : getMonsterHP(fi),
+    monsterMaxHP:  isBoss ? getBossHP(fi) : getMonsterHP(fi),
+    monsterName:   isBoss ? f.bossName    : initMonster.name,
+    monsterEmoji:  isBoss ? f.bossEmoji   : initMonster.emoji,
+    questionPool:  shuffle(f.questions),
+    qIdx:          0,
+    correct:       0,
+    total:         0,
+    expGained:     0,
+    leveled:       false,
+    newLevel:      save.playerLevel,
+    monstersKilled: 0,
+    hpRecovered:   0,
+    wrongCount:    0,
+  };
+
+  document.getElementById('bhFloor').textContent =
+    f.emoji + ' ' + f.name + (isBoss ? ' ／ ボス戦' : '');
+  updateEnemyUI();
+  updatePlayerBattleUI();
+  nextQuestion();
+  showScreen('battleScreen');
+}
+
+function updateEnemyUI() {
+  document.getElementById('enemyEmoji').textContent = gs.monsterEmoji;
+  document.getElementById('enemyName').textContent  = gs.monsterName;
+  const pct = Math.max(0, gs.monsterHP / gs.monsterMaxHP * 100);
+  document.getElementById('enemyHpFill').style.width = pct + '%';
+  document.getElementById('enemyHpLabel').textContent =
+    Math.max(0, gs.monsterHP) + ' / ' + gs.monsterMaxHP;
+}
+
+function updatePlayerBattleUI() {
+  const infArea   = document.getElementById('pbsInfArea');
+  const wrongArea = document.getElementById('pbsWrongArea');
+  if (gs.isBoss) {
+    infArea.classList.add('hidden');
+    wrongArea.classList.remove('hidden');
+    const wrong = gs.wrongCount || 0;
+    document.getElementById('pbsWrongDots').textContent =
+      '❌'.repeat(wrong) + '🔸'.repeat(3 - wrong);
+  } else {
+    infArea.classList.remove('hidden');
+    wrongArea.classList.add('hidden');
+  }
+  document.getElementById('pbsScore').innerHTML =
+    '<b>' + (gs.correct || 0) + '</b> / ' + (gs.total || 0) + ' 正解';
+}
+
+function nextQuestion() {
+  if (gs.qIdx >= gs.questionPool.length) {
+    gs.questionPool = shuffle(gs.questionPool);
+    gs.qIdx = 0;
+  }
+  const q = gs.questionPool[gs.qIdx++];
+  gs.currentQ = q;
+
+  document.getElementById('qCount').textContent = 'Q.' + (gs.total + 1);
+  document.getElementById('qText').textContent  = q.q;
+  document.getElementById('hintArea').classList.add('hidden');
+
+  const labels = ['A','B','C','D'];
+  document.getElementById('choicesGrid').innerHTML = q.choices.map((c, i) =>
+    '<button class="choice-btn" onclick="onChoice(' + i + ')">' +
+    '<span class="choice-label">' + labels[i] + '</span><span>' + c + '</span></button>'
+  ).join('');
+}
+
+function onChoice(idx) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  const q  = gs.currentQ;
+  const fi = gs.floorIndex;
+  gs.total++;
+
+  const btns = document.querySelectorAll('.choice-btn');
+  const correct = idx === q.answer;
+  btns[idx].classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) btns[q.answer].classList.add('correct');
+
+  if (correct) {
+    gs.correct++;
+    const dmg = getTotalAtk(fi);
+    gs.monsterHP -= dmg;
+    showBattleEffect('atk', '−' + dmg);
+    updateEnemyUI();
+    if (gs.monsterHP <= 0) {
+      setTimeout(enemyDefeated, 900);
+    } else {
+      setTimeout(nextQuestion, 900);
+    }
+  } else {
+    const hintEl = document.getElementById('hintArea');
+    hintEl.textContent = '💡 ' + q.hint;
+    hintEl.classList.remove('hidden');
+
+    if (gs.isBoss) {
+      gs.wrongCount++;
+      showBattleEffect('hit', '❌');
+      updatePlayerBattleUI();
+      if (gs.wrongCount >= 3) {
+        setTimeout(playerDefeated, 1100);
+      } else {
+        setTimeout(nextQuestion, 1300);
+      }
+    } else {
+      setTimeout(nextQuestion, 1300);
+    }
+  }
+}
+
+function showBattleEffect(type, text) {
+  const area = document.getElementById('enemyArea');
+  const old  = area.querySelector('.battle-effect');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'battle-effect ' + type;
+  el.textContent = text;
+  area.appendChild(el);
+  setTimeout(() => el.remove(), 650);
+}
+
+function enemyDefeated() {
+  const fi = gs.floorIndex;
+  const f  = FLOORS[fi];
+
+  if (gs.isBoss) {
+    const expGain = (fi + 1) * 10;
+    const lv = gainEXP(expGain);
+    gs.expGained += expGain;
+    if (lv) { gs.leveled = true; gs.newLevel = save.playerLevel; }
+
+    if (save.itemLevels[fi] < 3) save.itemLevels[fi]++;
+    if (!save.clearedFloors.includes(fi)) save.clearedFloors.push(fi);
+
+    writeSave();
+    showResult('boss_win');
+  } else {
+    const expGain = (fi + 1) * 2;
+    const lv = gainEXP(expGain);
+    gs.expGained += expGain;
+    if (lv) { gs.leveled = true; gs.newLevel = save.playerLevel; }
+    gs.monstersKilled++;
+
+    save.playerHP = Math.min(getMaxPlayerHP(), save.playerHP + 1);
+    gs.hpRecovered++;
+
+    writeSave();
+    updatePlayerBattleUI();
+
+    showDefeatPopup(expGain, lv, () => {
+      const m = pickMonster(FLOORS[fi]);
+      gs.monsterName  = m.name;
+      gs.monsterEmoji = m.emoji;
+      gs.monsterHP    = getMonsterHP(fi);
+      gs.monsterMaxHP = getMonsterHP(fi);
+      updateEnemyUI();
+      setTimeout(nextQuestion, 200);
+    });
+  }
+}
+
+function showDefeatPopup(expGain, leveled, callback) {
+  document.getElementById('dpEmoji').textContent = gs.monsterEmoji;
+  document.getElementById('dpMsg').textContent   = gs.monsterName + ' を倒した！';
+  document.getElementById('dpExp').textContent   = '✨ ＋' + expGain + ' EXP 獲得';
+  document.getElementById('dpLv').textContent    = leveled ? ('⬆️ LEVEL UP！ Lv.' + save.playerLevel) : '';
+  document.getElementById('dpHp').textContent    = '💚 HP ＋1 回復';
+  document.getElementById('defeatPopup').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('defeatPopup').classList.add('hidden');
+    callback();
+  }, 1600);
+}
+
+function playerDefeated() {
+  save.playerHP = 1;
+  writeSave();
+  showResult('defeat');
+}
+
+function retreat() {
+  writeSave();
+  showResult('retreat');
+}
+
+function showResult(outcome) {
+  const fi = gs.floorIndex;
+  const f  = FLOORS[fi];
+
+  const titleEl = document.getElementById('resultTitle');
+  const emojiEl = document.getElementById('resultEnemyEmoji');
+  if (outcome === 'boss_win') {
+    titleEl.textContent = '勝利！'; titleEl.className = 'result-title win';
+    emojiEl.textContent = '🏆';
+  } else if (outcome === 'defeat') {
+    titleEl.textContent = '敗北…'; titleEl.className = 'result-title defeat';
+    emojiEl.textContent = '💀';
+  } else {
+    titleEl.textContent = '撤退'; titleEl.className = 'result-title retreat';
+    emojiEl.textContent = gs.monsterEmoji;
+  }
+
+  const killsCol = gs.isBoss ? '' :
+    '<div class="rs-item"><div class="rs-label">KILLS</div><div class="rs-val">' + gs.monstersKilled + '</div></div>';
+  document.getElementById('resultStats').innerHTML =
+    '<div class="rs-item"><div class="rs-label">CORRECT</div><div class="rs-val">' + gs.correct + '</div></div>' +
+    '<div class="rs-item"><div class="rs-label">TOTAL</div><div class="rs-val">'   + gs.total   + '</div></div>' +
+    killsCol;
+
+  const expBox = document.getElementById('resultExpBox');
+  if (gs.expGained > 0) {
+    expBox.textContent = '+' + gs.expGained + ' EXP 獲得';
+    expBox.classList.remove('hidden');
+  } else {
+    expBox.classList.add('hidden');
+  }
+
+  const lvBox = document.getElementById('resultLvBox');
+  if (gs.leveled) {
+    lvBox.textContent = '🎉 LEVEL UP！　Lv.' + gs.newLevel + ' になった！';
+    lvBox.classList.remove('hidden');
+  } else {
+    lvBox.classList.add('hidden');
+  }
+
+  const itemBox = document.getElementById('resultItemBox');
+  if (outcome === 'boss_win') {
+    const lv = save.itemLevels[fi];
+    itemBox.textContent = f.itemEmoji + ' ' + f.itemName + ' を ' + (lv >= 3 ? 'MAX' : 'Lv.' + lv) + ' に強化！';
+    itemBox.classList.remove('hidden');
+  } else {
+    itemBox.classList.add('hidden');
+  }
+
+  const mainBtn = document.getElementById('resultMainBtn');
+  const subBtn  = document.getElementById('resultSubBtn');
+
+  if (outcome === 'boss_win' && save.clearedFloors.length === 4) {
+    mainBtn.textContent = '🌍 全フロアクリア！';
+    mainBtn.onclick = () => { save.lastScreen = 'endingScreen'; writeSave(); renderEnding(); showScreen('endingScreen'); };
+    subBtn.textContent = 'マップへ戻る';
+    subBtn.onclick = () => { renderMap(); showScreen('mapScreen'); };
+  } else if (outcome === 'boss_win') {
+    mainBtn.textContent = 'マップへ戻る';
+    mainBtn.onclick = () => { renderMap(); showScreen('mapScreen'); };
+    subBtn.textContent = 'もう一度挑戦';
+    subBtn.onclick = () => enterFloor(fi);
+  } else {
+    mainBtn.textContent = 'マップへ戻る';
+    mainBtn.onclick = () => { renderMap(); showScreen('mapScreen'); };
+    subBtn.textContent = 'もう一度';
+    subBtn.onclick = () => enterFloor(fi);
+  }
+
+  showScreen('resultScreen');
+}
+
+function renderEnding() {
+  document.getElementById('endingStats').innerHTML =
+    '<div class="es-item"><div class="es-label">LEVEL</div><div class="es-val">' + save.playerLevel + '</div></div>' +
+    '<div class="es-item"><div class="es-label">ATK</div><div class="es-val">'   + getBaseAtk()     + '</div></div>' +
+    '<div class="es-item"><div class="es-label">HP</div><div class="es-val">'    + save.playerHP + '/' + getMaxPlayerHP() + '</div></div>';
+}
+
+// ══════════════════════════════════════════
+//  起動
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const last  = localStorage.getItem(CUR_USR_KEY);
+  const users = _getUsers();
+  if (last && users[last]) {
+    currentUser = last;
+    loadSave();
+    restoreLastScreen();
+  } else {
+    renderUserScreen();
+  }
+});
+</script>
+</body>
+</html>
