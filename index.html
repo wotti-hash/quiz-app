@@ -23,6 +23,7 @@
   --accent-geo-rpg: #00d4aa;
   --accent-pmp: #60a5fa;
   --accent-math: #ff6b35;
+  --accent-kokugo: #ff8c5a;
   --text: #f0eee8;
   --sub: #8a8898;
 }
@@ -189,6 +190,21 @@ body {
 .geo-rpg-title { color: var(--accent-geo-rpg); }
 .tag-geo-rpg { color: var(--accent-geo-rpg); border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.08); }
 
+/* 国語の塔 */
+.card-kokugo {
+  background: linear-gradient(135deg, #1c0a06 0%, #130704 100%);
+  box-shadow: 0 4px 24px rgba(255,140,90,0.08);
+}
+.card-kokugo:hover {
+  border-color: rgba(255,140,90,0.4);
+  box-shadow: 0 8px 40px rgba(255,140,90,0.18);
+}
+.card-kokugo::before {
+  background: radial-gradient(ellipse at 80% 20%, rgba(255,140,90,0.08), transparent 60%);
+}
+.kokugo-title { color: var(--accent-kokugo); }
+.tag-kokugo { color: var(--accent-kokugo); border-color: rgba(255,140,90,0.3); background: rgba(255,140,90,0.08); }
+.fade-in:nth-child(6) { animation-delay: 0.85s; }
 
 .card-inner {
   display: flex;
@@ -344,6 +360,22 @@ body {
             <span class="tag tag-geo-rpg">🗺️ 全4フロア</span>
             <span class="tag tag-geo-rpg">⚔️ バトル形式</span>
             <span class="tag tag-geo-rpg">🌍 地理全般</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-kokugo fade-in" href="kokugo-tower.html?v=1">
+      <div class="card-inner">
+        <div class="card-icon">📚</div>
+        <div class="card-body">
+          <div class="card-title kokugo-title">国語の塔</div>
+          <div class="card-desc">RPG風バトルゲーム。漢字・ことわざ・四字熟語・敬語の問題を解いて全4フロアを踏破せよ！</div>
+          <div class="card-tags">
+            <span class="tag tag-kokugo">📚 全4フロア</span>
+            <span class="tag tag-kokugo">⚔️ バトル形式</span>
+            <span class="tag tag-kokugo">📖 国語全般</span>
           </div>
         </div>
         <div class="card-arrow">›</div>
