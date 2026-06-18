@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>「と言えば」ゲーム オンライン</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0a16; --card: #1a1326; --border: rgba(167,139,250,0.16);
+  --text: #f0eef6; --sub: #9a90b4; --accent: #b794ff; --accent2: #ff5fa2;
+  --gold: #ffd700; --red: #ff5577; --green: #44dd99; --blue: #60a5fa;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(183,148,255,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba(255,95,162,0.12) 0%, transparent 55%);
+}
+
+.hidden { display: none !important; }
+
+.screen { display: none; position: relative; z-index: 1; min-height: 100vh; flex-direction: column; align-items: center; padding: 0 0 60px; }
+.screen.active { display: flex; }
+
+.wrap { width: 100%; max-width: 480px; padding: 0 20px; }
+
+/* ボタン */
+.btn {
+  display: block; width: 100%; padding: 14px; border-radius: 14px;
+  border: none; cursor: pointer; font-family: inherit;
+  font-size: 15px; font-weight: 700; transition: all 0.2s;
+}
+.btn-primary { background: linear-gradient(135deg, #b794ff, #ff5fa2); color: #fff; box-shadow: 0 4px 18px rgba(183,148,255,0.35); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(183,148,255,0.5); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: rgba(183,148,255,0.12); color: var(--accent); border: 1px solid rgba(183,148,255,0.3); }
+.btn-secondary:hover { background: rgba(183,148,255,0.2); }
+.btn-ghost { background: rgba(255,255,255,0.05); color: var(--sub); border: 1px solid rgba(255,255,255,0.1); }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+.input {
+  width: 100%; padding: 13px 16px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 16px; font-family: inherit;
+  outline: none; transition: border-color 0.2s;
+}
+.input:focus { border-color: var(--accent); }
+
+.hero { text-align: center; padding: 48px 0 28px; }
+.hero-icon { font-size: 60px; display: block; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.hero h1 {
+  font-family: 'Kaisei Decol', serif; font-size: 30px; font-weight: 700; letter-spacing: 2px; margin: 14px 0 6px;
+  background: linear-gradient(135deg, #b794ff, #ff5fa2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero p { font-size: 13px; color: var(--sub); }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 18px; margin-bottom: 14px;
+}
+.section-label { font-size: 12px; color: var(--sub); font-weight: 700; margin-bottom: 8px; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 10px; }
+
+/* ヘッダーバー */
+.topbar { width: 100%; max-width: 480px; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px; }
+.topbar .tb-room { font-size: 12px; color: var(--sub); }
+.topbar .tb-room b { color: var(--accent); letter-spacing: 2px; font-size: 14px; }
+.tb-leave { font-size: 12px; color: var(--sub); background: none; border: none; cursor: pointer; font-family: inherit; padding: 4px 8px; }
+.tb-leave:hover { color: var(--red); }
+
+/* ルームコード大表示 */
+.roomcode-box { text-align: center; padding: 20px; }
+.roomcode-label { font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+.roomcode { font-family: 'Kaisei Decol', serif; font-size: 44px; font-weight: 700; letter-spacing: 8px; color: var(--accent); }
+.roomcode-hint { font-size: 12px; color: var(--sub); margin-top: 8px; }
+
+/* プレイヤー一覧 */
+.players { display: flex; flex-direction: column; gap: 8px; }
+.player-item { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 14px; }
+.player-item.is-me { border-color: rgba(183,148,255,0.4); background: rgba(183,148,255,0.08); }
+.player-item.is-parent { border-color: rgba(255,215,0,0.4); }
+.pi-avatar { font-size: 22px; }
+.pi-name { flex: 1; font-size: 14px; font-weight: 700; }
+.pi-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+.badge-host { background: rgba(96,165,250,0.15); color: var(--blue); }
+.badge-parent { background: rgba(255,215,0,0.15); color: var(--gold); }
+.badge-me { background: rgba(183,148,255,0.18); color: var(--accent); }
+.badge-done { background: rgba(68,221,153,0.15); color: var(--green); }
+.badge-wait { background: rgba(255,255,255,0.08); color: var(--sub); }
+.pi-score { font-size: 14px; font-weight: 900; color: var(--accent); min-width: 36px; text-align: right; }
+
+/* お題表示 */
+.odai-display { text-align: center; padding: 24px 16px; }
+.odai-pre { font-size: 13px; color: var(--sub); }
+.odai-word { font-family: 'Kaisei Decol', serif; font-size: 40px; font-weight: 700; color: var(--accent2); margin: 8px 0; line-height: 1.2; }
+.odai-post { font-size: 18px; color: var(--text); font-weight: 700; }
+
+/* カテゴリチップ */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 13px; padding: 8px 14px; border-radius: 20px; background: rgba(183,148,255,0.08); border: 1px solid rgba(183,148,255,0.25); color: var(--accent); cursor: pointer; font-family: inherit; font-weight: 700; transition: all 0.18s; }
+.chip:hover { background: rgba(183,148,255,0.2); }
+.chip.active { background: var(--accent); color: #1a1326; }
+
+/* 進捗 */
+.wait-status { text-align: center; padding: 28px 16px; }
+.wait-emoji { font-size: 52px; display: block; animation: float 2.4s ease-in-out infinite; }
+.wait-msg { font-size: 15px; font-weight: 700; margin-top: 12px; }
+.wait-sub { font-size: 13px; color: var(--sub); margin-top: 6px; }
+.answer-progress { font-size: 13px; color: var(--sub); margin-top: 10px; }
+
+/* 結果 */
+.result-head { text-align: center; padding: 8px 0 14px; }
+.result-type { font-family: 'Kaisei Decol', serif; font-size: 30px; font-weight: 700; }
+.rt-all_diff { color: var(--blue); } .rt-partial { color: var(--green); } .rt-all_same { color: var(--gold); }
+.result-odai { font-size: 13px; color: var(--sub); margin-top: 4px; }
+.group-card { border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); }
+.group-card.matched { border-color: rgba(68,221,153,0.4); background: rgba(68,221,153,0.07); }
+.gc-answer { font-size: 16px; font-weight: 700; }
+.gc-answer .gc-count { font-size: 12px; color: var(--green); margin-left: 8px; }
+.gc-names { font-size: 12px; color: var(--sub); margin-top: 4px; }
+.delta-list { margin-top: 6px; }
+.delta-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); margin-bottom: 6px; font-size: 14px; }
+.delta-pts { font-weight: 900; }
+.delta-pos { color: var(--green); } .delta-neg { color: var(--red); } .delta-zero { color: var(--sub); }
+
+/* 最終順位 */
+.rank-item { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.rank-item.top { border-color: rgba(255,215,0,0.5); background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,95,162,0.06)); }
+.rank-pos { font-size: 22px; font-weight: 900; min-width: 36px; }
+.rank-name { flex: 1; font-size: 16px; font-weight: 700; }
+.rank-score { font-size: 20px; font-weight: 900; color: var(--accent); }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: 12px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+.foot-note { font-size: 11px; color: var(--sub); text-align: center; margin-top: 18px; opacity: 0.7; line-height: 1.6; }
+.help { font-size: 12px; color: var(--sub); line-height: 1.7; }
+.help b { color: var(--text); }
+code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+.score-pill { font-size: 12px; color: var(--sub); }
+.score-pill b { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+
+<!-- ══ 設定未完了の警告 ══ -->
+<div id="configScreen" class="screen">
+  <div class="wrap">
+    <div class="hero"><span class="hero-icon">🔧</span><h1>初期設定が必要です</h1><p>Firebase接続情報が未設定です</p></div>
+    <div class="card">
+      <div class="help">
+        このHTMLファイルをエディタで開き、<code>&lt;script&gt;</code> 内の <b>firebaseConfig</b> に、
+        Firebaseコンソールでコピーした接続情報を貼り付けてください。<br><br>
+        <b>手順（tasks.md STEP1）：</b><br>
+        ① <a href="https://firebase.google.com" target="_blank" style="color:var(--blue)">Firebase</a> でプロジェクト作成<br>
+        ② 「Realtime Database」を作成（asia-southeast1／テストモード）<br>
+        ③ プロジェクト設定 → マイアプリ → <code>&lt;/&gt;</code> で <b>firebaseConfig</b> を取得<br>
+        ④ このファイルの <code>const firebaseConfig = {…}</code> に貼り付けて保存<br>
+        ⑤ ブラウザで再読み込み<br><br>
+        特に <code>databaseURL</code> が必須です。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ロビー ══ -->
+<div id="lobbyScreen" class="screen">
+  <div class="wrap">
+    <div class="hero"><span class="hero-icon">💬</span><h1>「と言えば」</h1><p>みんなの連想がそろうか！？</p></div>
+    <div class="card">
+      <div class="section-label">あなたの名前</div>
+      <input id="nameInput" class="input" type="text" placeholder="例：やすおっち" maxlength="10">
+    </div>
+    <div class="card">
+      <div class="section-label">新しくルームを作る（あなたがホスト）</div>
+      <button class="btn btn-primary" onclick="createRoom()">ルームを作成 🎲</button>
+    </div>
+    <div class="card">
+      <div class="section-label">ルームコードで参加する</div>
+      <div class="row">
+        <input id="codeInput" class="input" type="text" placeholder="6桁コード" maxlength="6" style="text-transform:uppercase;letter-spacing:3px;text-align:center">
+        <button class="btn btn-secondary" style="width:auto;padding:13px 20px;white-space:nowrap" onclick="joinRoom()">参加</button>
+      </div>
+    </div>
+    <div class="foot-note">同じルームコードを家族に伝えて、それぞれの端末から参加！<br>5ラウンド対戦・最後に順位発表。</div>
+  </div>
+</div>
+
+<!-- ══ 待機室 ══ -->
+<div id="waitScreen" class="screen">
+  <div class="topbar"><div class="tb-room">ROOM <b id="wRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="wrap">
+    <div class="card roomcode-box">
+      <div class="roomcode-label">このコードを伝えて参加してもらおう</div>
+      <div class="roomcode" id="wBigCode">------</div>
+      <div class="roomcode-hint" id="wShareHint">タップでコピー</div>
+    </div>
+    <div class="card">
+      <div class="section-label">参加者 <span id="wCount"></span></div>
+      <div class="players" id="wPlayers"></div>
+    </div>
+    <div class="stack" id="wHostControls">
+      <button class="btn btn-primary" id="wStartBtn" onclick="startGame()">ゲーム開始 ▶</button>
+      <div class="foot-note" id="wStartHint">3人以上で開始できます</div>
+    </div>
+    <div class="wait-status hidden" id="wGuestWait">
+      <span class="wait-emoji">⏳</span>
+      <div class="wait-msg">ホストの開始を待っています…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ お題フェーズ ══ -->
+<div id="odaiScreen" class="screen">
+  <div class="topbar"><div class="tb-room">R<span id="oRound">1</span>/5 ・ ROOM <b id="oRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="wrap">
+    <!-- 親用 -->
+    <div id="odaiParentView">
+      <div class="card" style="text-align:center">
+        <div class="section-label">あなたが親です 👑 お題を出そう</div>
+        <div class="odai-display" style="padding:14px 0">
+          <span class="odai-pre">「</span>
+          <span class="odai-word" id="oCurrentOdai" style="font-size:34px">？？？</span>
+          <span class="odai-post">」と言えば？</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">カテゴリから選ぶ</div>
+        <div class="chips" id="oChips"></div>
+      </div>
+      <div class="card">
+        <div class="section-label">自分で入力する</div>
+        <div class="row">
+          <input id="oManualInput" class="input" type="text" placeholder="例：夏、給食、ねこ…" maxlength="20">
+          <button class="btn btn-secondary" style="width:auto;padding:13px 16px;white-space:nowrap" onclick="useManualOdai()">決定</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="oConfirmBtn" onclick="confirmOdai()" disabled>このお題で出題する →</button>
+    </div>
+    <!-- 子用 -->
+    <div id="odaiChildView" class="hidden">
+      <div class="wait-status"><span class="wait-emoji">🤔</span>
+        <div class="wait-msg"><b id="oParentName">親</b> がお題を考えています…</div>
+        <div class="wait-sub">少しお待ちください</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 回答フェーズ ══ -->
+<div id="answerScreen" class="screen">
+  <div class="topbar"><div class="tb-room">R<span id="aRound">1</span>/5 ・ ROOM <b id="aRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="wrap">
+    <div class="card" style="text-align:center">
+      <div class="odai-display" style="padding:14px 0">
+        <span class="odai-pre">「</span>
+        <span class="odai-word" id="aOdai">？？</span>
+        <span class="odai-post">」と言えば？</span>
+      </div>
+    </div>
+    <!-- 子の回答入力 -->
+    <div id="answerChildView">
+      <div class="card">
+        <div class="section-label">あなたの回答（他の人には見えません）</div>
+        <input id="answerInput" class="input" type="text" placeholder="ぱっと思いついた言葉を！" maxlength="20">
+      </div>
+      <button class="btn btn-primary" id="answerSubmitBtn" onclick="submitAnswer()">回答を送信 ✏️</button>
+      <div class="wait-status hidden" id="answerDoneView">
+        <span class="wait-emoji">✅</span>
+        <div class="wait-msg">回答しました！</div>
+        <div class="answer-progress" id="aProgressChild"></div>
+      </div>
+    </div>
+    <!-- 親の待機 -->
+    <div id="answerParentView" class="hidden">
+      <div class="wait-status"><span class="wait-emoji">📥</span>
+        <div class="wait-msg">みんなの回答を待っています…</div>
+        <div class="answer-progress" id="aProgressParent"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="section-label">回答状況</div>
+      <div class="players" id="aPlayers"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 結果フェーズ ══ -->
+<div id="resultScreen" class="screen">
+  <div class="topbar"><div class="tb-room">R<span id="rRound">1</span>/5 ・ ROOM <b id="rRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="wrap">
+    <div class="result-head">
+      <div class="result-type" id="rType">結果</div>
+      <div class="result-odai" id="rOdai"></div>
+    </div>
+    <div class="card">
+      <div class="section-label">みんなの回答</div>
+      <div id="rGroups"></div>
+    </div>
+    <div class="card">
+      <div class="section-label">獲得ポイント</div>
+      <div class="delta-list" id="rDeltas"></div>
+    </div>
+    <div class="stack" id="rHostControls">
+      <button class="btn btn-primary" id="rNextBtn" onclick="nextRound()">次のラウンドへ →</button>
+    </div>
+    <div class="wait-status hidden" id="rGuestWait"><span class="wait-emoji">⏳</span><div class="wait-msg">ホストの操作を待っています…</div></div>
+  </div>
+</div>
+
+<!-- ══ 最終結果 ══ -->
+<div id="endScreen" class="screen">
+  <div class="topbar"><div class="tb-room">ROOM <b id="eRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="wrap">
+    <div class="hero" style="padding:32px 0 18px"><span class="hero-icon">🏆</span><h1>最終結果</h1><p>全5ラウンド終了！</p></div>
+    <div id="eRanking"></div>
+    <div class="stack" id="eHostControls" style="margin-top:8px">
+      <button class="btn btn-primary" onclick="playAgain()">もう一度あそぶ 🔄</button>
+    </div>
+    <div class="wait-status hidden" id="eGuestWait"><span class="wait-emoji">🎉</span><div class="wait-msg">おつかれさま！</div></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Firebase SDK (CDN / compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  ★★★ ここに Firebase の接続情報を貼り付けてください ★★★
+//  Firebaseコンソール → プロジェクト設定 → マイアプリ → </> で取得
+// ══════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDML1qE08Wk3Yah_e35PqGOlXlKEX5-wLc",
+  authDomain: "toieba-game.firebaseapp.com",
+  databaseURL: "https://toieba-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "toieba-game",
+  storageBucket: "toieba-game.firebasestorage.app",
+  messagingSenderId: "987291900786",
+  appId: "1:987291900786:web:dc0430a21c1995c4b3dbeb",
+  measurementId: "G-WL763P8WBR"
+};
+// ══════════════════════════════════════════════════════════════
+
+// ══ 定数 ══
+const TOTAL_ROUNDS = 5;
+const MIN_PLAYERS  = 3;
+const SS_NAME = 'toieba_name', SS_ROOM = 'toieba_room';
+const SCREENS = ['configScreen','lobbyScreen','waitScreen','odaiScreen','answerScreen','resultScreen','endScreen'];
+
+// ══ お題バンク ══
+const ODAI_BANK = {
+  '食べ物':   ['夏の食べ物','給食','お祭りの屋台','甘いもの','すっぱいもの','お弁当','コンビニ','朝ごはん','鍋に入れる具'],
+  '季節・行事':['夏','冬','お正月','夏休み','クリスマス','遠足','運動会','梅雨','秋といえば'],
+  '動物':     ['かわいい動物','強い動物','ペット','動物園','海の生き物','鳥','こわい生き物','虫'],
+  '場所・旅行':['行ってみたい国','海','山','東京','温泉','遊園地','学校の好きな場所','宇宙'],
+  'スポーツ':  ['人気のスポーツ','オリンピック','球技','水泳','体育でやること','プロ選手'],
+  '学校':     ['好きな教科','休み時間','文房具','係・委員会','給食当番','school行事'],
+  '色・もの':  ['赤いもの','丸いもの','光るもの','冷たいもの','うるさいもの','やわらかいもの','長いもの'],
+  'エンタメ':  ['人気のゲーム','アニメ','YouTube','歌','映画','キャラクター'],
+  '生活':     ['朝にすること','お風呂','寝る前','お手伝い','雨の日にすること','休日の過ごし方'],
+};
+const ALL_CATS = Object.keys(ODAI_BANK);
+
+// ══ Firebase 初期化 ══
+let db = null, fbReady = false;
+try {
+  if (firebaseConfig.databaseURL && firebaseConfig.databaseURL.startsWith('http')) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    fbReady = true;
+  }
+} catch (e) { console.error(e); fbReady = false; }
+
+// ══ 状態 ══
+let myName = '';
+let roomCode = '';
+let room = null;          // 現在のルームスナップショット
+let roomRef = null;       // listener 用 ref
+let pickedOdai = '';      // 親が選択中のお題
+let answeredFlag = false; // 自分が回答送信済みか
+let computingResult = false;
+
+// ══ ユーティリティ ══
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+function avatarFor(name) {
+  const av = ['🦊','🐰','🐻','🐼','🐯','🦁','🐸','🐵','🐶','🐱','🐹','🐧'];
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) % av.length;
+  return av[h];
+}
+// 表記ゆれ正規化：前後空白・大文字小文字・全角→半角・ひらがな→カタカナ・記号除去
+function normalize(s) {
+  return (s || '').trim().toLowerCase()
+    .replace(/[Ａ-Ｚａ-ｚ０-９！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[ぁ-ん]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60))
+    .replace(/[\s　]+/g, '')
+    .replace(/[、。・,.!?！？「」『』（）()ー－\-~〜・]/g, '');
+}
+function isHost()   { return room && room.host === myName; }
+function parentName(){ return room && room.players ? room.players[room.parentIdx] : ''; }
+function amParent() { return parentName() === myName; }
+
+// ══ ロビー ══
+function createRoom() {
+  if (!fbReady) { toast('Firebase未設定です'); return; }
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { toast('名前を入力してください'); return; }
+  myName = name;
+  const code = genCode();
+  const data = {
+    code, host: name, players: [name], scores: { [name]: 0 },
+    phase: 'waiting', round: 1, parentIdx: 0, odai: '', answers: {}, result: null,
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+  };
+  db.ref('rooms/' + code).set(data).then(() => { roomCode = code; subscribeRoom(); })
+    .catch(e => toast('作成に失敗：' + e.message));
+}
+function joinRoom() {
+  if (!fbReady) { toast('Firebase未設定です'); return; }
+  const name = document.getElementById('nameInput').value.trim();
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!name) { toast('名前を入力してください'); return; }
+  if (code.length !== 6) { toast('6桁のコードを入力してください'); return; }
+  const ref = db.ref('rooms/' + code);
+  ref.get().then(snap => {
+    if (!snap.exists()) { toast('そのルームは見つかりません'); return; }
+    const r = snap.val();
+    if (r.phase !== 'waiting') { toast('そのルームは既にゲーム中です'); return; }
+    const players = r.players || [];
+    if (players.includes(name)) { toast('同じ名前が既に参加しています'); return; }
+    players.push(name);
+    const scores = r.scores || {}; scores[name] = 0;
+    ref.update({ players, scores }).then(() => { myName = name; roomCode = code; subscribeRoom(); });
+  }).catch(e => toast('参加に失敗：' + e.message));
+}
+
+// ══ ルーム購読 ══
+function subscribeRoom() {
+  sessionStorage.setItem(SS_NAME, myName);
+  sessionStorage.setItem(SS_ROOM, roomCode);
+  if (roomRef) roomRef.off();
+  roomRef = db.ref('rooms/' + roomCode);
+  roomRef.on('value', snap => {
+    if (!snap.exists()) { toast('ルームが終了しました'); backToLobby(); return; }
+    room = snap.val();
+    room.players = room.players || [];
+    room.scores = room.scores || {};
+    room.answers = room.answers || {};
+    render();
+    if (isHost()) hostAutoCompute();
+  });
+}
+
+// ══ ホスト：全員回答したら結果を計算 ══
+function hostAutoCompute() {
+  if (room.phase !== 'answering' || room.result) return;
+  if (computingResult) return;
+  const children = room.players.filter((_, i) => i !== room.parentIdx);
+  const answered = children.filter(c => room.answers[c] != null && room.answers[c] !== '');
+  if (answered.length < children.length || children.length < 2) return;
+  computingResult = true;
+  const res = computeResult(children);
+  const newScores = Object.assign({}, room.scores);
+  for (const [n, d] of Object.entries(res.delta)) newScores[n] = (newScores[n] || 0) + d;
+  roomRef.update({ result: res, scores: newScores, phase: 'result' })
+    .finally(() => { computingResult = false; });
+}
+
+function computeResult(children) {
+  // 正規化でグループ化
+  const groups = {}; // normalized -> [names]
+  const rep = {};    // normalized -> 代表の生回答
+  children.forEach(c => {
+    const raw = room.answers[c];
+    const key = normalize(raw);
+    if (!groups[key]) { groups[key] = []; rep[key] = raw; }
+    groups[key].push(c);
+  });
+  const groupArr = Object.keys(groups).map(k => ({ rep: rep[k], names: groups[k], size: groups[k].length }))
+    .sort((a, b) => b.size - a.size);
+  const numGroups = groupArr.length;
+  const parent = parentName();
+  const totalPlayers = room.players.length;
+  const delta = {};
+  room.players.forEach(p => delta[p] = 0);
+
+  let type, label;
+  if (numGroups === children.length) {
+    // 全員バラバラ
+    type = 'all_diff'; label = 'みんなバラバラ！';
+    delta[parent] += 1;
+  } else if (numGroups === 1) {
+    // 全員一致
+    type = 'all_same'; label = '全員一致！！';
+    const bonus = totalPlayers >= 5 ? 2 : 1;
+    children.forEach(c => delta[c] += 5 * bonus);
+    delta[parent] += -2;
+  } else {
+    // 一部一致
+    type = 'partial'; label = '一部一致！';
+    groupArr.forEach(g => {
+      if (g.size >= 2) g.names.forEach(n => delta[n] += g.size * 2);
+    });
+  }
+  return { type, label, delta, groups: groupArr, odai: room.odai, parent };
+}
+
+// ══ 描画 ══
+function render() {
+  if (!room) return;
+  switch (room.phase) {
+    case 'waiting':   renderWait(); break;
+    case 'odai':      renderOdai(); break;
+    case 'answering': renderAnswer(); break;
+    case 'result':    renderResult(); break;
+    case 'end':       renderEnd(); break;
+  }
+}
+
+function playerRowHtml(name, opts) {
+  opts = opts || {};
+  const me = name === myName;
+  const isP = name === parentName();
+  const badges = [];
+  if (room.host === name) badges.push('<span class="pi-badge badge-host">ホスト</span>');
+  if (isP && opts.showParent) badges.push('<span class="pi-badge badge-parent">親</span>');
+  if (me) badges.push('<span class="pi-badge badge-me">あなた</span>');
+  if (opts.status === 'done') badges.push('<span class="pi-badge badge-done">回答済</span>');
+  if (opts.status === 'wait') badges.push('<span class="pi-badge badge-wait">考え中</span>');
+  const score = opts.showScore ? `<div class="pi-score">${room.scores[name] || 0}</div>` : '';
+  const cls = 'player-item' + (me ? ' is-me' : '') + (isP && opts.showParent ? ' is-parent' : '');
+  return `<div class="${cls}"><div class="pi-avatar">${avatarFor(name)}</div><div class="pi-name">${escapeHtml(name)}</div>${badges.join('')}${score}</div>`;
+}
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// 待機室
+function renderWait() {
+  showScreen('waitScreen');
+  document.getElementById('wRoomCode').textContent = roomCode;
+  document.getElementById('wBigCode').textContent = roomCode;
+  document.getElementById('wCount').textContent = `(${room.players.length}人)`;
+  document.getElementById('wPlayers').innerHTML = room.players.map(n => playerRowHtml(n, {})).join('');
+  const host = isHost();
+  document.getElementById('wHostControls').classList.toggle('hidden', !host);
+  document.getElementById('wGuestWait').classList.toggle('hidden', host);
+  if (host) {
+    const ok = room.players.length >= MIN_PLAYERS;
+    document.getElementById('wStartBtn').disabled = !ok;
+    document.getElementById('wStartHint').textContent = ok ? `${room.players.length}人で開始できます` : `あと${MIN_PLAYERS - room.players.length}人必要です（最低${MIN_PLAYERS}人）`;
+  }
+}
+function startGame() {
+  if (!isHost()) return;
+  if (room.players.length < MIN_PLAYERS) { toast(`最低${MIN_PLAYERS}人必要です`); return; }
+  pickedOdai = ''; answeredFlag = false;
+  roomRef.update({ phase: 'odai', round: 1, parentIdx: 0, odai: '', answers: {}, result: null })
+    .catch(e => toast('開始に失敗：' + e.message));
+}
+
+// お題
+function renderOdai() {
+  showScreen('odaiScreen');
+  document.getElementById('oRoomCode').textContent = roomCode;
+  document.getElementById('oRound').textContent = room.round;
+  const parent = amParent();
+  document.getElementById('odaiParentView').classList.toggle('hidden', !parent);
+  document.getElementById('odaiChildView').classList.toggle('hidden', parent);
+  if (parent) {
+    if (!document.getElementById('oChips').dataset.built) {
+      document.getElementById('oChips').innerHTML = ALL_CATS.map(c => `<button class="chip" onclick="pickCategory('${c}')">${c}</button>`).join('') +
+        `<button class="chip" onclick="pickCategory('__random')">🎲 おまかせ</button>`;
+      document.getElementById('oChips').dataset.built = '1';
+    }
+  } else {
+    document.getElementById('oParentName').textContent = parentName();
+  }
+}
+function pickCategory(cat) {
+  let pool;
+  if (cat === '__random') { const c = ALL_CATS[Math.floor(Math.random() * ALL_CATS.length)]; pool = ODAI_BANK[c]; }
+  else pool = ODAI_BANK[cat];
+  pickedOdai = pool[Math.floor(Math.random() * pool.length)];
+  document.getElementById('oCurrentOdai').textContent = pickedOdai;
+  document.getElementById('oConfirmBtn').disabled = false;
+  document.getElementById('oManualInput').value = '';
+}
+function useManualOdai() {
+  const v = document.getElementById('oManualInput').value.trim();
+  if (!v) { toast('お題を入力してください'); return; }
+  pickedOdai = v;
+  document.getElementById('oCurrentOdai').textContent = pickedOdai;
+  document.getElementById('oConfirmBtn').disabled = false;
+}
+function confirmOdai() {
+  if (!pickedOdai) { toast('お題を選んでください'); return; }
+  answeredFlag = false;
+  roomRef.update({ odai: pickedOdai, phase: 'answering', answers: {}, result: null });
+}
+
+// 回答
+function renderAnswer() {
+  showScreen('answerScreen');
+  document.getElementById('aRoomCode').textContent = roomCode;
+  document.getElementById('aRound').textContent = room.round;
+  document.getElementById('aOdai').textContent = room.odai;
+  const parent = amParent();
+  const children = room.players.filter((_, i) => i !== room.parentIdx);
+  const answeredCount = children.filter(c => room.answers[c] != null && room.answers[c] !== '').length;
+
+  document.getElementById('answerChildView').classList.toggle('hidden', parent);
+  document.getElementById('answerParentView').classList.toggle('hidden', !parent);
+
+  if (!parent) {
+    const done = answeredFlag || (room.answers[myName] != null && room.answers[myName] !== '');
+    document.getElementById('answerInput').classList.toggle('hidden', done);
+    document.getElementById('answerSubmitBtn').classList.toggle('hidden', done);
+    document.getElementById('answerDoneView').classList.toggle('hidden', !done);
+    document.getElementById('aProgressChild').textContent = `${answeredCount} / ${children.length} 人が回答済み`;
+  } else {
+    document.getElementById('aProgressParent').textContent = `${answeredCount} / ${children.length} 人が回答済み`;
+  }
+  // 回答状況リスト（中身は伏せる）
+  document.getElementById('aPlayers').innerHTML = room.players.map((n, i) => {
+    if (i === room.parentIdx) return playerRowHtml(n, { showParent: true });
+    const ans = room.answers[n];
+    return playerRowHtml(n, { showParent: true, status: (ans != null && ans !== '') ? 'done' : 'wait' });
+  }).join('');
+}
+function submitAnswer() {
+  const v = document.getElementById('answerInput').value.trim();
+  if (!v) { toast('回答を入力してください'); return; }
+  answeredFlag = true;
+  roomRef.child('answers/' + myName).set(v);
+}
+
+// 結果
+function renderResult() {
+  showScreen('resultScreen');
+  document.getElementById('rRoomCode').textContent = roomCode;
+  document.getElementById('rRound').textContent = room.round;
+  const res = room.result || {};
+  const tEl = document.getElementById('rType');
+  tEl.textContent = res.label || '結果';
+  tEl.className = 'result-type rt-' + (res.type || '');
+  document.getElementById('rOdai').textContent = `お題：「${res.odai || room.odai}」と言えば？`;
+
+  document.getElementById('rGroups').innerHTML = (res.groups || []).map(g => {
+    const matched = g.size >= 2;
+    const count = matched ? `<span class="gc-count">${g.size}人一致</span>` : '';
+    return `<div class="group-card ${matched ? 'matched' : ''}">
+      <div class="gc-answer">${escapeHtml(g.rep)}${count}</div>
+      <div class="gc-names">${g.names.map(escapeHtml).join('、')}</div>
+    </div>`;
+  }).join('');
+
+  const delta = res.delta || {};
+  document.getElementById('rDeltas').innerHTML = room.players.map(n => {
+    const d = delta[n] || 0;
+    const cls = d > 0 ? 'delta-pos' : d < 0 ? 'delta-neg' : 'delta-zero';
+    const sign = d > 0 ? '+' : '';
+    const isP = n === res.parent;
+    return `<div class="delta-item">
+      <span>${avatarFor(n)} ${escapeHtml(n)}${isP ? ' 👑' : ''} <span class="score-pill">(計 <b>${room.scores[n] || 0}</b>)</span></span>
+      <span class="delta-pts ${cls}">${sign}${d} pt</span>
+    </div>`;
+  }).join('');
+
+  const host = isHost();
+  document.getElementById('rHostControls').classList.toggle('hidden', !host);
+  document.getElementById('rGuestWait').classList.toggle('hidden', host);
+  document.getElementById('rNextBtn').textContent = (room.round >= TOTAL_ROUNDS) ? '最終結果を見る 🏆' : '次のラウンドへ →';
+}
+function nextRound() {
+  if (room.round >= TOTAL_ROUNDS) {
+    roomRef.update({ phase: 'end' });
+  } else {
+    const nextParent = (room.parentIdx + 1) % room.players.length;
+    roomRef.update({ round: room.round + 1, parentIdx: nextParent, phase: 'odai', odai: '', answers: {}, result: null });
+  }
+  pickedOdai = ''; answeredFlag = false;
+  document.getElementById('oConfirmBtn') && (document.getElementById('oConfirmBtn').disabled = true);
+  document.getElementById('oCurrentOdai') && (document.getElementById('oCurrentOdai').textContent = '？？？');
+}
+
+// 最終結果
+function renderEnd() {
+  showScreen('endScreen');
+  document.getElementById('eRoomCode').textContent = roomCode;
+  const ranked = room.players.slice().sort((a, b) => (room.scores[b] || 0) - (room.scores[a] || 0));
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('eRanking').innerHTML = ranked.map((n, i) => {
+    return `<div class="rank-item ${i === 0 ? 'top' : ''}">
+      <div class="rank-pos">${medals[i] || (i + 1)}</div>
+      <div class="pi-avatar" style="font-size:26px">${avatarFor(n)}</div>
+      <div class="rank-name">${escapeHtml(n)}${n === myName ? ' <span class="pi-badge badge-me">あなた</span>' : ''}</div>
+      <div class="rank-score">${room.scores[n] || 0}<span style="font-size:12px;color:var(--sub)"> pt</span></div>
+    </div>`;
+  }).join('');
+  const host = isHost();
+  document.getElementById('eHostControls').classList.toggle('hidden', !host);
+  document.getElementById('eGuestWait').classList.toggle('hidden', host);
+}
+function playAgain() {
+  const scores = {}; room.players.forEach(p => scores[p] = 0);
+  roomRef.update({ phase: 'waiting', round: 1, parentIdx: 0, odai: '', answers: {}, result: null, scores });
+}
+
+// ══ 退出 ══
+function leaveRoom() {
+  if (!roomRef) { backToLobby(); return; }
+  const players = room.players.filter(p => p !== myName);
+  const scores = Object.assign({}, room.scores); delete scores[myName];
+  const updates = {};
+  if (players.length === 0) {
+    roomRef.remove().finally(backToLobby);
+    return;
+  }
+  updates.players = players;
+  updates.scores = scores;
+  if (room.host === myName) updates.host = players[0];
+  if (room.parentIdx >= players.length) updates.parentIdx = 0;
+  roomRef.update(updates).finally(backToLobby);
+}
+function backToLobby() {
+  if (roomRef) { roomRef.off(); roomRef = null; }
+  room = null; roomCode = ''; answeredFlag = false; pickedOdai = '';
+  sessionStorage.removeItem(SS_ROOM);
+  showScreen('lobbyScreen');
+}
+
+// コードコピー
+document.getElementById('wBigCode').addEventListener('click', () => {
+  if (navigator.clipboard) navigator.clipboard.writeText(roomCode).then(() => toast('コードをコピーしました'));
+});
+
+// Enterキー
+document.getElementById('answerInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitAnswer(); });
+document.getElementById('oManualInput').addEventListener('keydown', e => { if (e.key === 'Enter') useManualOdai(); });
+
+// ══ 起動 ══
+window.addEventListener('DOMContentLoaded', () => {
+  if (!fbReady) { showScreen('configScreen'); return; }
+  // セッション復帰
+  const sName = sessionStorage.getItem(SS_NAME);
+  const sRoom = sessionStorage.getItem(SS_ROOM);
+  if (sName && sRoom) {
+    myName = sName; roomCode = sRoom;
+    db.ref('rooms/' + sRoom).get().then(snap => {
+      if (snap.exists() && (snap.val().players || []).includes(sName)) subscribeRoom();
+      else { sessionStorage.removeItem(SS_ROOM); document.getElementById('nameInput').value = sName; showScreen('lobbyScreen'); }
+    }).catch(() => showScreen('lobbyScreen'));
+  } else {
+    if (sName) document.getElementById('nameInput').value = sName;
+    showScreen('lobbyScreen');
+  }
+});
+</script>
+</body>
+</html>

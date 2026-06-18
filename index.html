@@ -205,6 +205,14 @@ body {
 .kokugo-title { color: var(--accent-kokugo); }
 .tag-kokugo { color: var(--accent-kokugo); border-color: rgba(255,140,90,0.3); background: rgba(255,140,90,0.08); }
 .fade-in:nth-child(6) { animation-delay: 0.85s; }
+.fade-in:nth-child(7) { animation-delay: 1.0s; }
+
+/* と言えば（パーティ） */
+.card-toieba { background: linear-gradient(135deg, #1f0f1c 0%, #150a14 100%); box-shadow: 0 4px 24px rgba(255,95,162,0.08); }
+.card-toieba:hover { border-color: rgba(255,95,162,0.4); box-shadow: 0 8px 40px rgba(255,95,162,0.18); }
+.card-toieba::before { background: radial-gradient(ellipse at 80% 20%, rgba(255,95,162,0.08), transparent 60%); }
+.toieba-title { color: #ff7fb5; }
+.tag-toieba { color: #ff7fb5; border-color: rgba(255,95,162,0.3); background: rgba(255,95,162,0.08); }
 
 .card-inner {
   display: flex;
@@ -392,6 +400,22 @@ body {
             <span class="tag tag-math">🧮 全54問</span>
             <span class="tag tag-math">⭐ レベル1〜4</span>
             <span class="tag tag-math">9カテゴリ</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-toieba fade-in" href="toieba-online.html">
+      <div class="card-inner">
+        <div class="card-icon">💬</div>
+        <div class="card-body">
+          <div class="card-title toieba-title">「と言えば」ゲーム</div>
+          <div class="card-desc">家族でオンライン対戦！親のお題にみんなが連想で回答。連想がそろうほど高得点。ルームコードで複数端末から参加。</div>
+          <div class="card-tags">
+            <span class="tag tag-toieba">💬 オンライン対戦</span>
+            <span class="tag tag-toieba">👨‍👩‍👧 3人〜</span>
+            <span class="tag tag-toieba">⚙️ Firebase設定要</span>
           </div>
         </div>
         <div class="card-arrow">›</div>
