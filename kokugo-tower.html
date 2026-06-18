@@ -175,7 +175,10 @@ body {
 .fc-f1 { border-color: rgba(251,146,60,0.25); } .fc-f1:hover { border-color: rgba(251,146,60,0.5); }
 .fc-f2 { border-color: rgba(250,204,21,0.25); } .fc-f2:hover { border-color: rgba(250,204,21,0.5); }
 .fc-f3 { border-color: rgba(167,139,250,0.25); } .fc-f3:hover { border-color: rgba(167,139,250,0.5); }
+.fc-f4 { border-color: rgba(244,63,94,0.25); } .fc-f4:hover { border-color: rgba(244,63,94,0.5); }
+.fc-f5 { border-color: rgba(255,215,0,0.28); } .fc-f5:hover { border-color: rgba(255,215,0,0.55); }
 .pip-f0 { background:#f87171; } .pip-f1 { background:#fb923c; } .pip-f2 { background:#facc15; } .pip-f3 { background:#a78bfa; }
+.pip-f4 { background:#f43f5e; } .pip-f5 { background:#ffd700; }
 .pip-empty { background: rgba(255,255,255,0.12); }
 
 .map-items-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -374,7 +377,7 @@ body {
   <div class="title-wrap">
     <span class="title-icon">📚</span>
     <div class="title-main">国語の塔</div>
-    <div class="title-sub">漢字・ことわざ・四字熟語・敬語</div>
+    <div class="title-sub">漢字・ことわざ・四字熟語・敬語・故事成語・古文文法</div>
     <div class="title-status">
       <div class="ts-item"><div class="ts-label">LEVEL</div><div class="ts-val" id="ttLv">1</div></div>
       <div class="ts-item"><div class="ts-label">ATK</div><div class="ts-val" id="ttAtk">2</div></div>
@@ -537,7 +540,7 @@ body {
   <div class="ending-wrap">
     <span class="ending-icon">🏆</span>
     <div class="ending-title">全フロア制覇！</div>
-    <div class="ending-msg">漢字・ことわざ・四字熟語・敬語——<br>すべての言葉の試練を乗り越えた！<br>あなたは真の「言葉の達人」だ！</div>
+    <div class="ending-msg">漢字・ことわざ・四字熟語・敬語、<br>そして故事成語・古文文法の深淵まで——<br>全6フロアの試練を乗り越えた！<br>あなたは真の「言葉の達人」だ！</div>
     <div class="ending-stats" id="endingStats"></div>
     <button class="btn btn-primary" onclick="goToMap()">マップに戻る</button>
     <button class="btn btn-ghost" style="margin-top:10px" onclick="showScreen('titleScreen')">タイトルへ</button>
@@ -713,6 +716,84 @@ const FLOORS = [
       },
     ],
   },
+  {
+    name: '故事成語の間', theme: '故事成語・対義語・類義語（難）', emoji: '📕',
+    monsters: [
+      {name:'故事の妖魔', emoji:'🐲'},
+      {name:'古典の亡霊', emoji:'👻'},
+      {name:'語彙食らい', emoji:'🦇'},
+    ],
+    monsterHP: 14, monsterHPGrowth: 2,
+    bossName: '故事の覇王', bossEmoji: '🐉', bossHP: 36, bossHPGrowth: 6,
+    bossCls: '', bossTitle: '故事の覇王',
+    itemEmoji: '📕', itemName: '古典の秘書', itemBonus: 2,
+    questions: [
+      // Type A: 故事成語の意味
+      { type:'A', q:'「矛盾」の意味は？', choices:['二つの武器を持つこと','つじつまが合わないこと','激しく争うこと','守りを固めること'], answer:1, hint:'矛盾（むじゅん）：話のつじつまが合わないこと。中国の故事に由来する' },
+      { type:'A', q:'「漁夫の利」の意味は？', choices:['漁師が魚を独占する','両者が争う間に第三者が利益を得る','努力して得た成果','海で得た幸運'], answer:1, hint:'漁夫の利（ぎょふのり）：二者が争っている隙に、第三者が労せず利益を横取りすること' },
+      { type:'A', q:'「四面楚歌」の意味は？', choices:['四方から歌が聞こえる','周囲が敵ばかりで孤立すること','楚の国の歌','四方を守られている'], answer:1, hint:'四面楚歌（しめんそか）：周りが敵や反対者ばかりで、孤立無援であること' },
+      { type:'A', q:'「背水の陣」の意味は？', choices:['川を背に休む','退路を断って必死に取り組むこと','水を蓄えて備える','安全な場所に陣を張る'], answer:1, hint:'背水の陣（はいすいのじん）：あとがない状況に身を置き、決死の覚悟で事に当たること' },
+      { type:'A', q:'「杞憂」の意味は？', choices:['当然の心配','する必要のない無用な心配','深い悲しみ','正しい予測'], answer:1, hint:'杞憂（きゆう）：起こりもしないことをあれこれ心配する、取り越し苦労のこと' },
+      { type:'A', q:'「蛇足」の意味は？', choices:['蛇の足は速い','余計な付け足しで台無しにすること','長所を伸ばすこと','必要不可欠なもの'], answer:1, hint:'蛇足（だそく）：なくてもよい余計なものを付け加えること' },
+      // Type B: 故事成語の穴埋め・対義語
+      { type:'B', q:'「呉越___舟」の___に入る漢字は？', choices:['同','異','共','合'], answer:0, hint:'呉越同舟（ごえつどうしゅう）：仲の悪い者同士が同じ場所に居合わせること' },
+      { type:'B', q:'「温故___新」の___に入る漢字は？', choices:['知','創','維','革'], answer:0, hint:'温故知新（おんこちしん）：昔のことを学んで新しい知識・道理を得ること' },
+      { type:'B', q:'「需要」の対義語は？', choices:['供給','要求','消費','不足'], answer:0, hint:'需要⇔供給：求める量と、市場に出す量。経済の基本対義語' },
+      { type:'B', q:'「楽観」の対義語は？', choices:['悲観','静観','達観','傍観'], answer:0, hint:'楽観⇔悲観：物事を良く見るか、悪く見るか' },
+      // Type C: マッチング
+      {
+        type:'C',
+        q:'故事成語とその意味を正しく組み合わせよう',
+        pairs:[['矛盾','つじつまが合わない'],['蛇足','余計な付け足し'],['杞憂','無用な心配'],['推敲','文章を練り直す']],
+        hint:'矛盾=つじつまが合わない、蛇足=余計な付け足し、推敲=文章を練り直す'
+      },
+      {
+        type:'C',
+        q:'言葉とその対義語を正しく組み合わせよう',
+        pairs:[['需要','供給'],['理想','現実'],['主観','客観'],['原因','結果']],
+        hint:'需要⇔供給、理想⇔現実、主観⇔客観、原因⇔結果'
+      },
+    ],
+  },
+  {
+    name: '言葉の深淵', theme: '古文単語・文法・敬語の達人（超難）', emoji: '🌌',
+    monsters: [
+      {name:'文法の鬼神', emoji:'👹'},
+      {name:'古語の幻影', emoji:'🌫️'},
+      {name:'係り結びの蛇', emoji:'🐍'},
+    ],
+    monsterHP: 16, monsterHPGrowth: 2,
+    bossName: '言霊の支配者', bossEmoji: '👑', bossHP: 42, bossHPGrowth: 7,
+    bossCls: '', bossTitle: '言霊の支配者',
+    itemEmoji: '🔮', itemName: '言霊の宝珠', itemBonus: 2,
+    questions: [
+      // Type A: 古文単語・文法・敬語
+      { type:'A', q:'古文「いとをかし」の「をかし」の意味は？', choices:['おかしくて笑える','趣がある・風情がある','奇妙で気味が悪い','間違っている'], answer:1, hint:'「をかし」：明るく知的な美しさ・趣があること。現代語の「おかしい」とは意味が違う' },
+      { type:'A', q:'古文「ありがたし」の本来の意味は？', choices:['感謝したい','めったにない・珍しい','とても難しい','ありふれている'], answer:1, hint:'「ありがたし」＝有り難し：めったに存在しない、珍しいこと。そこから感謝の意味へ' },
+      { type:'A', q:'古文「つとめて」の意味は？', choices:['努力して','早朝','急いで','勤め先'], answer:1, hint:'「つとめて」：早朝、または「翌朝」を表す古文の時間表現' },
+      { type:'A', q:'二重敬語（過剰敬語）で誤りとされるのは？', choices:['ご覧になる','召し上がる','お読みになられる','拝見する'], answer:2, hint:'「お読みになられる」は「お〜になる」と「られる」を重ねた二重敬語。「お読みになる」が正しい' },
+      { type:'A', q:'「静かだ」の品詞は？', choices:['形容詞','形容動詞','副詞','連体詞'], answer:1, hint:'「〜だ」で言い切れ、「静かな」と活用するのは形容動詞' },
+      { type:'A', q:'古文「あさまし」の意味は？', choices:['朝が早い','驚きあきれる','清らかだ','浅はかだ'], answer:1, hint:'「あさまし」：意外なことに驚きあきれる気持ちを表す古語' },
+      // Type B: 文法・古文・敬語の穴埋め
+      { type:'B', q:'係り結びで「ぞ・なむ・こそ」のうち、文末が已然形になるのは？', choices:['こそ','ぞ','なむ','や'], answer:0, hint:'「こそ」は文末を已然形で結ぶ。「ぞ・なむ・や・か」は連体形で結ぶ' },
+      { type:'B', q:'「ゆっくり歩く」の「ゆっくり」の品詞は？', choices:['副詞','形容詞','形容動詞','連体詞'], answer:0, hint:'用言（動詞など）を修飾し活用しない自立語は副詞' },
+      { type:'B', q:'「拝見する」は「見る」の何語か？', choices:['謙譲語','尊敬語','丁寧語','美化語'], answer:0, hint:'自分の動作をへりくだる謙譲語。相手を高める尊敬語は「ご覧になる」' },
+      { type:'B', q:'「大きな」の品詞は？', choices:['連体詞','形容詞','形容動詞','副詞'], answer:0, hint:'「大きな」は活用せず体言だけを修飾する連体詞。「大きい」は形容詞で別物' },
+      // Type C: マッチング
+      {
+        type:'C',
+        q:'古文単語と現代語の意味を組み合わせよう',
+        pairs:[['をかし','趣がある'],['あはれ','しみじみとした情趣'],['つとめて','早朝'],['ありがたし','めったにない']],
+        hint:'をかし=趣がある、あはれ=しみじみ、つとめて=早朝、ありがたし=めったにない'
+      },
+      {
+        type:'C',
+        q:'言葉とその品詞を正しく組み合わせよう',
+        pairs:[['美しい','形容詞'],['静かだ','形容動詞'],['ゆっくり','副詞'],['大きな','連体詞']],
+        hint:'美しい=形容詞、静かだ=形容動詞、ゆっくり=副詞、大きな=連体詞'
+      },
+    ],
+  },
 ];
 
 // ══════════════════════════════════════════
@@ -725,7 +806,7 @@ const DEFAULT_SAVE = () => ({
   playerLevel: 1,
   playerEXP:   0,
   playerHP:    10,
-  itemLevels:  [0, 0, 0, 0],
+  itemLevels:  FLOORS.map(() => 0),
   clearedFloors: [],
   lastScreen:  'titleScreen',
 });
@@ -736,7 +817,8 @@ function _getUsers() {
 function loadSave() {
   const users = _getUsers();
   save = users[currentUser] ? JSON.parse(JSON.stringify(users[currentUser])) : DEFAULT_SAVE();
-  if (!save.itemLevels)   save.itemLevels = [0,0,0,0];
+  if (!save.itemLevels)   save.itemLevels = FLOORS.map(() => 0);
+  while (save.itemLevels.length < FLOORS.length) save.itemLevels.push(0);
   if (!save.clearedFloors) save.clearedFloors = [];
 }
 function writeSave() {
@@ -765,7 +847,7 @@ function renderUserScreen() {
         <div class="user-avatar">📖</div>
         <div class="user-info">
           <div class="user-name">${escHtml(n)}</div>
-          <div class="user-meta">Lv.${s.playerLevel || 1} ／ クリア ${(s.clearedFloors||[]).length}/4F</div>
+          <div class="user-meta">Lv.${s.playerLevel || 1} ／ クリア ${(s.clearedFloors||[]).length}/${FLOORS.length}F</div>
         </div>
       </div>`;
     }).join('');
@@ -844,7 +926,7 @@ function renderTitle() {
   document.getElementById('ttLv').textContent    = save.playerLevel;
   document.getElementById('ttAtk').textContent   = getBaseAtk();
   document.getElementById('ttHp').textContent    = save.playerHP + '/' + getMaxPlayerHP();
-  document.getElementById('ttClear').textContent = save.clearedFloors.length + '/4';
+  document.getElementById('ttClear').textContent = save.clearedFloors.length + '/' + FLOORS.length;
   document.getElementById('ttPlayer').textContent= currentUser || '';
   document.getElementById('ttExpLabel').textContent = 'EXP ' + (save.playerEXP||0) + '/' + getExpToNext();
   document.getElementById('ttExpFill').style.width = getExpProgress() + '%';
@@ -864,7 +946,7 @@ function renderMap() {
     const badge    = cleared ? '✅' : !unlocked ? '🔒' : '⚔️';
     const onclick  = unlocked ? `onclick="enterFloor(${i})"` : '';
     const lv       = getItemLv(i);
-    const pipColors = ['pip-f0','pip-f1','pip-f2','pip-f3'];
+    const pipColors = ['pip-f0','pip-f1','pip-f2','pip-f3','pip-f4','pip-f5'];
     const pips = [0,1,2].map(p => `<div class="fc-item-pip ${p < lv ? pipColors[i] : 'pip-empty'}"></div>`).join('');
     return `<div class="floor-card ${state} fc-f${i}" ${onclick}>
       <div class="fc-top">
@@ -895,7 +977,7 @@ function renderMap() {
 //  ナビゲーション
 // ══════════════════════════════════════════
 function goToMap() {
-  if (save.clearedFloors.length === 4) {
+  if (save.clearedFloors.length === FLOORS.length) {
     save.lastScreen = 'endingScreen'; writeSave();
     renderEnding(); showScreen('endingScreen'); return;
   }
@@ -1308,7 +1390,7 @@ function showResult(outcome) {
 
   const mainBtn = document.getElementById('resultMainBtn');
   const subBtn  = document.getElementById('resultSubBtn');
-  if (outcome === 'boss_win' && save.clearedFloors.length === 4) {
+  if (outcome === 'boss_win' && save.clearedFloors.length === FLOORS.length) {
     mainBtn.textContent = '🏆 全フロアクリア！';
     mainBtn.onclick = () => { save.lastScreen='endingScreen'; writeSave(); renderEnding(); showScreen('endingScreen'); };
     subBtn.textContent = 'マップへ戻る';
