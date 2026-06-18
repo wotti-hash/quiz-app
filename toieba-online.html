@@ -135,6 +135,21 @@ body {
 .delta-pts { font-weight: 900; }
 .delta-pos { color: var(--green); } .delta-neg { color: var(--red); } .delta-zero { color: var(--sub); }
 
+/* 結果アニメーション */
+@keyframes resultPop { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.12)} 100%{transform:scale(1);opacity:1} }
+.result-type.animate { animation: resultPop 0.55s cubic-bezier(.2,.8,.3,1.5) both; }
+@keyframes cardSlideUp { from{opacity:0;transform:translateY(18px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+.gc-animate, .delta-animate { animation: cardSlideUp 0.45s ease both; }
+@keyframes matchedPulse { 0%,100%{box-shadow:0 0 0 0 rgba(68,221,153,0)} 50%{box-shadow:0 0 0 7px rgba(68,221,153,0.16)} }
+.group-card.matched.gc-animate { animation: cardSlideUp 0.45s ease both, matchedPulse 1.2s ease 0.5s 2; }
+.gc-count { display:inline-block; animation: resultPop 0.4s ease 0.4s both; }
+.delta-pts.pop { animation: resultPop 0.45s ease both; }
+
+/* 紙吹雪 */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 300; overflow: hidden; }
+.confetti-piece { position: absolute; top: -24px; width: 10px; height: 14px; opacity: 0.92; will-change: transform; animation: confettiFall linear forwards; }
+@keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); } }
+
 /* 最終順位 */
 .rank-item { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
 .rank-item.top { border-color: rgba(255,215,0,0.5); background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,95,162,0.06)); }
@@ -357,6 +372,12 @@ const firebaseConfig = {
 };
 // ══════════════════════════════════════════════════════════════
 
+// ══ AI意味判定（任意）══
+// Cloudflare Worker のURLを設定すると、AIが同義の回答（例：ドラゴンクエスト＝ドラクエ）を
+// まとめて判定します。空のままなら文字一致（ひらがな↔カタカナ等）のみで動作。
+// セットアップは toieba-ai-worker/README.md を参照。
+const AI_MATCH_URL = "";
+
 // ══ 定数 ══
 const TOTAL_ROUNDS = 5;
 const MIN_PLAYERS  = 3;
@@ -481,32 +502,85 @@ function subscribeRoom() {
 }
 
 // ══ ホスト：全員回答したら結果を計算 ══
-function hostAutoCompute() {
+async function hostAutoCompute() {
   if (room.phase !== 'answering' || room.result) return;
   if (computingResult) return;
   const children = room.players.filter((_, i) => i !== room.parentIdx);
   const answered = children.filter(c => room.answers[c] != null && room.answers[c] !== '');
   if (answered.length < children.length || children.length < 2) return;
   computingResult = true;
-  const res = computeResult(children);
+
+  // AI判定中の表示（ホストのみ）
+  if (AI_MATCH_URL && amParent()) {
+    const el = document.getElementById('aProgressParent');
+    if (el) el.textContent = '🤖 AIが回答を判定中…';
+  }
+
+  // AIで同義判定 → 失敗時は文字正規化にフォールバック
+  let groupArr = await aiGroupArr(children);
+  if (!groupArr) groupArr = groupArrByNormalize(children);
+
+  // 計算中に他イベントで既に確定していないか再確認
+  if (room.phase !== 'answering' || room.result) { computingResult = false; return; }
+
+  const res = scoreGroups(children, groupArr);
   const newScores = Object.assign({}, room.scores);
   for (const [n, d] of Object.entries(res.delta)) newScores[n] = (newScores[n] || 0) + d;
   roomRef.update({ result: res, scores: newScores, phase: 'result' })
     .finally(() => { computingResult = false; });
 }
 
-function computeResult(children) {
-  // 正規化でグループ化
-  const groups = {}; // normalized -> [names]
-  const rep = {};    // normalized -> 代表の生回答
+// 文字正規化でグループ化（フォールバック / AI未設定時）
+function groupArrByNormalize(children) {
+  const groups = {}, rep = {};
   children.forEach(c => {
     const raw = room.answers[c];
     const key = normalize(raw);
     if (!groups[key]) { groups[key] = []; rep[key] = raw; }
     groups[key].push(c);
   });
-  const groupArr = Object.keys(groups).map(k => ({ rep: rep[k], names: groups[k], size: groups[k].length }))
+  return Object.keys(groups).map(k => ({ rep: rep[k], names: groups[k], size: groups[k].length }))
     .sort((a, b) => b.size - a.size);
+}
+
+// AIで同義判定（Worker経由）。成功時は groupArr、失敗時は null
+async function aiGroupArr(children) {
+  if (!AI_MATCH_URL) return null;
+  const answers = {};
+  children.forEach(c => answers[c] = room.answers[c]);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(AI_MATCH_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ odai: room.odai, answers }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const aiGroups = data.groups;
+    if (!Array.isArray(aiGroups)) return null;
+    // 検証：全員がちょうど1回ずつ含まれること
+    const seen = new Set();
+    let ok = true;
+    aiGroups.forEach(g => {
+      if (!Array.isArray(g)) { ok = false; return; }
+      g.forEach(n => { if (!children.includes(n) || seen.has(n)) ok = false; seen.add(n); });
+    });
+    if (!ok || seen.size !== children.length) return null;
+    return aiGroups.filter(g => g.length > 0)
+      .map(g => ({ rep: room.answers[g[0]], names: g, size: g.length }))
+      .sort((a, b) => b.size - a.size);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// グループ分けからスコア・結果を算出
+function scoreGroups(children, groupArr) {
   const numGroups = groupArr.length;
   const parent = parentName();
   const totalPlayers = room.players.length;
@@ -662,6 +736,36 @@ function submitAnswer() {
   roomRef.child('answers/' + myName).set(v);
 }
 
+// 数字カウントアップ演出
+function countUp(el, from, to, dur) {
+  if (from === to) { el.textContent = to; return; }
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / dur);
+    el.textContent = Math.round(from + (to - from) * t);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+// 全員一致の紙吹雪
+function launchConfetti() {
+  let c = document.getElementById('confetti');
+  if (!c) { c = document.createElement('div'); c.id = 'confetti'; document.body.appendChild(c); }
+  c.innerHTML = '';
+  const colors = ['#b794ff', '#ff5fa2', '#ffd700', '#44dd99', '#60a5fa', '#ff9f43'];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (1.8 + Math.random() * 1.6) + 's';
+    p.style.animationDelay = (Math.random() * 0.5) + 's';
+    if (Math.random() < 0.5) p.style.borderRadius = '50%';
+    c.appendChild(p);
+  }
+  setTimeout(() => { if (c) c.innerHTML = ''; }, 4400);
+}
+
 // 結果
 function renderResult() {
   showScreen('resultScreen');
@@ -670,29 +774,47 @@ function renderResult() {
   const res = room.result || {};
   const tEl = document.getElementById('rType');
   tEl.textContent = res.label || '結果';
+  // 'animate' クラスを付け直してポップ演出を再生
   tEl.className = 'result-type rt-' + (res.type || '');
+  void tEl.offsetWidth;
+  tEl.classList.add('animate');
   document.getElementById('rOdai').textContent = `お題：「${res.odai || room.odai}」と言えば？`;
 
-  document.getElementById('rGroups').innerHTML = (res.groups || []).map(g => {
+  document.getElementById('rGroups').innerHTML = (res.groups || []).map((g, i) => {
     const matched = g.size >= 2;
     const count = matched ? `<span class="gc-count">${g.size}人一致</span>` : '';
-    return `<div class="group-card ${matched ? 'matched' : ''}">
+    return `<div class="group-card ${matched ? 'matched' : ''} gc-animate" style="animation-delay:${(i * 0.12).toFixed(2)}s">
       <div class="gc-answer">${escapeHtml(g.rep)}${count}</div>
       <div class="gc-names">${g.names.map(escapeHtml).join('、')}</div>
     </div>`;
   }).join('');
 
   const delta = res.delta || {};
-  document.getElementById('rDeltas').innerHTML = room.players.map(n => {
+  const groupCount = (res.groups || []).length;
+  document.getElementById('rDeltas').innerHTML = room.players.map((n, i) => {
     const d = delta[n] || 0;
     const cls = d > 0 ? 'delta-pos' : d < 0 ? 'delta-neg' : 'delta-zero';
     const sign = d > 0 ? '+' : '';
     const isP = n === res.parent;
-    return `<div class="delta-item">
-      <span>${avatarFor(n)} ${escapeHtml(n)}${isP ? ' 👑' : ''} <span class="score-pill">(計 <b>${room.scores[n] || 0}</b>)</span></span>
-      <span class="delta-pts ${cls}">${sign}${d} pt</span>
+    const total = room.scores[n] || 0;
+    const before = total - d;
+    const delay = (groupCount * 0.12 + 0.2 + i * 0.08).toFixed(2);
+    return `<div class="delta-item delta-animate" style="animation-delay:${delay}s">
+      <span>${avatarFor(n)} ${escapeHtml(n)}${isP ? ' 👑' : ''} <span class="score-pill">(計 <b class="ct-num" data-from="${before}" data-to="${total}">${before}</b>)</span></span>
+      <span class="delta-pts pop ${cls}">${sign}${d} pt</span>
     </div>`;
   }).join('');
+
+  // スコアのカウントアップ（スライドイン後に開始）
+  const startMs = groupCount * 120 + 350;
+  setTimeout(() => {
+    document.querySelectorAll('#rDeltas .ct-num').forEach(el => {
+      countUp(el, parseInt(el.dataset.from, 10), parseInt(el.dataset.to, 10), 700);
+    });
+  }, startMs);
+
+  // 全員一致なら紙吹雪
+  if (res.type === 'all_same') setTimeout(launchConfetti, 250);
 
   const host = isHost();
   document.getElementById('rHostControls').classList.toggle('hidden', !host);
