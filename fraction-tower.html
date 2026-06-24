@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>算数の塔 — 分数版</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a1414; --card: #0f1f1e; --border: rgba(45,212,191,0.16);
+  --text: #eef6f4; --sub: #8aa6a0; --accent: #2dd4bf; --accent2: #ffb454;
+  --gold: #ffd700; --red: #ff6b6b; --green: #44dd99; --blue: #60a5fa; --yellow: #ffd95a;
+}
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(45,212,191,0.13) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 82%, rgba(255,180,84,0.10) 0%, transparent 55%);
+}
+.hidden { display: none !important; }
+.screen { display: none; position: relative; z-index: 1; min-height: 100vh; flex-direction: column; align-items: center; padding: 0 0 60px; }
+.screen.active { display: flex; }
+.wrap { width: 100%; max-width: 480px; padding: 0 20px; }
+
+.btn { display: block; width: 100%; padding: 14px; border-radius: 14px; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, #2dd4bf, #14a89a); color: #04211e; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(45,212,191,0.45); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: rgba(45,212,191,0.1); color: var(--accent); border: 1px solid rgba(45,212,191,0.3); }
+.btn-secondary:hover { background: rgba(45,212,191,0.18); }
+.btn-ghost { background: rgba(255,255,255,0.05); color: var(--sub); border: 1px solid rgba(255,255,255,0.1); }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.btn-warm { background: linear-gradient(135deg, #ffb454, #f0902a); color: #2a1500; }
+
+.page-header { width: 100%; max-width: 480px; display: flex; align-items: center; gap: 12px; padding: 16px 20px 4px; }
+.page-header h2 { font-size: 16px; font-weight: 700; }
+
+/* ══ タイトル ══ */
+#titleScreen { justify-content: center; background: radial-gradient(ellipse at 50% 0%, rgba(45,212,191,0.14) 0%, transparent 65%), var(--bg); }
+.title-wrap { text-align: center; padding: 24px 20px; max-width: 400px; width: 100%; }
+.title-icon { font-size: 70px; display: block; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.title-main { font-family: 'Kaisei Decol', serif; font-size: 32px; font-weight: 700; margin: 14px 0 2px;
+  background: linear-gradient(135deg, #2dd4bf, #ffb454); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.title-sub { color: var(--sub); font-size: 13px; margin-bottom: 26px; }
+.title-btns { display: flex; flex-direction: column; gap: 10px; }
+.name-row { display: flex; gap: 8px; margin-bottom: 18px; }
+.name-input { flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 15px; font-family: inherit; outline: none; }
+.name-input:focus { border-color: var(--accent); }
+
+/* ══ マップ ══ */
+.map-wrap { width: 100%; max-width: 480px; padding: 0 16px; }
+.map-floors { display: flex; flex-direction: column; gap: 12px; margin: 12px 0 16px; }
+.floor-card { border-radius: 16px; padding: 16px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: all 0.2s; user-select: none; }
+.floor-card:hover:not(.locked) { transform: translateY(-2px); border-color: rgba(45,212,191,0.45); }
+.floor-card.locked { opacity: 0.4; cursor: default; filter: grayscale(0.5); }
+.floor-card.cleared { border-color: rgba(68,221,153,0.35); background: rgba(68,221,153,0.05); }
+.fc-top { display: flex; align-items: center; gap: 12px; }
+.fc-emoji { font-size: 30px; }
+.fc-info { flex: 1; }
+.fc-name { font-size: 15px; font-weight: 700; }
+.fc-theme { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.fc-badge { font-size: 20px; }
+.fc-prog { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+.fc-pip { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); }
+.fc-pip.done { background: var(--accent); }
+.fc-pip.now { background: var(--accent2); }
+
+/* ══ プレイ ══ */
+.play-wrap { width: 100%; max-width: 480px; padding: 0 16px; }
+.play-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; }
+.pb-floor { font-weight: 700; color: var(--accent); }
+.pb-lv { color: var(--sub); }
+.pb-prog { display: flex; gap: 4px; }
+.pb-pip { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+.pb-pip.on { background: var(--accent); }
+
+.q-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px 16px; text-align: center; margin-bottom: 14px; }
+.q-label { font-size: 12px; color: var(--sub); margin-bottom: 14px; }
+.q-expr { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 26px; font-weight: 700; flex-wrap: wrap; }
+.q-op { font-size: 26px; color: var(--accent2); font-weight: 900; }
+
+/* 分数表示 */
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.05; }
+.frac .num { padding: 0 6px 2px; }
+.frac .den { padding: 2px 6px 0; border-top: 2.5px solid currentColor; }
+.frac-int { display: inline-flex; align-items: center; }
+
+/* 答え入力 */
+.ans-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px 16px; margin-bottom: 12px; }
+.ans-label { font-size: 12px; color: var(--sub); text-align: center; margin-bottom: 12px; }
+.ans-frac { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 120px; margin: 0 auto; }
+.ans-frac input { width: 100%; text-align: center; font-size: 26px; font-weight: 700; padding: 8px; border-radius: 10px; border: 2px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); font-family: inherit; outline: none; }
+.ans-frac input:focus { border-color: var(--accent); }
+.ans-bar { width: 100%; height: 3px; background: currentColor; border-radius: 2px; color: var(--text); }
+.ans-hint { font-size: 11px; color: var(--sub); text-align: center; margin-top: 10px; }
+
+.action-row { display: flex; flex-direction: column; gap: 10px; }
+.hint-line { text-align: center; margin-bottom: 12px; }
+.hint-toggle { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+.hint-box { background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.25); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; font-size: 14px; line-height: 1.6; }
+
+/* フィードバック */
+.fb { border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+.fb-correct { background: rgba(68,221,153,0.1); border: 1px solid rgba(68,221,153,0.4); }
+.fb-near { background: rgba(255,217,90,0.1); border: 1px solid rgba(255,217,90,0.45); }
+.fb-wrong { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.35); }
+.fb-title { font-size: 18px; font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.fb-correct .fb-title { color: var(--green); }
+.fb-near .fb-title { color: var(--yellow); }
+.fb-wrong .fb-title { color: var(--red); }
+.fb-advice { font-size: 14px; line-height: 1.7; }
+.fb-advice b { color: var(--accent2); }
+
+.steps-box { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.steps-title { font-size: 12px; color: var(--sub); font-weight: 700; margin-bottom: 8px; }
+.step { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; font-size: 14px; line-height: 1.5; }
+.step-no { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: rgba(45,212,191,0.18); color: var(--accent); font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+
+/* レベルクリア */
+#clearScreen { justify-content: center; }
+.clear-wrap { text-align: center; padding: 24px 20px; max-width: 380px; }
+.clear-icon { font-size: 64px; display: block; animation: float 2.6s ease-in-out infinite; margin-bottom: 12px; }
+.clear-title { font-family: 'Kaisei Decol', serif; font-size: 28px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+.clear-msg { font-size: 14px; color: var(--sub); line-height: 1.7; margin-bottom: 24px; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: 12px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 300; overflow: hidden; }
+.confetti-piece { position: absolute; top: -24px; width: 9px; height: 13px; opacity: 0.92; animation: confettiFall linear forwards; }
+@keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); } }
+.foot-note { font-size: 11px; color: var(--sub); text-align: center; margin-top: 16px; opacity: 0.7; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+
+<!-- ══ タイトル ══ -->
+<div id="titleScreen" class="screen active">
+  <div class="title-wrap">
+    <span class="title-icon">🧮</span>
+    <div class="title-main">算数の塔</div>
+    <div class="title-sub">分数版 — 1から少しずつ強くなろう</div>
+    <div class="name-row">
+      <input class="name-input" id="nameInput" type="text" placeholder="なまえ（任意）" maxlength="10">
+    </div>
+    <div class="title-btns">
+      <button class="btn btn-primary" onclick="startGame()">はじめる ▶</button>
+      <a class="btn btn-ghost" href="index.html" style="text-decoration:none;text-align:center">← QUIZ HUB に戻る</a>
+    </div>
+    <div class="foot-note">たし算 → 通分 → ひき算 → かけ算 → わり算 の順に、<br>レベル1のやさしい問題からのぼっていくよ。</div>
+  </div>
+</div>
+
+<!-- ══ マップ ══ -->
+<div id="mapScreen" class="screen">
+  <div class="page-header">
+    <button class="btn-ghost btn" style="width:auto;padding:8px 12px;font-size:12px" onclick="showScreen('titleScreen')">← もどる</button>
+    <h2>フロアをえらぶ</h2>
+  </div>
+  <div class="map-wrap" style="margin-top:8px">
+    <div class="map-floors" id="mapFloors"></div>
+    <button class="btn btn-ghost" onclick="resetProgress()" style="font-size:12px">進み具合をリセット</button>
+  </div>
+</div>
+
+<!-- ══ プレイ ══ -->
+<div id="playScreen" class="screen">
+  <div class="page-header">
+    <button class="btn-ghost btn" style="width:auto;padding:8px 12px;font-size:12px" onclick="showScreen('mapScreen')">← マップ</button>
+    <h2 id="playTitle">フロア</h2>
+  </div>
+  <div class="play-wrap" style="margin-top:8px">
+    <div class="play-bar">
+      <span class="pb-floor" id="pbFloor">1F</span>
+      <span class="pb-lv" id="pbLv">レベル1</span>
+      <span class="pb-prog" id="pbProg"></span>
+    </div>
+
+    <div class="q-card">
+      <div class="q-label" id="qLabel">つぎの計算をしよう（約分も忘れずに！）</div>
+      <div class="q-expr" id="qExpr"></div>
+    </div>
+
+    <div class="hint-line">
+      <button class="hint-toggle" id="hintToggle" onclick="toggleHint()">💡 ヒントを見る</button>
+    </div>
+    <div class="hint-box hidden" id="hintBox"></div>
+
+    <div class="ans-card" id="ansCard">
+      <div class="ans-label">こたえ（仮分数で。整数のときは分母を 1 に）</div>
+      <div class="ans-frac">
+        <input id="ansNum" type="text" inputmode="numeric" placeholder="分子" autocomplete="off">
+        <div class="ans-bar"></div>
+        <input id="ansDen" type="text" inputmode="numeric" placeholder="分母" autocomplete="off">
+      </div>
+    </div>
+
+    <div id="feedbackArea"></div>
+
+    <div class="action-row" id="actionRow">
+      <button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">こたえあわせ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ クリア ══ -->
+<div id="clearScreen" class="screen">
+  <div class="clear-wrap">
+    <span class="clear-icon" id="clearIcon">🎉</span>
+    <div class="clear-title" id="clearTitle">レベルクリア！</div>
+    <div class="clear-msg" id="clearMsg"></div>
+    <div class="title-btns">
+      <button class="btn btn-primary" id="clearNextBtn" onclick="afterClear()">つづける ▶</button>
+      <button class="btn btn-ghost" onclick="showScreen('mapScreen')">マップに戻る</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  AIアドバイス（任意・既定OFF）：ルールで判定できない間違いだけ、
+//  Worker経由でClaudeにアドバイスを生成させる。空ならルールベースのみ。
+//  （toieba と同じ要領で後からWorkerを立てて有効化できます）
+const AI_ADVICE_URL = "";
+// ══════════════════════════════════════════════════════════════
+
+const SAVE_KEY = 'fractionTower_v1';
+const LEVELS_PER_FLOOR = 3;
+const NEED_PER_LEVEL = 5;   // 各レベルをクリアするのに必要な正解数
+const SCREENS = ['titleScreen','mapScreen','playScreen','clearScreen'];
+
+const FLOORS = [
+  { key:'add_same', emoji:'➕', name:'たし算の間（同じ分母）', theme:'分母が同じたし算' },
+  { key:'add_diff', emoji:'🔗', name:'通分のたし算', theme:'分母がちがうたし算（通分）' },
+  { key:'sub',      emoji:'➖', name:'ひき算の間',     theme:'分数のひき算（同分母→通分）' },
+  { key:'mul',      emoji:'✖️', name:'かけ算の間',     theme:'分数のかけ算' },
+  { key:'div',      emoji:'➗', name:'わり算の間',     theme:'分数のわり算（逆数）' },
+  { key:'mix',      emoji:'👑', name:'総合の間',       theme:'たし・ひき・かけ・わり ぜんぶ' },
+];
+
+// ══ セーブ ══
+let playerName = '';
+let save = {};
+function defaultSave() {
+  const prog = {};
+  FLOORS.forEach(f => prog[f.key] = { level: 1, cleared: false });
+  return { name: '', progress: prog };
+}
+function loadSave() {
+  try { save = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch { save = null; }
+  if (!save || !save.progress) save = defaultSave();
+  FLOORS.forEach(f => { if (!save.progress[f.key]) save.progress[f.key] = { level: 1, cleared: false }; });
+}
+function writeSave() { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
+
+// ══ 算数ユーティリティ ══
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a || 1; }
+function lcm(a, b) { return a / gcd(a, b) * b; }
+function reduce(f) { const g = gcd(f.n, f.d); return { n: f.n / g, d: f.d / g }; }
+function isReduced(f) { return gcd(f.n, f.d) === 1; }
+function randInt(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
+function val(f) { return f.n / f.d; }
+
+// op を適用して「約分前の自然な形(pre)」を返す
+function applyPre(op, A, B) {
+  if (op === '+') {
+    if (A.d === B.d) return { n: A.n + B.n, d: A.d };
+    const L = lcm(A.d, B.d); return { n: A.n * (L / A.d) + B.n * (L / B.d), d: L };
+  }
+  if (op === '-') {
+    if (A.d === B.d) return { n: A.n - B.n, d: A.d };
+    const L = lcm(A.d, B.d); return { n: A.n * (L / A.d) - B.n * (L / B.d), d: L };
+  }
+  if (op === '*') return { n: A.n * B.n, d: A.d * B.d };
+  return { n: A.n * B.d, d: A.d * B.n }; // '/'
+}
+
+// ══ 問題生成 ══
+function buildQuestion(floorKey, level) {
+  let key = floorKey;
+  if (floorKey === 'mix') key = ['add_same','add_diff','sub','mul','div'][randInt(0, 4)];
+
+  for (let tries = 0; tries < 300; tries++) {
+    let A, B, op;
+    if (key === 'add_same') {
+      op = '+';
+      const d = level === 1 ? randInt(3, 6) : level === 2 ? randInt(4, 9) : randInt(6, 12);
+      const a = randInt(1, d - 1), b = randInt(1, d - 1);
+      A = { n: a, d }; B = { n: b, d };
+    } else if (key === 'add_diff') {
+      op = '+';
+      if (level === 1) { const p = randInt(2, 5), k = randInt(2, 3); A = { n: randInt(1, p - 1), d: p }; B = { n: randInt(1, p * k - 1), d: p * k }; }
+      else if (level === 2) { let p = randInt(2, 6), q = randInt(2, 7); A = { n: randInt(1, p - 1), d: p }; B = { n: randInt(1, q - 1), d: q }; }
+      else { let p = randInt(3, 9), q = randInt(3, 12); A = { n: randInt(1, p), d: p }; B = { n: randInt(1, q), d: q }; }
+    } else if (key === 'sub') {
+      op = '-';
+      if (level === 1) { const d = randInt(3, 8); const a = randInt(2, d - 1), b = randInt(1, a - 1 < 1 ? 1 : a - 1); A = { n: a, d }; B = { n: b, d }; }
+      else if (level === 2) { const p = randInt(2, 5), k = randInt(2, 3); A = { n: randInt(2, p), d: p }; B = { n: randInt(1, p * k - 1), d: p * k }; }
+      else { let p = randInt(3, 9), q = randInt(3, 12); A = { n: randInt(2, p + 2), d: p }; B = { n: randInt(1, q), d: q }; }
+    } else if (key === 'mul') {
+      op = '*';
+      if (level === 1) { A = { n: randInt(1, 4), d: randInt(2, 5) }; B = { n: randInt(1, 4), d: randInt(2, 5) }; }
+      else if (level === 2) { A = { n: randInt(1, 6), d: randInt(2, 8) }; B = { n: randInt(1, 6), d: randInt(2, 8) }; }
+      else { if (randInt(0, 1)) { A = { n: randInt(1, 8), d: randInt(2, 10) }; B = { n: randInt(2, 9), d: 1 }; } else { A = { n: randInt(1, 9), d: randInt(2, 12) }; B = { n: randInt(1, 9), d: randInt(2, 12) }; } }
+    } else { // div
+      op = '/';
+      if (level === 1) { A = { n: randInt(1, 4), d: randInt(2, 5) }; B = { n: randInt(1, 4), d: randInt(2, 5) }; }
+      else if (level === 2) { A = { n: randInt(1, 6), d: randInt(2, 8) }; B = { n: randInt(1, 6), d: randInt(2, 8) }; }
+      else { if (randInt(0, 1)) { A = { n: randInt(1, 9), d: randInt(2, 12) }; B = { n: randInt(2, 9), d: 1 }; } else { A = { n: randInt(1, 9), d: randInt(2, 12) }; B = { n: randInt(1, 9), d: randInt(2, 12) }; } } }
+
+    // 「6/6（=1）」のような分母と分子が同じ分数は学習者に不自然なので避ける
+    if ((A.d > 1 && A.n === A.d) || (B.d > 1 && B.n === B.d)) continue;
+
+    const pre = applyPre(op, A, B);
+    if (pre.n <= 0 || pre.d <= 0) continue;            // ひき算で0や負はやり直し
+    if (op === '/' && B.n === 0) continue;
+    const correct = reduce(pre);
+
+    // レベル別の難易度チェック
+    const needsReduce = !isReduced(pre);
+    if (level === 1 && needsReduce) continue;          // L1は約分なし
+    if (level === 1 && val(pre) > 1.0001 && (key === 'add_same' || key === 'add_diff')) continue; // L1のたし算は1以下
+    if (level === 3 && !needsReduce && key !== 'mul' && key !== 'div') {
+      // L3はなるべく約分ありに（mul/divは整数の場合もあるので緩め）
+      if (tries < 250) continue;
+    }
+    if (A.n === B.n && A.d === B.d && op === '-') continue;
+
+    return { key, op, opSym: { '+':'＋','-':'−','*':'×','/':'÷' }[op], A, B, pre, correct, steps: buildSteps(op, A, B, pre, correct), hint: buildHint(op, A, B) };
+  }
+  // フォールバック（まず到達しない）
+  const A = { n: 1, d: 2 }, B = { n: 1, d: 3 }, op = '+';
+  const pre = applyPre(op, A, B), correct = reduce(pre);
+  return { key, op, opSym:'＋', A, B, pre, correct, steps: buildSteps(op, A, B, pre, correct), hint: buildHint(op, A, B) };
+}
+
+function reduceStepLine(pre, correct) {
+  if (pre.n !== correct.n || pre.d !== correct.d) {
+    const g = gcd(pre.n, pre.d);
+    return `約分する：${pre.n}/${pre.d} = ${correct.n}/${correct.d}（上も下も ${g} でわった）`;
+  }
+  return `これ以上約分できないので、答えは ${fracText(correct)}`;
+}
+function fracText(f) { return f.d === 1 ? `${f.n}` : `${f.n}/${f.d}`; }
+
+function buildSteps(op, A, B, pre, correct) {
+  const steps = [];
+  if (op === '+' || op === '-') {
+    const word = op === '+' ? 'たす' : 'ひく';
+    if (A.d === B.d) {
+      steps.push('分母が同じだから、分母はそのまま、分子だけ' + word + 'よ');
+      steps.push(`(${A.n} ${op === '+' ? '＋' : '−'} ${B.n}) / ${A.d} = ${pre.n}/${pre.d}`);
+    } else {
+      const L = lcm(A.d, B.d);
+      steps.push(`分母をそろえる。${A.d} と ${B.d} の最小公倍数は ${L}`);
+      steps.push(`${A.n}/${A.d} = ${A.n * (L / A.d)}/${L} 、 ${B.n}/${B.d} = ${B.n * (L / B.d)}/${L}`);
+      steps.push(`分子を${word}：(${A.n * (L / A.d)} ${op === '+' ? '＋' : '−'} ${B.n * (L / B.d)}) / ${L} = ${pre.n}/${pre.d}`);
+    }
+  } else if (op === '*') {
+    steps.push('分子どうし、分母どうしをかけるよ');
+    steps.push(`(${A.n}×${B.n}) / (${A.d}×${B.d}) = ${pre.n}/${pre.d}`);
+  } else {
+    steps.push(`わり算は、後ろの分数をひっくり返して（逆数にして）かけるよ：${B.n}/${B.d} → ${B.d}/${B.n}`);
+    steps.push(`${A.n}/${A.d} × ${B.d}/${B.n} = (${A.n}×${B.d}) / (${A.d}×${B.n}) = ${pre.n}/${pre.d}`);
+  }
+  steps.push(reduceStepLine(pre, correct));
+  return steps;
+}
+function buildHint(op, A, B) {
+  if ((op === '+' || op === '-') && A.d !== B.d) return `まずは分母をそろえよう。${A.d} と ${B.d} の最小公倍数は ${lcm(A.d, B.d)} だよ。`;
+  if (op === '+' || op === '-') return '分母が同じだね。分母はそのまま、分子だけ計算しよう。';
+  if (op === '*') return '分子どうし・分母どうしをかけるよ。先に約分できるか見てもいいね。';
+  return '後ろの分数を逆数（上下を入れかえ）にして、かけ算に直そう。';
+}
+
+// ══ 間違い診断（ルールベース）══
+function diagnose(op, A, B, correct, stu) {
+  const sv = stu.n / stu.d;
+  const eq = (x) => Math.abs(sv - x) < 1e-9;
+
+  // 値は合っているが約分していない
+  if (eq(correct.n / correct.d) && (stu.n !== correct.n || stu.d !== correct.d)) {
+    return { kind: 'near', advice: `答えの大きさは合ってるよ！でも、まだ<b>約分</b>できるね。分子と分母を同じ数でわってみよう（${stu.n}/${stu.d} → ${correct.n}/${correct.d}）。` };
+  }
+  // 分子と分母が逆
+  if (correct.n !== 0 && eq(correct.d / correct.n)) {
+    return { kind: 'wrong', advice: '<b>分子と分母が逆</b>かも。「上が分子・下が分母」だよ。もう一度たしかめよう。' };
+  }
+  if (op === '+') {
+    if (A.d !== B.d && eq((A.n + B.n) / (A.d + B.d))) return { kind: 'wrong', advice: '<b>分母どうしをたしてない？</b> 分母はたさないよ。まず<b>通分</b>して分母をそろえ、<b>分子だけ</b>をたそう。' };
+    if (A.d !== B.d && (eq((A.n + B.n) / A.d) || eq((A.n + B.n) / B.d))) return { kind: 'wrong', advice: '分母がちがうから、そのままではたせないよ。<b>最小公倍数で通分</b>してからたそう。' };
+    if (A.d === B.d && eq((A.n + B.n) / (A.d * 2))) return { kind: 'wrong', advice: '分母が同じときは、<b>分母はそのまま</b>だよ。分子だけたして、分母は変えないでね。' };
+  }
+  if (op === '-') {
+    if (A.d !== B.d && A.d !== 0 && B.d !== 0 && (A.d - B.d) !== 0 && eq((A.n - B.n) / (A.d - B.d))) return { kind: 'wrong', advice: '<b>分母どうしを引いてない？</b> 分母は引かないよ。<b>通分</b>して分母をそろえ、<b>分子だけ</b>引こう。' };
+    if (A.d !== B.d && (eq((A.n - B.n) / A.d) || eq((A.n - B.n) / B.d))) return { kind: 'wrong', advice: '分母がちがうよ。<b>通分</b>して分母をそろえてから、分子を引こう。' };
+  }
+  if (op === '*') {
+    if (eq((A.n * B.n) / A.d) || eq((A.n * B.n) / B.d)) return { kind: 'wrong', advice: '<b>分母どうしもかける</b>よ。「分子×分子／分母×分母」だよ。' };
+    if (eq(A.n / A.d + B.n / B.d)) return { kind: 'wrong', advice: 'これは<b>かけ算</b>だよ。通分はいらないよ。「分子×分子／分母×分母」でOK。' };
+  }
+  if (op === '/') {
+    if (eq((A.n * B.n) / (A.d * B.d))) return { kind: 'wrong', advice: 'わり算は、<b>後ろの分数を逆数</b>にしてかけるよ。÷ ' + B.n + '/' + B.d + ' → × ' + B.d + '/' + B.n + ' だよ。' };
+    if (eq((A.d * B.n) / (A.n * B.d))) return { kind: 'wrong', advice: '<b>逆数にする分数をまちがえてる</b>かも。ひっくり返すのは「後ろ（わる方）」の分数だよ。' };
+  }
+  return null; // ルールでは判定できず → AIへ
+}
+
+// ══ ゲーム状態 ══
+let gs = { floorKey: null, level: 1, correctInLevel: 0, q: null, answered: false };
+
+function startGame() {
+  playerName = document.getElementById('nameInput').value.trim();
+  save.name = playerName; writeSave();
+  renderMap(); showScreen('mapScreen');
+}
+
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function isFloorUnlocked(i) { return i === 0 || save.progress[FLOORS[i - 1].key].cleared; }
+
+function renderMap() {
+  document.getElementById('mapFloors').innerHTML = FLOORS.map((f, i) => {
+    const p = save.progress[f.key];
+    const unlocked = isFloorUnlocked(i);
+    const state = !unlocked ? 'locked' : p.cleared ? 'cleared' : '';
+    const badge = p.cleared ? '👑' : !unlocked ? '🔒' : '▶';
+    const onclick = unlocked ? `onclick="enterFloor('${f.key}')"` : '';
+    const pips = [1, 2, 3].map(lv => {
+      const cls = p.cleared || lv < p.level ? 'done' : (lv === p.level ? 'now' : '');
+      return `<div class="fc-pip ${cls}"></div>`;
+    }).join('');
+    return `<div class="floor-card ${state}" ${onclick}>
+      <div class="fc-top">
+        <div class="fc-emoji">${f.emoji}</div>
+        <div class="fc-info"><div class="fc-name">${i + 1}F ${f.name}</div><div class="fc-theme">${f.theme}</div></div>
+        <div class="fc-badge">${badge}</div>
+      </div>
+      <div class="fc-prog">${pips}</div>
+    </div>`;
+  }).join('');
+}
+
+function enterFloor(key) {
+  gs.floorKey = key;
+  gs.level = save.progress[key].cleared ? 1 : save.progress[key].level;
+  gs.correctInLevel = 0;
+  nextProblem();
+  showScreen('playScreen');
+}
+
+function nextProblem() {
+  const f = FLOORS.find(x => x.key === gs.floorKey);
+  gs.q = buildQuestion(gs.floorKey, gs.level);
+  gs.answered = false;
+  document.getElementById('playTitle').textContent = f.name;
+  document.getElementById('pbFloor').textContent = (FLOORS.findIndex(x => x.key === gs.floorKey) + 1) + 'F';
+  document.getElementById('pbLv').textContent = 'レベル' + gs.level;
+  document.getElementById('pbProg').innerHTML = Array.from({ length: NEED_PER_LEVEL }, (_, i) =>
+    `<span class="pb-pip ${i < gs.correctInLevel ? 'on' : ''}"></span>`).join('');
+  document.getElementById('qExpr').innerHTML = fracHTML(gs.q.A) + `<span class="q-op">${gs.q.opSym}</span>` + fracHTML(gs.q.B) + `<span class="q-op">＝</span><span style="color:var(--sub)">？</span>`;
+  document.getElementById('ansNum').value = '';
+  document.getElementById('ansDen').value = '';
+  document.getElementById('feedbackArea').innerHTML = '';
+  document.getElementById('hintBox').classList.add('hidden');
+  document.getElementById('hintBox').textContent = '';
+  document.getElementById('hintToggle').textContent = '💡 ヒントを見る';
+  document.getElementById('ansCard').classList.remove('hidden');
+  document.getElementById('actionRow').innerHTML = '<button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">こたえあわせ</button>';
+  document.getElementById('ansNum').focus();
+}
+
+function fracHTML(f) {
+  if (f.d === 1) return `<span class="frac-int">${f.n}</span>`;
+  return `<span class="frac"><span class="num">${f.n}</span><span class="den">${f.d}</span></span>`;
+}
+
+function toggleHint() {
+  const box = document.getElementById('hintBox');
+  if (box.classList.contains('hidden')) {
+    box.textContent = '💡 ' + gs.q.hint;
+    box.classList.remove('hidden');
+    document.getElementById('hintToggle').textContent = '🙈 ヒントをかくす';
+  } else {
+    box.classList.add('hidden');
+    document.getElementById('hintToggle').textContent = '💡 ヒントを見る';
+  }
+}
+
+async function checkAnswer() {
+  if (gs.answered) return;
+  const numRaw = document.getElementById('ansNum').value.trim();
+  const denRaw = document.getElementById('ansDen').value.trim() || '1';
+  if (numRaw === '' || !/^-?\d+$/.test(numRaw) || !/^\d+$/.test(denRaw)) { toast('分子と分母を数字で入れてね'); return; }
+  const stu = { n: parseInt(numRaw, 10), d: parseInt(denRaw, 10) };
+  if (stu.d === 0) { toast('分母に0は使えないよ'); return; }
+
+  const q = gs.q;
+  const correct = q.correct;
+  const stuRed = reduce(stu);
+  const fullyCorrect = (stuRed.n === correct.n && stuRed.d === correct.d) && (stu.n === correct.n && stu.d === correct.d);
+
+  gs.answered = true;
+  document.getElementById('checkBtn') && (document.getElementById('checkBtn').disabled = true);
+
+  if (fullyCorrect) {
+    gs.correctInLevel++;
+    renderFeedback('correct', 'せいかい！', '🎉', '', q.steps);
+    document.getElementById('pbProg').innerHTML = Array.from({ length: NEED_PER_LEVEL }, (_, i) =>
+      `<span class="pb-pip ${i < gs.correctInLevel ? 'on' : ''}"></span>`).join('');
+    document.getElementById('ansCard').classList.add('hidden');
+    document.getElementById('actionRow').innerHTML = '<button class="btn btn-primary" onclick="advance()">つぎの問題 ▶</button>';
+    if (gs.correctInLevel >= NEED_PER_LEVEL) {
+      document.getElementById('actionRow').innerHTML = '<button class="btn btn-warm" onclick="advance()">レベルクリア！ ▶</button>';
+    }
+    return;
+  }
+
+  // 不正解 / おしい
+  let diag = diagnose(q.op, q.A, q.B, correct, stu);
+  if (!diag) {
+    const ai = await aiAdvice(q);
+    if (ai) diag = { kind: 'wrong', advice: ai };
+    else diag = { kind: 'wrong', advice: genericAdvice(q.op) };
+  }
+  const isNear = diag.kind === 'near';
+  renderFeedback(isNear ? 'near' : 'wrong', isNear ? 'おしい！' : 'ちがうみたい', isNear ? '🤏' : '🤔', diag.advice, null);
+  // ステップは「解き方を見る」で表示
+  const ar = document.getElementById('actionRow');
+  if (isNear) {
+    ar.innerHTML = '<button class="btn btn-secondary" onclick="retrySame()">約分してやり直す</button>'
+      + '<button class="btn btn-ghost" onclick="revealSteps()">解き方を見る</button>'
+      + '<button class="btn btn-ghost" onclick="advance()">つぎの問題 ▶</button>';
+  } else {
+    ar.innerHTML = '<button class="btn btn-secondary" onclick="retrySame()">もう一度ためす</button>'
+      + '<button class="btn btn-ghost" onclick="revealSteps()">解き方を見る</button>'
+      + '<button class="btn btn-ghost" onclick="advance()">つぎの問題 ▶</button>';
+  }
+}
+
+function genericAdvice(op) {
+  if (op === '+' || op === '-') return '順番にやってみよう：①分母がちがうなら<b>通分</b> ②<b>分子だけ</b>を計算（分母はそのまま） ③最後に<b>約分</b>。';
+  if (op === '*') return '「<b>分子×分子／分母×分母</b>」だよ。最後に<b>約分</b>もわすれずに。';
+  return '<b>後ろの分数を逆数</b>にして、かけ算に直そう。最後に<b>約分</b>もしてね。';
+}
+
+function renderFeedback(kind, title, icon, advice, steps) {
+  let html = `<div class="fb fb-${kind}"><div class="fb-title">${icon} ${title}</div>`;
+  if (advice) html += `<div class="fb-advice">${advice}</div>`;
+  html += `</div>`;
+  if (steps) html += stepsHTML(steps);
+  document.getElementById('feedbackArea').innerHTML = html;
+}
+function stepsHTML(steps) {
+  return `<div class="steps-box"><div class="steps-title">解き方</div>` +
+    steps.map((s, i) => `<div class="step"><span class="step-no">${i + 1}</span><span>${s}</span></div>`).join('') +
+    `</div>`;
+}
+function revealSteps() {
+  const fa = document.getElementById('feedbackArea');
+  if (!document.getElementById('revealedSteps')) {
+    const div = document.createElement('div');
+    div.id = 'revealedSteps';
+    div.innerHTML = stepsHTML(gs.q.steps);
+    fa.appendChild(div);
+  }
+}
+function retrySame() {
+  gs.answered = false;
+  document.getElementById('feedbackArea').innerHTML = '';
+  document.getElementById('ansCard').classList.remove('hidden');
+  document.getElementById('actionRow').innerHTML = '<button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">こたえあわせ</button>';
+  document.getElementById('ansNum').focus();
+}
+
+function advance() {
+  if (gs.correctInLevel >= NEED_PER_LEVEL) {
+    // レベルクリア処理
+    const p = save.progress[gs.floorKey];
+    const wasLevel = gs.level;
+    if (!p.cleared) {
+      if (wasLevel >= LEVELS_PER_FLOOR) {
+        p.cleared = true; p.level = LEVELS_PER_FLOOR;
+      } else if (wasLevel >= p.level) {
+        p.level = wasLevel + 1;
+      }
+      writeSave();
+    }
+    showClear(wasLevel, p.cleared);
+    return;
+  }
+  nextProblem();
+}
+
+function showClear(level, floorCleared) {
+  const f = FLOORS.find(x => x.key === gs.floorKey);
+  const fi = FLOORS.findIndex(x => x.key === gs.floorKey);
+  launchConfetti();
+  if (floorCleared) {
+    document.getElementById('clearIcon').textContent = '👑';
+    document.getElementById('clearTitle').textContent = `${f.name} クリア！`;
+    const allDone = FLOORS.every(x => save.progress[x.key].cleared);
+    document.getElementById('clearMsg').innerHTML = allDone
+      ? 'すべてのフロアを制覇した！<br>君は<b>分数マスター</b>だ！🎓'
+      : `${fi + 1}F をクリア！つぎのフロアがひらいたよ。`;
+    document.getElementById('clearNextBtn').textContent = allDone ? 'マップへ' : 'マップへ ▶';
+    gs._next = 'map';
+  } else {
+    document.getElementById('clearIcon').textContent = '⭐';
+    document.getElementById('clearTitle').textContent = `レベル${level} クリア！`;
+    document.getElementById('clearMsg').innerHTML = `よくできました！<br>つぎは <b>レベル${level + 1}</b>（少しむずかしくなるよ）。`;
+    document.getElementById('clearNextBtn').textContent = `レベル${level + 1}へ ▶`;
+    gs._next = 'continue';
+  }
+  showScreen('clearScreen');
+}
+function afterClear() {
+  if (gs._next === 'map') { renderMap(); showScreen('mapScreen'); return; }
+  gs.level = save.progress[gs.floorKey].level;
+  gs.correctInLevel = 0;
+  nextProblem();
+  showScreen('playScreen');
+}
+
+function resetProgress() {
+  if (!confirm('進み具合を最初からにします。よろしいですか？')) return;
+  save = defaultSave(); save.name = playerName; writeSave();
+  renderMap();
+  toast('リセットしました');
+}
+
+// ══ AIアドバイス（任意）══
+async function aiAdvice(q) {
+  if (!AI_ADVICE_URL) return null;
+  const problem = `${fracText(q.A)} ${q.opSym} ${fracText(q.B)}`;
+  const numRaw = document.getElementById('ansNum').value.trim();
+  const denRaw = document.getElementById('ansDen').value.trim() || '1';
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(AI_ADVICE_URL, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ problem, correct: fracText(q.correct), student: `${numRaw}/${denRaw}` }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return (d && typeof d.advice === 'string' && d.advice.trim()) ? d.advice.trim() : null;
+  } catch { return null; } finally { clearTimeout(timer); }
+}
+
+// ══ 演出・UI ══
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+function launchConfetti() {
+  let c = document.getElementById('confetti');
+  if (!c) { c = document.createElement('div'); c.id = 'confetti'; document.body.appendChild(c); }
+  c.innerHTML = '';
+  const colors = ['#2dd4bf', '#ffb454', '#ffd700', '#44dd99', '#60a5fa', '#ff8fab'];
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (1.8 + Math.random() * 1.6) + 's';
+    p.style.animationDelay = (Math.random() * 0.4) + 's';
+    if (Math.random() < 0.5) p.style.borderRadius = '50%';
+    c.appendChild(p);
+  }
+  setTimeout(() => { if (c) c.innerHTML = ''; }, 4200);
+}
+
+// Enterキーで答え合わせ
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('playScreen').classList.contains('active') && !gs.answered) checkAnswer();
+});
+
+// ══ 起動 ══
+window.addEventListener('DOMContentLoaded', () => {
+  loadSave();
+  if (save.name) document.getElementById('nameInput').value = save.name;
+  showScreen('titleScreen');
+});
+</script>
+</body>
+</html>

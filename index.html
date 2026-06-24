@@ -213,6 +213,14 @@ body {
 .card-toieba::before { background: radial-gradient(ellipse at 80% 20%, rgba(255,95,162,0.08), transparent 60%); }
 .toieba-title { color: #ff7fb5; }
 .tag-toieba { color: #ff7fb5; border-color: rgba(255,95,162,0.3); background: rgba(255,95,162,0.08); }
+.fade-in:nth-child(8) { animation-delay: 1.15s; }
+
+/* 分数の塔 */
+.card-fraction { background: linear-gradient(135deg, #0c1f1d 0%, #081413 100%); box-shadow: 0 4px 24px rgba(45,212,191,0.08); }
+.card-fraction:hover { border-color: rgba(45,212,191,0.4); box-shadow: 0 8px 40px rgba(45,212,191,0.18); }
+.card-fraction::before { background: radial-gradient(ellipse at 80% 20%, rgba(45,212,191,0.08), transparent 60%); }
+.fraction-title { color: #2dd4bf; }
+.tag-fraction { color: #2dd4bf; border-color: rgba(45,212,191,0.3); background: rgba(45,212,191,0.08); }
 
 .card-inner {
   display: flex;
@@ -416,6 +424,22 @@ body {
             <span class="tag tag-toieba">💬 オンライン対戦</span>
             <span class="tag tag-toieba">👨‍👩‍👧 3人〜</span>
             <span class="tag tag-toieba">⚙️ Firebase設定要</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-fraction fade-in" href="fraction-tower.html">
+      <div class="card-inner">
+        <div class="card-icon">🧮</div>
+        <div class="card-body">
+          <div class="card-title fraction-title">算数の塔（分数版）</div>
+          <div class="card-desc">分数が苦手でも大丈夫。たし算→通分→ひき算→かけ算→わり算をレベル1から少しずつ。回答後に解き方の解説＋間違い診断アドバイス付き。</div>
+          <div class="card-tags">
+            <span class="tag tag-fraction">🧮 全6フロア</span>
+            <span class="tag tag-fraction">⭐ レベル制</span>
+            <span class="tag tag-fraction">💡 解説＋ミス診断</span>
           </div>
         </div>
         <div class="card-arrow">›</div>
