@@ -422,7 +422,7 @@ function diagnoseFactor(q, v, ex) {
 // ══ ゲーム状態 ══
 let gs = { floorKey: null, level: 1, correctInLevel: 0, q: null, answered: false, mode: 'direct', gidx: 0 };
 
-function startGame() { playerName = document.getElementById('nameInput').value.trim(); save.name = playerName; writeSave(); renderMap(); showScreen('mapScreen'); }
+function startGame() { playerName = document.getElementById('nameInput').value.trim(); save.name = playerName; writeSave(); if (playerName) try { localStorage.setItem('quizhub_name', playerName.slice(0, 16)); } catch (e) {} renderMap(); showScreen('mapScreen'); }
 function showScreen(id) { SCREENS.forEach(s => document.getElementById(s).classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function isFloorUnlocked(i) { return i === 0 || save.progress[FLOORS[i - 1].key].cleared; }
 
@@ -630,5 +630,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.ge
 
 window.addEventListener('DOMContentLoaded', () => { loadSave(); if (save.name) document.getElementById('nameInput').value = save.name; showScreen('titleScreen'); });
 </script>
+<script src="usage-log.js"></script>
 </body>
 </html>

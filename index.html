@@ -324,6 +324,12 @@ body {
     <p>学習クイズアプリ</p>
   </div>
 
+  <div class="namebar" style="max-width:560px;margin:0 auto 20px;padding:0 20px;display:flex;align-items:center;gap:10px">
+    <label style="font-size:13px;color:var(--sub);white-space:nowrap">なまえ</label>
+    <input id="hubName" maxlength="12" placeholder="なまえを入力（学習の記録用）"
+      style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;font-family:inherit;outline:none">
+  </div>
+
   <div class="quiz-grid">
 
     <a class="quiz-card card-geo fade-in" href="geography-quiz.html?v=1">
@@ -477,5 +483,16 @@ body {
   </div>
 </div>
 
+<script>
+(function(){
+  var el = document.getElementById('hubName');
+  if (!el) return;
+  el.value = localStorage.getItem('quizhub_name') || '';
+  el.addEventListener('input', function(){
+    var v = el.value.trim().slice(0, 16);
+    if (v) localStorage.setItem('quizhub_name', v);
+  });
+})();
+</script>
 </body>
 </html>

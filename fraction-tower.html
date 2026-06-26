@@ -423,6 +423,7 @@ let gs = { floorKey: null, level: 1, correctInLevel: 0, q: null, answered: false
 function startGame() {
   playerName = document.getElementById('nameInput').value.trim();
   save.name = playerName; writeSave();
+  if (playerName) try { localStorage.setItem('quizhub_name', playerName.slice(0, 16)); } catch (e) {}
   renderMap(); showScreen('mapScreen');
 }
 
@@ -695,5 +696,6 @@ window.addEventListener('DOMContentLoaded', () => {
   showScreen('titleScreen');
 });
 </script>
+<script src="usage-log.js"></script>
 </body>
 </html>

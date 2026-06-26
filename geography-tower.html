@@ -295,11 +295,28 @@ body {
 }
 .q-count { font-size: 11px; color: var(--sub); margin-bottom: 8px; letter-spacing: 1px; }
 .q-text  { font-size: 17px; font-weight: 700; line-height: 1.6; }
-.hint-area {
-  background: rgba(255,159,67,0.08); border: 1px solid rgba(255,159,67,0.3);
-  border-radius: 10px; padding: 8px 14px; margin-bottom: 8px;
-  font-size: 12px; color: var(--orange);
+.wrong-panel {
+  background: rgba(255,68,68,0.07); border: 1px solid rgba(255,68,68,0.3);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  display: flex; flex-direction: column; gap: 10px;
 }
+.wrong-hint {
+  font-size: 13px; color: var(--orange); line-height: 1.65;
+}
+.wrong-link {
+  font-size: 12px; color: #60a5fa; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.wrong-link:hover { text-decoration: underline; }
+.wrong-next-btn {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--accent), #0099cc);
+  color: #000; border: none; border-radius: 20px;
+  padding: 9px 22px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.wrong-next-btn:hover { opacity: 0.85; }
 .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .choice-btn {
   background: var(--card); border: 1.5px solid var(--border); border-radius: 12px;
@@ -516,7 +533,11 @@ body {
       <div class="q-count" id="qCount"></div>
       <div class="q-text"  id="qText"></div>
     </div>
-    <div id="hintArea" class="hint-area hidden"></div>
+    <div id="wrongPanel" class="wrong-panel hidden">
+      <div id="wrongHint" class="wrong-hint"></div>
+      <a id="wrongLink" class="wrong-link" target="_blank" rel="noopener">🔍 Googleで詳しく調べる</a>
+      <button id="wrongNextBtn" class="wrong-next-btn" onclick="proceedFromWrong()">次の問題へ →</button>
+    </div>
     <div class="choices-grid" id="choicesGrid"></div>
     <div class="player-battle-status">
       <div id="pbsInfArea" class="pbs-inf hidden">∞ 何度でも挑戦OK</div>
@@ -1182,6 +1203,7 @@ function startBattle(mode) {
     monstersKilled: 0,
     hpRecovered:   0,
     wrongCount:    0,
+    pendingDefeat: false,
   };
 
   document.getElementById('bhFloor').textContent =
@@ -1228,7 +1250,7 @@ function nextQuestion() {
 
   document.getElementById('qCount').textContent = 'Q.' + (gs.total + 1);
   document.getElementById('qText').textContent  = q.q;
-  document.getElementById('hintArea').classList.add('hidden');
+  document.getElementById('wrongPanel').classList.add('hidden');
 
   const labels = ['A','B','C','D'];
   document.getElementById('choicesGrid').innerHTML = q.choices.map((c, i) =>
@@ -1261,22 +1283,36 @@ function onChoice(idx) {
       setTimeout(nextQuestion, 900);
     }
   } else {
-    const hintEl = document.getElementById('hintArea');
-    hintEl.textContent = '💡 ' + q.hint;
-    hintEl.classList.remove('hidden');
+    // Show wrong panel with hint, search link, and next button
+    document.getElementById('wrongHint').textContent = '💡 ' + q.hint;
+    const correctText = q.choices[q.answer];
+    const searchQ = encodeURIComponent(correctText + ' ' + q.q.replace(/[？?]$/, ''));
+    document.getElementById('wrongLink').href = 'https://www.google.com/search?q=' + searchQ;
 
     if (gs.isBoss) {
       gs.wrongCount++;
       showBattleEffect('hit', '❌');
       updatePlayerBattleUI();
       if (gs.wrongCount >= 3) {
-        setTimeout(playerDefeated, 1100);
+        gs.pendingDefeat = true;
+        document.getElementById('wrongNextBtn').textContent = '結果を見る';
       } else {
-        setTimeout(nextQuestion, 1300);
+        document.getElementById('wrongNextBtn').textContent = '次の問題へ →';
       }
     } else {
-      setTimeout(nextQuestion, 1300);
+      document.getElementById('wrongNextBtn').textContent = '次の問題へ →';
     }
+    document.getElementById('wrongPanel').classList.remove('hidden');
+  }
+}
+
+function proceedFromWrong() {
+  document.getElementById('wrongPanel').classList.add('hidden');
+  if (gs.pendingDefeat) {
+    gs.pendingDefeat = false;
+    playerDefeated();
+  } else {
+    nextQuestion();
   }
 }
 
@@ -1449,5 +1485,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script src="usage-log.js"></script>
 </body>
 </html>

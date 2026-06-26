@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUIZ HUB 利用状況</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--card:#161b26;--border:rgba(255,255,255,0.1);--text:#e6edf3;--sub:#8b98a9;--accent:#58a6ff;--green:#3fb950;--gold:#ffd700}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:var(--sub);font-size:13px;margin-bottom:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.btn{padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn-primary{background:var(--accent);color:#06101f;border:none}
+select,input{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;min-width:120px}
+.stat .v{font-size:26px;font-weight:900;color:var(--accent)}
+.stat .l{font-size:11px;color:var(--sub);margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.panel h2{font-size:14px;margin-bottom:10px;color:var(--sub)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06)}
+th{color:var(--sub);font-size:11px;font-weight:700;position:sticky;top:0;background:var(--card)}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--accent);margin-top:4px}
+.log-scroll{max-height:520px;overflow:auto}
+.tag{font-size:11px;color:var(--accent);background:rgba(88,166,255,0.12);padding:2px 8px;border-radius:10px}
+.empty{color:var(--sub);text-align:center;padding:30px;font-size:14px}
+.foot{color:var(--sub);font-size:11px;margin-top:18px;line-height:1.7}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 QUIZ HUB 利用状況</h1>
+  <div class="sub"><span class="live"></span>誰が・どのアプリを・いつ使ったか（Firebase の利用ログ）</div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="reload()">🔄 更新</button>
+    <label style="font-size:13px;color:var(--sub)">期間
+      <select id="rangeSel" onchange="render()">
+        <option value="1">今日</option>
+        <option value="7" selected>7日間</option>
+        <option value="30">30日間</option>
+        <option value="0">すべて</option>
+      </select>
+    </label>
+    <label style="font-size:13px;color:var(--sub)">なまえ
+      <select id="nameSel" onchange="render()"><option value="">全員</option></select>
+    </label>
+    <button class="btn" onclick="exportCsv()">CSV出力</button>
+  </div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>👤 なまえ別（回数・最終利用）</h2>
+      <div id="byName"></div>
+    </div>
+    <div class="panel">
+      <h2>🎮 アプリ別（回数）</h2>
+      <div id="byApp"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🕒 利用履歴（新しい順）</h2>
+    <div class="log-scroll"><table><thead><tr><th>日時</th><th>なまえ</th><th>アプリ</th><th>イベント</th></tr></thead><tbody id="logBody"></tbody></table></div>
+  </div>
+
+  <div class="foot">
+    ・ログは各アプリ起動時に自動記録（usage-log.js）。Firebase無料枠で運用。<br>
+    ・このページにパスコードをかけたい場合は admin.html 冒頭の <code>ADMIN_PASS</code> に文字列を設定してください（空なら無し）。<br>
+    ・端末ごとに「なまえ」を記録。同名の別人や、なまえ未設定（ゲスト）は端末IDで区別できます。
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// パスコード（空なら無し）。設定すると開くときに入力を求めます。
+const ADMIN_PASS = "";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDML1qE08Wk3Yah_e35PqGOlXlKEX5-wLc",
+  authDomain: "toieba-game.firebaseapp.com",
+  databaseURL: "https://toieba-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "toieba-game",
+  storageBucket: "toieba-game.firebasestorage.app",
+  messagingSenderId: "987291900786",
+  appId: "1:987291900786:web:dc0430a21c1995c4b3dbeb"
+};
+
+// アプリ表示名
+const APP_LABELS = {
+  'fraction-tower': '算数の塔(分数)', 'factor-tower': '数学の塔(因数分解)', 'toieba-online': 'と言えば',
+  'kokugo-tower': '国語の塔', 'geography-tower': '地理の塔', 'math-tower-rpg': '算数の塔(RPG)',
+  'geography-quiz': '地理クイズ', 'pmp-quiz': 'PMP', 'math-quiz': '算数クイズ'
+};
+function appLabel(a) { return APP_LABELS[a] || a; }
+
+let allLogs = [];
+let db = null;
+
+if (ADMIN_PASS) { const p = prompt('パスコードを入力'); if (p !== ADMIN_PASS) { document.body.innerHTML = '<p style="padding:40px">アクセスできません</p>'; throw new Error('locked'); } }
+
+try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch (e) { document.getElementById('logBody').innerHTML = '<tr><td colspan="4" class="empty">Firebase接続エラー</td></tr>'; }
+
+function reload() {
+  db.ref('usage').limitToLast(3000).get().then(snap => {
+    allLogs = [];
+    snap.forEach(ch => { const v = ch.val(); v._id = ch.key; allLogs.push(v); });
+    allLogs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    buildNameFilter();
+    render();
+  }).catch(e => { document.getElementById('logBody').innerHTML = '<tr><td colspan="4" class="empty">読み込みエラー：' + e.message + '</td></tr>'; });
+}
+
+function buildNameFilter() {
+  const names = Array.from(new Set(allLogs.map(l => l.name || 'ゲスト'))).sort();
+  const sel = document.getElementById('nameSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全員</option>' + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  sel.value = cur;
+}
+
+function filtered() {
+  const days = parseInt(document.getElementById('rangeSel').value, 10);
+  const nameF = document.getElementById('nameSel').value;
+  const now = Date.now();
+  return allLogs.filter(l => {
+    if (days > 0 && l.ts && (now - l.ts) > days * 86400000) return false;
+    if (nameF && (l.name || 'ゲスト') !== nameF) return false;
+    return true;
+  });
+}
+
+function render() {
+  const logs = filtered();
+  // 統計
+  const names = new Set(logs.map(l => l.name || 'ゲスト'));
+  const apps = new Set(logs.map(l => l.app));
+  document.getElementById('statRow').innerHTML =
+    stat(logs.length, '利用回数') + stat(names.size, '人数') + stat(apps.size, 'アプリ数');
+
+  // なまえ別
+  const byName = groupCount(logs, l => l.name || 'ゲスト');
+  const maxN = Math.max(1, ...byName.map(x => x.count));
+  document.getElementById('byName').innerHTML = byName.length ? `<table><tbody>` + byName.map(x =>
+    `<tr><td>${esc(x.key)}</td><td class="num">${x.count}回</td><td style="color:var(--sub);font-size:11px">${fmt(x.last)}</td></tr>
+     <tr><td colspan="3" style="padding-top:0"><div class="bar" style="width:${Math.round(x.count / maxN * 100)}%"></div></td></tr>`
+  ).join('') + `</tbody></table>` : '<div class="empty">記録なし</div>';
+
+  // アプリ別
+  const byApp = groupCount(logs, l => l.app);
+  const maxA = Math.max(1, ...byApp.map(x => x.count));
+  document.getElementById('byApp').innerHTML = byApp.length ? `<table><tbody>` + byApp.map(x =>
+    `<tr><td>${esc(appLabel(x.key))}</td><td class="num">${x.count}回</td></tr>
+     <tr><td colspan="2" style="padding-top:0"><div class="bar" style="width:${Math.round(x.count / maxA * 100)}%"></div></td></tr>`
+  ).join('') + `</tbody></table>` : '<div class="empty">記録なし</div>';
+
+  // 履歴
+  document.getElementById('logBody').innerHTML = logs.length ? logs.slice(0, 500).map(l =>
+    `<tr><td style="white-space:nowrap">${fmt(l.ts)}</td><td>${esc(l.name || 'ゲスト')}</td><td><span class="tag">${esc(appLabel(l.app))}</span></td><td style="color:var(--sub)">${esc(l.event || '')}</td></tr>`
+  ).join('') : '<tr><td colspan="4" class="empty">この期間の記録はありません</td></tr>';
+}
+
+function groupCount(logs, keyFn) {
+  const m = {};
+  logs.forEach(l => { const k = keyFn(l); if (!m[k]) m[k] = { key: k, count: 0, last: 0 }; m[k].count++; if ((l.ts || 0) > m[k].last) m[k].last = l.ts || 0; });
+  return Object.values(m).sort((a, b) => b.count - a.count);
+}
+function stat(v, l) { return `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
+function fmt(ts) { if (!ts) return '-'; const d = new Date(ts); return d.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+function esc(s) { return (s == null ? '' : '' + s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function exportCsv() {
+  const logs = filtered();
+  const rows = [['日時', 'なまえ', 'アプリ', 'イベント', '端末']].concat(
+    logs.map(l => [new Date(l.ts || 0).toLocaleString('ja-JP'), l.name || 'ゲスト', appLabel(l.app), l.event || '', l.device || ''])
+  );
+  const csv = rows.map(r => r.map(c => '"' + ('' + c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quizhub_usage.csv'; a.click();
+}
+
+if (db) reload();
+</script>
+</body>
+</html>
