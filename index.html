@@ -221,6 +221,14 @@ body {
 .card-fraction::before { background: radial-gradient(ellipse at 80% 20%, rgba(45,212,191,0.08), transparent 60%); }
 .fraction-title { color: #2dd4bf; }
 .tag-fraction { color: #2dd4bf; border-color: rgba(45,212,191,0.3); background: rgba(45,212,191,0.08); }
+.fade-in:nth-child(9) { animation-delay: 1.3s; }
+
+/* 因数分解の塔 */
+.card-factor { background: linear-gradient(135deg, #131a2e 0%, #0d1322 100%); box-shadow: 0 4px 24px rgba(129,140,248,0.08); }
+.card-factor:hover { border-color: rgba(129,140,248,0.4); box-shadow: 0 8px 40px rgba(129,140,248,0.18); }
+.card-factor::before { background: radial-gradient(ellipse at 80% 20%, rgba(129,140,248,0.08), transparent 60%); }
+.factor-title { color: #818cf8; }
+.tag-factor { color: #818cf8; border-color: rgba(129,140,248,0.3); background: rgba(129,140,248,0.08); }
 
 .card-inner {
   display: flex;
@@ -440,6 +448,22 @@ body {
             <span class="tag tag-fraction">🧮 全6フロア</span>
             <span class="tag tag-fraction">⭐ レベル制</span>
             <span class="tag tag-fraction">💡 解説＋ミス診断</span>
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </a>
+
+    <a class="quiz-card card-factor fade-in" href="factor-tower.html">
+      <div class="card-inner">
+        <div class="card-icon">🧩</div>
+        <div class="card-body">
+          <div class="card-title factor-title">数学の塔（因数分解版）</div>
+          <div class="card-desc">中学数学の因数分解。共通因数→(x+a)(x+b)→平方→平方の差→たすき掛け まで段階的に。わからない問題は「1つずつ解く」で数字を穴埋めしながら正解へ。解説＋ミス診断付き。</div>
+          <div class="card-tags">
+            <span class="tag tag-factor">🧩 全6フロア</span>
+            <span class="tag tag-factor">❌ たすき掛け対応</span>
+            <span class="tag tag-factor">💡 ガイド＋ミス診断</span>
           </div>
         </div>
         <div class="card-arrow">›</div>
