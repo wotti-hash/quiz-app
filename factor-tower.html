@@ -424,6 +424,10 @@ function diagnoseFactor(q, v, ex) {
 // ══ ゲーム状態 ══
 let gs = { floorKey: null, level: 1, correctInLevel: 0, q: null, answered: false, mode: 'direct', gidx: 0 };
 
+// 利用ログ（usage-log.js があれば送信）
+function floorNo() { return FLOORS.findIndex(x => x.key === gs.floorKey) + 1; }
+function logEvent(extra) { if (window.QuizHubLog) { try { QuizHubLog(extra); } catch (e) {} } }
+
 function startGame() { playerName = document.getElementById('nameInput').value.trim(); save.name = playerName; writeSave(); if (playerName) try { localStorage.setItem('quizhub_name', playerName.slice(0, 16)); } catch (e) {} renderMap(); showScreen('mapScreen'); }
 function showScreen(id) { SCREENS.forEach(s => document.getElementById(s).classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function isFloorUnlocked(i) { return i === 0 || save.progress[FLOORS[i - 1].key].cleared; }
@@ -507,6 +511,7 @@ async function checkAnswer() {
   if (res.kind === 'correct') {
     gs.answered = true;
     gs.correctInLevel++; renderProg();
+    logEvent({ event: 'answer', result: 'correct', floorNo: floorNo(), level: gs.level });
     renderFeedback('correct', 'せいかい！', '🎉', '', gs.q.steps);
     document.getElementById('answerArea').classList.add('hidden');
     const last = gs.correctInLevel >= NEED_PER_LEVEL;
@@ -514,6 +519,7 @@ async function checkAnswer() {
     return;
   }
   // near / wrong
+  logEvent({ event: 'answer', result: res.kind === 'near' ? 'near' : 'wrong', floorNo: floorNo(), level: gs.level });
   let advice;
   if (res.kind === 'near') {
     advice = (gs.q.type === 'common')
@@ -601,6 +607,7 @@ function revealSteps() { if (!document.getElementById('revealedSteps')) { const 
 
 function showClear(level, floorCleared) {
   const f = FLOORS.find(x => x.key === gs.floorKey); const fi = FLOORS.findIndex(x => x.key === gs.floorKey);
+  logEvent({ event: 'clear', kind: floorCleared ? 'floor' : 'level', floorNo: fi + 1, level: level });
   launchConfetti();
   if (floorCleared) {
     document.getElementById('clearIcon').textContent = '👑';

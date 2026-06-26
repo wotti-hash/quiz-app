@@ -71,6 +71,11 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </div>
 
+  <div class="panel" style="margin-bottom:18px">
+    <h2>📈 学習の成績（なまえ別・正解率と進みぐあい）</h2>
+    <div id="scoreTable"></div>
+  </div>
+
   <div class="panel">
     <h2>🕒 利用履歴（新しい順）</h2>
     <div class="log-scroll"><table><thead><tr><th>日時</th><th>なまえ</th><th>アプリ</th><th>イベント</th></tr></thead><tbody id="logBody"></tbody></table></div>
@@ -145,32 +150,71 @@ function filtered() {
 
 function render() {
   const logs = filtered();
-  // 統計
-  const names = new Set(logs.map(l => l.name || 'ゲスト'));
-  const apps = new Set(logs.map(l => l.app));
-  document.getElementById('statRow').innerHTML =
-    stat(logs.length, '利用回数') + stat(names.size, '人数') + stat(apps.size, 'アプリ数');
+  const opens = logs.filter(l => !l.event || l.event === 'open');
+  const answers = logs.filter(l => l.event === 'answer');
+  const clears = logs.filter(l => l.event === 'clear');
 
-  // なまえ別
-  const byName = groupCount(logs, l => l.name || 'ゲスト');
+  const names = new Set(opens.map(l => l.name || 'ゲスト'));
+  const apps = new Set(opens.map(l => l.app));
+  document.getElementById('statRow').innerHTML =
+    stat(opens.length, '利用回数') + stat(names.size, '人数') + stat(apps.size, 'アプリ数') + stat(answers.length, '解答数');
+
+  // なまえ別（利用回数）
+  const byName = groupCount(opens, l => l.name || 'ゲスト');
   const maxN = Math.max(1, ...byName.map(x => x.count));
   document.getElementById('byName').innerHTML = byName.length ? `<table><tbody>` + byName.map(x =>
     `<tr><td>${esc(x.key)}</td><td class="num">${x.count}回</td><td style="color:var(--sub);font-size:11px">${fmt(x.last)}</td></tr>
      <tr><td colspan="3" style="padding-top:0"><div class="bar" style="width:${Math.round(x.count / maxN * 100)}%"></div></td></tr>`
   ).join('') + `</tbody></table>` : '<div class="empty">記録なし</div>';
 
-  // アプリ別
-  const byApp = groupCount(logs, l => l.app);
+  // アプリ別（利用回数）
+  const byApp = groupCount(opens, l => l.app);
   const maxA = Math.max(1, ...byApp.map(x => x.count));
   document.getElementById('byApp').innerHTML = byApp.length ? `<table><tbody>` + byApp.map(x =>
     `<tr><td>${esc(appLabel(x.key))}</td><td class="num">${x.count}回</td></tr>
      <tr><td colspan="2" style="padding-top:0"><div class="bar" style="width:${Math.round(x.count / maxA * 100)}%"></div></td></tr>`
   ).join('') + `</tbody></table>` : '<div class="empty">記録なし</div>';
 
-  // 履歴
-  document.getElementById('logBody').innerHTML = logs.length ? logs.slice(0, 500).map(l =>
-    `<tr><td style="white-space:nowrap">${fmt(l.ts)}</td><td>${esc(l.name || 'ゲスト')}</td><td><span class="tag">${esc(appLabel(l.app))}</span></td><td style="color:var(--sub)">${esc(l.event || '')}</td></tr>`
+  renderScores(answers, clears);
+
+  // 履歴（解答の1件ずつは多すぎるので除外し、起動・クリアを表示）
+  const hist = logs.filter(l => l.event !== 'answer');
+  document.getElementById('logBody').innerHTML = hist.length ? hist.slice(0, 500).map(l =>
+    `<tr><td style="white-space:nowrap">${fmt(l.ts)}</td><td>${esc(l.name || 'ゲスト')}</td><td><span class="tag">${esc(appLabel(l.app))}</span></td><td style="color:var(--sub)">${eventLabel(l)}</td></tr>`
   ).join('') : '<tr><td colspan="4" class="empty">この期間の記録はありません</td></tr>';
+}
+
+function eventLabel(l) {
+  if (l.event === 'clear') return l.kind === 'floor' ? `🏆 ${l.floorNo || ''}F クリア` : `⭐ ${l.floorNo || ''}F レベル${l.level || ''} クリア`;
+  return '開いた';
+}
+
+function renderScores(answers, clears) {
+  const m = {};
+  answers.forEach(l => { const n = l.name || 'ゲスト'; (m[n] = m[n] || { ans: [], reach: {} }); m[n].ans.push(l); });
+  clears.filter(l => l.kind === 'floor').forEach(l => { const n = l.name || 'ゲスト'; (m[n] = m[n] || { ans: [], reach: {} }); m[n].reach[l.app] = Math.max(m[n].reach[l.app] || 0, l.floorNo || 0); });
+  const names = Object.keys(m).sort();
+  if (!names.length) { document.getElementById('scoreTable').innerHTML = '<div class="empty">学習の記録はまだありません（分数の塔・因数分解の塔で問題を解くと記録されます）</div>'; return; }
+  let html = '<table><thead><tr><th>なまえ</th><th class="num">解答数</th><th class="num">正解率</th><th>のびぐあい（前半→後半）</th><th>到達フロア</th></tr></thead><tbody>';
+  names.forEach(n => {
+    const a = m[n].ans.slice().sort((x, y) => (x.ts || 0) - (y.ts || 0));
+    const total = a.length;
+    const correct = a.filter(x => x.result === 'correct').length;
+    const rate = total ? Math.round(correct / total * 100) : 0;
+    let trend = '<span style="color:var(--sub)">—（もう少し解くと表示）</span>';
+    if (total >= 6) {
+      const mid = Math.floor(total / 2);
+      const e = a.slice(0, mid), late = a.slice(mid);
+      const re = Math.round(e.filter(x => x.result === 'correct').length / e.length * 100);
+      const rl = Math.round(late.filter(x => x.result === 'correct').length / late.length * 100);
+      const arrow = rl > re + 5 ? '<span style="color:var(--green)">↑ のびてる</span>' : rl < re - 5 ? '<span style="color:#ff7b72">↓ 復習を</span>' : '<span style="color:var(--sub)">→ 安定</span>';
+      trend = `${re}% → ${rl}% ${arrow}`;
+    }
+    const reach = Object.keys(m[n].reach).map(app => `${esc(appLabel(app))} <b style="color:var(--accent)">${m[n].reach[app]}F</b>`).join(' / ') || '<span style="color:var(--sub)">—</span>';
+    html += `<tr><td>${esc(n)}</td><td class="num">${total}</td><td class="num"><b style="color:var(--accent)">${rate}%</b></td><td>${trend}</td><td style="font-size:12px">${reach}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('scoreTable').innerHTML = html;
 }
 
 function groupCount(logs, keyFn) {
@@ -184,8 +228,8 @@ function esc(s) { return (s == null ? '' : '' + s).replace(/&/g, '&amp;').replac
 
 function exportCsv() {
   const logs = filtered();
-  const rows = [['日時', 'なまえ', 'アプリ', 'イベント', '端末']].concat(
-    logs.map(l => [new Date(l.ts || 0).toLocaleString('ja-JP'), l.name || 'ゲスト', appLabel(l.app), l.event || '', l.device || ''])
+  const rows = [['日時', 'なまえ', 'アプリ', 'イベント', '正誤', 'フロア', 'レベル', '端末']].concat(
+    logs.map(l => [new Date(l.ts || 0).toLocaleString('ja-JP'), l.name || 'ゲスト', appLabel(l.app), l.event || 'open', l.result || '', l.floorNo || '', l.level || '', l.device || ''])
   );
   const csv = rows.map(r => r.map(c => '"' + ('' + c).replace(/"/g, '""') + '"').join(',')).join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv' });

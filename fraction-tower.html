@@ -420,6 +420,10 @@ function diagnose(op, A, B, correct, stu) {
 // ══ ゲーム状態 ══
 let gs = { floorKey: null, level: 1, correctInLevel: 0, q: null, answered: false };
 
+// 利用ログ（usage-log.js があれば送信）
+function floorNo() { return FLOORS.findIndex(x => x.key === gs.floorKey) + 1; }
+function logEvent(extra) { if (window.QuizHubLog) { try { QuizHubLog(extra); } catch (e) {} } }
+
 function startGame() {
   playerName = document.getElementById('nameInput').value.trim();
   save.name = playerName; writeSave();
@@ -520,6 +524,7 @@ async function checkAnswer() {
 
   if (fullyCorrect) {
     gs.correctInLevel++;
+    logEvent({ event: 'answer', result: 'correct', floorNo: floorNo(), level: gs.level });
     renderFeedback('correct', 'せいかい！', '🎉', '', q.steps);
     document.getElementById('pbProg').innerHTML = Array.from({ length: NEED_PER_LEVEL }, (_, i) =>
       `<span class="pb-pip ${i < gs.correctInLevel ? 'on' : ''}"></span>`).join('');
@@ -539,6 +544,7 @@ async function checkAnswer() {
     else diag = { kind: 'wrong', advice: genericAdvice(q.op) };
   }
   const isNear = diag.kind === 'near';
+  logEvent({ event: 'answer', result: isNear ? 'near' : 'wrong', floorNo: floorNo(), level: gs.level });
   renderFeedback(isNear ? 'near' : 'wrong', isNear ? 'おしい！' : 'ちがうみたい', isNear ? '🤏' : '🤔', diag.advice, null);
   // ステップは「解き方を見る」で表示
   const ar = document.getElementById('actionRow');
@@ -610,6 +616,7 @@ function advance() {
 function showClear(level, floorCleared) {
   const f = FLOORS.find(x => x.key === gs.floorKey);
   const fi = FLOORS.findIndex(x => x.key === gs.floorKey);
+  logEvent({ event: 'clear', kind: floorCleared ? 'floor' : 'level', floorNo: fi + 1, level: level });
   launchConfetti();
   if (floorCleared) {
     document.getElementById('clearIcon').textContent = '👑';
