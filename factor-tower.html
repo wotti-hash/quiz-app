@@ -90,6 +90,8 @@ sup { font-size: 0.6em; vertical-align: super; }
 .gblanks { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; font-size: 24px; font-weight: 700; }
 .gblank { width: 52px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border-radius: 10px; border: 2px solid var(--accent); background: rgba(129,140,248,0.08); color: var(--text); font-family: inherit; outline: none; }
 .gblank:focus { border-color: var(--accent2); }
+.signbtn { display: inline-block; width: auto; padding: 9px 24px; border-radius: 10px; border: 1px solid rgba(129,140,248,0.4); background: rgba(129,140,248,0.14); color: var(--accent); font-family: inherit; font-weight: 800; font-size: 18px; cursor: pointer; }
+.signbtn:active { background: rgba(240,163,90,0.2); }
 
 .fb { border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .fb-correct { background: rgba(68,221,153,0.1); border: 1px solid rgba(68,221,153,0.4); }
@@ -456,12 +458,25 @@ function renderProg() {
 
 // 因数分解テンプレ
 function templateHTML(type) {
-  const B = (i) => `<input class="blank" id="ans${i}" type="text" inputmode="numeric" autocomplete="off">`;
+  const B = (i) => `<input class="blank" id="ans${i}" type="text" inputmode="numeric" autocomplete="off" onfocus="gs.lastBlank='ans${i}'">`;
   if (type === 'common') return `${B(0)}<span class="paren">x(</span>${B(1)}<span class="paren">x +</span> ${B(2)}<span class="paren">)</span>`;
   if (type === 'sumprod') return `<span class="paren">( x +</span> ${B(0)} <span class="paren">)( x +</span> ${B(1)} <span class="paren">)</span>`;
   if (type === 'square') return `<span class="paren">( x +</span> ${B(0)} <span class="paren">)</span><sup>2</sup>`;
   if (type === 'diff') return `<span class="paren">( x +</span> ${B(0)} <span class="paren">)( x −</span> ${B(1)} <span class="paren">)</span>`;
   return `<span class="paren">(</span>${B(0)}<span class="paren">x +</span> ${B(1)} <span class="paren">)(</span>${B(2)}<span class="paren">x +</span> ${B(3)}<span class="paren">)</span>`;
+}
+function signBar() {
+  return `<div style="text-align:center;margin-top:12px">`
+    + `<button type="button" class="signbtn" onpointerdown="toggleSign(event)">＋ ⇄ −</button>`
+    + `<div class="ans-hint" style="margin-top:8px">マイナスにしたい□をタップ →「＋⇄−」で符号を切り替え（数字キーに − が無い端末用）</div></div>`;
+}
+function toggleSign(e) {
+  if (e && e.preventDefault) e.preventDefault();   // 入力欄のフォーカスを保つ
+  const el = document.getElementById(gs.lastBlank);
+  if (!el) { toast('さきに□をタップしてね'); return; }
+  const v = el.value || '';
+  el.value = (v.charAt(0) === '-') ? v.slice(1) : ('-' + v);
+  try { el.focus(); } catch (_) {}
 }
 function readBlanks(type) {
   const n = blanksCount(type); const v = [];
@@ -474,8 +489,9 @@ function readBlanks(type) {
 }
 function renderDirect() {
   gs.mode = 'direct';
-  const hint = gs.q.type === 'common' ? '前の□＝共通でくくる数。マイナスは − をつけてね。' : 'マイナスのときは − をつけてね（例：−3）。';
-  document.getElementById('answerArea').innerHTML = `<div class="ans-label">因数分解しよう</div><div class="tmpl">${templateHTML(gs.q.type)}</div><div class="ans-hint">${hint}</div>`;
+  const hint = gs.q.type === 'common' ? '前の□＝共通でくくる数。' : '';
+  document.getElementById('answerArea').innerHTML = `<div class="ans-label">因数分解しよう</div><div class="tmpl">${templateHTML(gs.q.type)}</div><div class="ans-hint">${hint}</div>${signBar()}`;
+  gs.lastBlank = 'ans0';
   document.getElementById('feedbackArea').innerHTML = '';
   document.getElementById('actionRow').innerHTML =
     `<button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">こたえあわせ</button>` +
@@ -528,14 +544,16 @@ function renderGuidedStep() {
   const steps = gs.q.guided, step = steps[gs.gidx];
   const head = `<div class="guide-head">1つずつ解く — ステップ ${gs.gidx + 1} / ${steps.length}</div>`;
   if (step.answer) {
-    document.getElementById('answerArea').innerHTML = head + `<div class="guide-prompt">${step.prompt}</div><div class="tmpl">${templateHTML(gs.q.type)}</div><div class="ans-hint">マイナスは − をつけてね。</div>`;
+    document.getElementById('answerArea').innerHTML = head + `<div class="guide-prompt">${step.prompt}</div><div class="tmpl">${templateHTML(gs.q.type)}</div>${signBar()}`;
+    gs.lastBlank = 'ans0';
     document.getElementById('actionRow').innerHTML =
       `<button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">こたえあわせ</button>` +
       `<button class="btn btn-ghost" onclick="renderDirect()">直接入力にもどる</button>`;
   } else {
     let blanks = '';
-    for (let i = 0; i < step.n; i++) blanks += `<input class="gblank" id="g${i}" type="text" inputmode="numeric" autocomplete="off">` + (i < step.n - 1 ? '<span style="color:var(--sub)">×</span>' : '');
-    document.getElementById('answerArea').innerHTML = head + `<div class="guide-prompt">${step.prompt}</div><div class="gblanks">${blanks}</div>`;
+    for (let i = 0; i < step.n; i++) blanks += `<input class="gblank" id="g${i}" type="text" inputmode="numeric" autocomplete="off" onfocus="gs.lastBlank='g${i}'">` + (i < step.n - 1 ? '<span style="color:var(--sub)">×</span>' : '');
+    document.getElementById('answerArea').innerHTML = head + `<div class="guide-prompt">${step.prompt}</div><div class="gblanks">${blanks}</div>${signBar()}`;
+    gs.lastBlank = 'g0';
     document.getElementById('actionRow').innerHTML =
       `<button class="btn btn-primary" onclick="checkGuidedStep()">確認</button>` +
       `<button class="btn btn-ghost" onclick="guidedHint()">💡 ヒント</button>` +
