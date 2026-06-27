@@ -100,6 +100,10 @@ body {
 .badge-done { background: rgba(68,221,153,0.15); color: var(--green); }
 .badge-wait { background: rgba(255,255,255,0.08); color: var(--sub); }
 .pi-score { font-size: 14px; font-weight: 900; color: var(--accent); min-width: 36px; text-align: right; }
+.kick-btn { font-size: 11px; padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(255,85,119,0.4); background: rgba(255,85,119,0.1); color: var(--red); font-family: inherit; font-weight: 700; cursor: pointer; margin-left: 6px; white-space: nowrap; }
+.kick-btn:hover { background: rgba(255,85,119,0.2); }
+#refreshBtn { position: fixed; right: 14px; bottom: 16px; z-index: 150; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 20px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+#hostBanner { position: fixed; top: 0; left: 0; right: 0; z-index: 160; background: #1a1326; border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: 13px; }
 
 /* お題表示 */
 .odai-display { text-align: center; padding: 24px 16px; }
@@ -201,6 +205,11 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
     </div>
     <div class="card">
       <div class="section-label">新しくルームを作る（あなたがホスト）</div>
+      <div class="row" style="align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;color:var(--sub);white-space:nowrap">対戦数</span>
+        <input id="roundsInput" class="input" type="number" min="3" max="99" value="5" style="width:90px;text-align:center">
+        <span style="font-size:13px;color:var(--sub);white-space:nowrap">回（3〜99）</span>
+      </div>
       <button class="btn btn-primary" onclick="createRoom()">ルームを作成 🎲</button>
     </div>
     <div class="card">
@@ -227,6 +236,10 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
       <div class="section-label">参加者 <span id="wCount"></span></div>
       <div class="players" id="wPlayers"></div>
     </div>
+    <div class="card hidden" id="wPendingCard">
+      <div class="section-label">入室リクエスト（許可してください）</div>
+      <div class="players" id="wPending"></div>
+    </div>
     <div class="stack" id="wHostControls">
       <button class="btn btn-primary" id="wStartBtn" onclick="startGame()">ゲーム開始 ▶</button>
       <div class="foot-note" id="wStartHint">3人以上で開始できます</div>
@@ -238,9 +251,23 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
   </div>
 </div>
 
+<!-- ══ 承認待ち（途中参加） ══ -->
+<div id="pendingScreen" class="screen">
+  <div class="topbar"><div class="tb-room">ROOM <b id="pendCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">やめる</button></div>
+  <div class="wrap">
+    <div class="hero"><span class="hero-icon">⏳</span><h1>承認まち</h1><p>ホストの入室きょかを待っています</p></div>
+    <div class="card" style="text-align:center">
+      <div class="wait-status"><span class="wait-emoji">🙋</span>
+        <div class="wait-msg">ホストが「許可」すると参加できます</div>
+        <div class="wait-sub">そのままお待ちください…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ お題フェーズ ══ -->
 <div id="odaiScreen" class="screen">
-  <div class="topbar"><div class="tb-room">R<span id="oRound">1</span>/5 ・ ROOM <b id="oRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="topbar"><div class="tb-room">R<span id="oRound">1</span>/<span id="oTotal">5</span> ・ ROOM <b id="oRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
   <div class="wrap">
     <!-- 親用 -->
     <div id="odaiParentView">
@@ -277,7 +304,7 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
 
 <!-- ══ 回答フェーズ ══ -->
 <div id="answerScreen" class="screen">
-  <div class="topbar"><div class="tb-room">R<span id="aRound">1</span>/5 ・ ROOM <b id="aRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="topbar"><div class="tb-room">R<span id="aRound">1</span>/<span id="aTotal">5</span> ・ ROOM <b id="aRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
   <div class="wrap">
     <div class="card" style="text-align:center">
       <div class="odai-display" style="padding:14px 0">
@@ -315,7 +342,7 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
 
 <!-- ══ 結果フェーズ ══ -->
 <div id="resultScreen" class="screen">
-  <div class="topbar"><div class="tb-room">R<span id="rRound">1</span>/5 ・ ROOM <b id="rRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
+  <div class="topbar"><div class="tb-room">R<span id="rRound">1</span>/<span id="rTotal">5</span> ・ ROOM <b id="rRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
   <div class="wrap">
     <div class="result-head">
       <div class="result-type" id="rType">結果</div>
@@ -340,7 +367,7 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
 <div id="endScreen" class="screen">
   <div class="topbar"><div class="tb-room">ROOM <b id="eRoomCode">------</b></div><button class="tb-leave" onclick="leaveRoom()">退出</button></div>
   <div class="wrap">
-    <div class="hero" style="padding:32px 0 18px"><span class="hero-icon">🏆</span><h1>最終結果</h1><p>全5ラウンド終了！</p></div>
+    <div class="hero" style="padding:32px 0 18px"><span class="hero-icon">🏆</span><h1>最終結果</h1><p id="eSub">全5ラウンド終了！</p></div>
     <div id="eRanking"></div>
     <div class="stack" id="eHostControls" style="margin-top:8px">
       <button class="btn btn-primary" onclick="playAgain()">もう一度あそぶ 🔄</button>
@@ -350,6 +377,8 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="hostBanner" class="hidden"></div>
+<button id="refreshBtn" onclick="location.reload()" title="画面を更新">🔄</button>
 
 <!-- Firebase SDK (CDN / compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -379,10 +408,11 @@ const firebaseConfig = {
 const AI_MATCH_URL = "";
 
 // ══ 定数 ══
-const TOTAL_ROUNDS = 5;
+const DEFAULT_ROUNDS = 5;
 const MIN_PLAYERS  = 3;
-const SS_NAME = 'toieba_name', SS_ROOM = 'toieba_room';
-const SCREENS = ['configScreen','lobbyScreen','waitScreen','odaiScreen','answerScreen','resultScreen','endScreen'];
+const LS_NAME = 'toieba_name', LS_ROOM = 'toieba_room';
+const SCREENS = ['configScreen','lobbyScreen','waitScreen','pendingScreen','odaiScreen','answerScreen','resultScreen','endScreen'];
+function totalRounds() { return (room && room.totalRounds) ? room.totalRounds : DEFAULT_ROUNDS; }
 
 // ══ お題バンク ══
 const ODAI_BANK = {
@@ -414,7 +444,7 @@ let roomCode = '';
 let room = null;          // 現在のルームスナップショット
 let roomRef = null;       // listener 用 ref
 let pickedOdai = '';      // 親が選択中のお題
-let answeredFlag = false; // 自分が回答送信済みか
+let answeredRound = 0;    // 自分が回答を送信したラウンド番号（ラウンドが進めば自動リセット）
 let computingResult = false;
 
 // ══ ユーティリティ ══
@@ -447,19 +477,31 @@ function normalize(s) {
     .replace(/[、。・,.!?！？「」『』（）()ー－\-~〜・]/g, '');
 }
 function isHost()   { return room && room.host === myName; }
-function parentName(){ return room && room.players ? room.players[room.parentIdx] : ''; }
+function parentName(){ if (!room) return ''; return room.parent || (room.players ? room.players[room.parentIdx] : '') || (room.players && room.players[0]) || ''; }
 function amParent() { return parentName() === myName; }
+function isMember() { return !!(room && room.players && room.players.includes(myName)); }
+function escapeJs(s){ return ('' + s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+// このラウンドの回答者（roster ∩ players − 親）。退室/キックは自動除外、途中参加は次ラウンドから。
+function activeChildren() {
+  if (!room) return [];
+  const roster = (room.roster && room.roster.length) ? room.roster : room.players;
+  const p = parentName();
+  return (roster || []).filter(n => room.players.includes(n) && n !== p);
+}
 
 // ══ ロビー ══
 function createRoom() {
   if (!fbReady) { toast('Firebase未設定です'); return; }
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { toast('名前を入力してください'); return; }
+  let rounds = parseInt(document.getElementById('roundsInput').value, 10);
+  if (!(rounds >= 3 && rounds <= 99)) rounds = DEFAULT_ROUNDS;
   myName = name;
   const code = genCode();
   const data = {
     code, host: name, players: [name], scores: { [name]: 0 },
-    phase: 'waiting', round: 1, parentIdx: 0, odai: '', answers: {}, result: null,
+    phase: 'waiting', round: 1, parentIdx: 0, parent: name, totalRounds: rounds,
+    odai: '', answers: {}, result: null, roster: [name], pending: {},
     createdAt: firebase.database.ServerValue.TIMESTAMP,
   };
   db.ref('rooms/' + code).set(data).then(() => { roomCode = code; subscribeRoom(); })
@@ -475,19 +517,32 @@ function joinRoom() {
   ref.get().then(snap => {
     if (!snap.exists()) { toast('そのルームは見つかりません'); return; }
     const r = snap.val();
-    if (r.phase !== 'waiting') { toast('そのルームは既にゲーム中です'); return; }
     const players = r.players || [];
-    if (players.includes(name)) { toast('同じ名前が既に参加しています'); return; }
-    players.push(name);
-    const scores = r.scores || {}; scores[name] = 0;
-    ref.update({ players, scores }).then(() => { myName = name; roomCode = code; subscribeRoom(); });
+    // 既存メンバー（ホスト含む）→ 無条件で再接続
+    if (players.includes(name)) { myName = name; roomCode = code; subscribeRoom(); return; }
+    // ホスト名なのに players から消えている場合の保険（無条件で復帰）
+    if (r.host === name) {
+      players.push(name); const sc = r.scores || {}; sc[name] = sc[name] || 0;
+      ref.update({ players, scores: sc }).then(() => { myName = name; roomCode = code; subscribeRoom(); });
+      return;
+    }
+    // 新規参加
+    if (r.phase === 'waiting') {
+      players.push(name); const sc = r.scores || {}; sc[name] = 0;
+      ref.update({ players, scores: sc }).then(() => { myName = name; roomCode = code; subscribeRoom(); });
+    } else {
+      // ゲーム中 → ホストの入室許可を待つ（承認待ち画面へ）
+      myName = name; roomCode = code;
+      ref.child('pending/' + name).set({ name, ts: firebase.database.ServerValue.TIMESTAMP })
+        .then(() => subscribeRoom());
+    }
   }).catch(e => toast('参加に失敗：' + e.message));
 }
 
 // ══ ルーム購読 ══
 function subscribeRoom() {
-  sessionStorage.setItem(SS_NAME, myName);
-  sessionStorage.setItem(SS_ROOM, roomCode);
+  localStorage.setItem(LS_NAME, myName);
+  localStorage.setItem(LS_ROOM, roomCode);
   if (roomRef) roomRef.off();
   roomRef = db.ref('rooms/' + roomCode);
   roomRef.on('value', snap => {
@@ -505,7 +560,7 @@ function subscribeRoom() {
 async function hostAutoCompute() {
   if (room.phase !== 'answering' || room.result) return;
   if (computingResult) return;
-  const children = room.players.filter((_, i) => i !== room.parentIdx);
+  const children = activeChildren();
   const answered = children.filter(c => room.answers[c] != null && room.answers[c] !== '');
   if (answered.length < children.length || children.length < 2) return;
   computingResult = true;
@@ -611,6 +666,12 @@ function scoreGroups(children, groupArr) {
 // ══ 描画 ══
 function render() {
   if (!room) return;
+  renderHostBanner();
+  if (!isMember()) {
+    if (room.pending && room.pending[myName]) { renderPending(); return; }
+    // 退室させられた / 拒否された
+    toast('ルームから退出しました'); backToLobby(); return;
+  }
   switch (room.phase) {
     case 'waiting':   renderWait(); break;
     case 'odai':      renderOdai(); break;
@@ -618,6 +679,22 @@ function render() {
     case 'result':    renderResult(); break;
     case 'end':       renderEnd(); break;
   }
+}
+function renderPending() {
+  showScreen('pendingScreen');
+  document.getElementById('pendCode').textContent = roomCode;
+}
+// ホストには、どの画面でも入室リクエストの許可/拒否バナーを表示
+function renderHostBanner() {
+  const banner = document.getElementById('hostBanner');
+  const pend = (isHost() && room.pending) ? Object.keys(room.pending) : [];
+  if (!pend.length) { banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  banner.innerHTML = '<span>🙋 入室希望：</span>' + pend.map(n =>
+    `<span style="display:inline-flex;gap:5px;align-items:center;background:rgba(255,255,255,0.06);padding:3px 6px 3px 10px;border-radius:14px">${escapeHtml(n)}`
+    + `<button onclick="approveJoin('${escapeJs(n)}')" style="border:none;border-radius:10px;background:var(--green);color:#04211e;font-weight:700;cursor:pointer;padding:3px 9px">許可</button>`
+    + `<button onclick="denyJoin('${escapeJs(n)}')" style="border:none;border-radius:10px;background:var(--red);color:#fff;font-weight:700;cursor:pointer;padding:3px 9px">拒否</button></span>`
+  ).join('');
 }
 
 function playerRowHtml(name, opts) {
@@ -632,7 +709,7 @@ function playerRowHtml(name, opts) {
   if (opts.status === 'wait') badges.push('<span class="pi-badge badge-wait">考え中</span>');
   const score = opts.showScore ? `<div class="pi-score">${room.scores[name] || 0}</div>` : '';
   const cls = 'player-item' + (me ? ' is-me' : '') + (isP && opts.showParent ? ' is-parent' : '');
-  return `<div class="${cls}"><div class="pi-avatar">${avatarFor(name)}</div><div class="pi-name">${escapeHtml(name)}</div>${badges.join('')}${score}</div>`;
+  return `<div class="${cls}"><div class="pi-avatar">${avatarFor(name)}</div><div class="pi-name">${escapeHtml(name)}</div>${badges.join('')}${score}${opts.extra || ''}</div>`;
 }
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -642,21 +719,59 @@ function renderWait() {
   document.getElementById('wRoomCode').textContent = roomCode;
   document.getElementById('wBigCode').textContent = roomCode;
   document.getElementById('wCount').textContent = `(${room.players.length}人)`;
-  document.getElementById('wPlayers').innerHTML = room.players.map(n => playerRowHtml(n, {})).join('');
   const host = isHost();
+  document.getElementById('wPlayers').innerHTML = room.players.map(n => {
+    const kick = (host && n !== myName) ? `<button class="kick-btn" onclick="kickPlayer('${escapeJs(n)}')">退室</button>` : '';
+    return playerRowHtml(n, { extra: kick });
+  }).join('');
+  // 入室リクエスト（待機室でも表示）
+  const pend = room.pending ? Object.keys(room.pending) : [];
+  const pc = document.getElementById('wPendingCard');
+  if (host && pend.length) {
+    pc.classList.remove('hidden');
+    document.getElementById('wPending').innerHTML = pend.map(n =>
+      `<div class="player-item"><div class="pi-avatar">${avatarFor(n)}</div><div class="pi-name">${escapeHtml(n)}</div>`
+      + `<button class="kick-btn" style="color:var(--green);border-color:rgba(68,221,153,0.4);background:rgba(68,221,153,0.1)" onclick="approveJoin('${escapeJs(n)}')">許可</button>`
+      + `<button class="kick-btn" onclick="denyJoin('${escapeJs(n)}')">拒否</button></div>`
+    ).join('');
+  } else { pc.classList.add('hidden'); }
+
   document.getElementById('wHostControls').classList.toggle('hidden', !host);
   document.getElementById('wGuestWait').classList.toggle('hidden', host);
   if (host) {
     const ok = room.players.length >= MIN_PLAYERS;
     document.getElementById('wStartBtn').disabled = !ok;
-    document.getElementById('wStartHint').textContent = ok ? `${room.players.length}人で開始できます` : `あと${MIN_PLAYERS - room.players.length}人必要です（最低${MIN_PLAYERS}人）`;
+    document.getElementById('wStartHint').textContent = (ok ? `${room.players.length}人で開始できます` : `あと${MIN_PLAYERS - room.players.length}人必要です（最低${MIN_PLAYERS}人）`) + `　／　対戦数 ${totalRounds()}回`;
   }
 }
+// ホスト操作：退室させる / 入室を許可・拒否
+function kickPlayer(name) {
+  if (!isHost() || name === myName) return;
+  if (!confirm(name + ' さんを退室させますか？')) return;
+  const players = room.players.filter(p => p !== name);
+  const scores = Object.assign({}, room.scores); delete scores[name];
+  const updates = { players, scores };
+  if (room.answers && room.answers[name] != null) updates['answers/' + name] = null; // 集計が止まらないように
+  if (room.pending && room.pending[name]) updates['pending/' + name] = null;
+  roomRef.update(updates);
+}
+function approveJoin(name) {
+  if (!isHost()) return;
+  if (room.players.includes(name)) { roomRef.child('pending/' + name).remove(); return; }
+  const players = room.players.slice(); players.push(name);
+  const scores = Object.assign({}, room.scores); scores[name] = 0;
+  roomRef.update({ players, scores, ['pending/' + name]: null });
+}
+function denyJoin(name) {
+  if (!isHost()) return;
+  roomRef.child('pending/' + name).remove();
+}
+
 function startGame() {
   if (!isHost()) return;
   if (room.players.length < MIN_PLAYERS) { toast(`最低${MIN_PLAYERS}人必要です`); return; }
-  pickedOdai = ''; answeredFlag = false;
-  roomRef.update({ phase: 'odai', round: 1, parentIdx: 0, odai: '', answers: {}, result: null })
+  pickedOdai = '';
+  roomRef.update({ phase: 'odai', round: 1, parentIdx: 0, parent: room.players[0], odai: '', answers: {}, result: null })
     .catch(e => toast('開始に失敗：' + e.message));
 }
 
@@ -665,6 +780,7 @@ function renderOdai() {
   showScreen('odaiScreen');
   document.getElementById('oRoomCode').textContent = roomCode;
   document.getElementById('oRound').textContent = room.round;
+  document.getElementById('oTotal').textContent = totalRounds();
   const parent = amParent();
   document.getElementById('odaiParentView').classList.toggle('hidden', !parent);
   document.getElementById('odaiChildView').classList.toggle('hidden', parent);
@@ -696,8 +812,7 @@ function useManualOdai() {
 }
 function confirmOdai() {
   if (!pickedOdai) { toast('お題を選んでください'); return; }
-  answeredFlag = false;
-  roomRef.update({ odai: pickedOdai, phase: 'answering', answers: {}, result: null });
+  roomRef.update({ odai: pickedOdai, phase: 'answering', answers: {}, result: null, roster: room.players.slice() });
 }
 
 // 回答
@@ -705,26 +820,34 @@ function renderAnswer() {
   showScreen('answerScreen');
   document.getElementById('aRoomCode').textContent = roomCode;
   document.getElementById('aRound').textContent = room.round;
+  document.getElementById('aTotal').textContent = totalRounds();
   document.getElementById('aOdai').textContent = room.odai;
   const parent = amParent();
-  const children = room.players.filter((_, i) => i !== room.parentIdx);
+  const children = activeChildren();
   const answeredCount = children.filter(c => room.answers[c] != null && room.answers[c] !== '').length;
+  const roster = (room.roster && room.roster.length) ? room.roster : room.players;
+  const spectator = !parent && !roster.includes(myName);  // 途中参加（このラウンドは見学、次から）
 
-  document.getElementById('answerChildView').classList.toggle('hidden', parent);
-  document.getElementById('answerParentView').classList.toggle('hidden', !parent);
+  // 親 と 見学者 は待機ビュー、活動中の子だけ入力ビュー
+  document.getElementById('answerChildView').classList.toggle('hidden', parent || spectator);
+  document.getElementById('answerParentView').classList.toggle('hidden', !(parent || spectator));
 
-  if (!parent) {
-    const done = answeredFlag || (room.answers[myName] != null && room.answers[myName] !== '');
+  if (!parent && !spectator) {
+    const done = (answeredRound === room.round) || (room.answers[myName] != null && room.answers[myName] !== '');
     document.getElementById('answerInput').classList.toggle('hidden', done);
     document.getElementById('answerSubmitBtn').classList.toggle('hidden', done);
     document.getElementById('answerDoneView').classList.toggle('hidden', !done);
     document.getElementById('aProgressChild').textContent = `${answeredCount} / ${children.length} 人が回答済み`;
   } else {
-    document.getElementById('aProgressParent').textContent = `${answeredCount} / ${children.length} 人が回答済み`;
+    document.getElementById('aProgressParent').textContent = spectator
+      ? '次のラウンドから参加します（今は見学中）'
+      : `${answeredCount} / ${children.length} 人が回答済み`;
   }
   // 回答状況リスト（中身は伏せる）
-  document.getElementById('aPlayers').innerHTML = room.players.map((n, i) => {
-    if (i === room.parentIdx) return playerRowHtml(n, { showParent: true });
+  const p = parentName();
+  document.getElementById('aPlayers').innerHTML = room.players.map(n => {
+    if (n === p) return playerRowHtml(n, { showParent: true });
+    if (!roster.includes(n)) return playerRowHtml(n, { showParent: true, status: 'wait' });
     const ans = room.answers[n];
     return playerRowHtml(n, { showParent: true, status: (ans != null && ans !== '') ? 'done' : 'wait' });
   }).join('');
@@ -732,7 +855,7 @@ function renderAnswer() {
 function submitAnswer() {
   const v = document.getElementById('answerInput').value.trim();
   if (!v) { toast('回答を入力してください'); return; }
-  answeredFlag = true;
+  answeredRound = room.round;
   roomRef.child('answers/' + myName).set(v);
 }
 
@@ -771,6 +894,7 @@ function renderResult() {
   showScreen('resultScreen');
   document.getElementById('rRoomCode').textContent = roomCode;
   document.getElementById('rRound').textContent = room.round;
+  document.getElementById('rTotal').textContent = totalRounds();
   const res = room.result || {};
   const tEl = document.getElementById('rType');
   tEl.textContent = res.label || '結果';
@@ -819,16 +943,17 @@ function renderResult() {
   const host = isHost();
   document.getElementById('rHostControls').classList.toggle('hidden', !host);
   document.getElementById('rGuestWait').classList.toggle('hidden', host);
-  document.getElementById('rNextBtn').textContent = (room.round >= TOTAL_ROUNDS) ? '最終結果を見る 🏆' : '次のラウンドへ →';
+  document.getElementById('rNextBtn').textContent = (room.round >= totalRounds()) ? '最終結果を見る 🏆' : '次のラウンドへ →';
 }
 function nextRound() {
-  if (room.round >= TOTAL_ROUNDS) {
+  if (room.round >= totalRounds()) {
     roomRef.update({ phase: 'end' });
   } else {
-    const nextParent = (room.parentIdx + 1) % room.players.length;
-    roomRef.update({ round: room.round + 1, parentIdx: nextParent, phase: 'odai', odai: '', answers: {}, result: null });
+    const len = room.players.length;
+    const nextIdx = (room.parentIdx + 1) % len;
+    roomRef.update({ round: room.round + 1, parentIdx: nextIdx, parent: room.players[nextIdx], phase: 'odai', odai: '', answers: {}, result: null });
   }
-  pickedOdai = ''; answeredFlag = false;
+  pickedOdai = '';
   document.getElementById('oConfirmBtn') && (document.getElementById('oConfirmBtn').disabled = true);
   document.getElementById('oCurrentOdai') && (document.getElementById('oCurrentOdai').textContent = '？？？');
 }
@@ -837,6 +962,7 @@ function nextRound() {
 function renderEnd() {
   showScreen('endScreen');
   document.getElementById('eRoomCode').textContent = roomCode;
+  document.getElementById('eSub').textContent = `全${totalRounds()}ラウンド終了！`;
   const ranked = room.players.slice().sort((a, b) => (room.scores[b] || 0) - (room.scores[a] || 0));
   const medals = ['🥇','🥈','🥉'];
   document.getElementById('eRanking').innerHTML = ranked.map((n, i) => {
@@ -853,29 +979,30 @@ function renderEnd() {
 }
 function playAgain() {
   const scores = {}; room.players.forEach(p => scores[p] = 0);
-  roomRef.update({ phase: 'waiting', round: 1, parentIdx: 0, odai: '', answers: {}, result: null, scores });
+  roomRef.update({ phase: 'waiting', round: 1, parentIdx: 0, parent: room.players[0], odai: '', answers: {}, result: null, scores, roster: room.players.slice() });
 }
 
 // ══ 退出 ══
 function leaveRoom() {
   if (!roomRef) { backToLobby(); return; }
-  const players = room.players.filter(p => p !== myName);
-  const scores = Object.assign({}, room.scores); delete scores[myName];
-  const updates = {};
-  if (players.length === 0) {
-    roomRef.remove().finally(backToLobby);
+  // 承認待ち中なら pending を消すだけ
+  if (room && !isMember()) {
+    roomRef.child('pending/' + myName).remove().finally(backToLobby);
     return;
   }
-  updates.players = players;
-  updates.scores = scores;
+  const players = (room.players || []).filter(p => p !== myName);
+  const scores = Object.assign({}, room.scores); delete scores[myName];
+  if (players.length === 0) { roomRef.remove().finally(backToLobby); return; }
+  const updates = { players, scores };
   if (room.host === myName) updates.host = players[0];
   if (room.parentIdx >= players.length) updates.parentIdx = 0;
   roomRef.update(updates).finally(backToLobby);
 }
 function backToLobby() {
   if (roomRef) { roomRef.off(); roomRef = null; }
-  room = null; roomCode = ''; answeredFlag = false; pickedOdai = '';
-  sessionStorage.removeItem(SS_ROOM);
+  room = null; roomCode = ''; answeredRound = 0; pickedOdai = '';
+  document.getElementById('hostBanner').classList.add('hidden');
+  localStorage.removeItem(LS_ROOM);
   showScreen('lobbyScreen');
 }
 
@@ -891,14 +1018,17 @@ document.getElementById('oManualInput').addEventListener('keydown', e => { if (e
 // ══ 起動 ══
 window.addEventListener('DOMContentLoaded', () => {
   if (!fbReady) { showScreen('configScreen'); return; }
-  // セッション復帰
-  const sName = sessionStorage.getItem(SS_NAME);
-  const sRoom = sessionStorage.getItem(SS_ROOM);
+  // 再接続（端末を閉じても復帰できるよう localStorage を使用）
+  const sName = localStorage.getItem(LS_NAME);
+  const sRoom = localStorage.getItem(LS_ROOM);
   if (sName && sRoom) {
     myName = sName; roomCode = sRoom;
     db.ref('rooms/' + sRoom).get().then(snap => {
-      if (snap.exists() && (snap.val().players || []).includes(sName)) subscribeRoom();
-      else { sessionStorage.removeItem(SS_ROOM); document.getElementById('nameInput').value = sName; showScreen('lobbyScreen'); }
+      const r = snap.exists() ? snap.val() : null;
+      const member = r && (r.players || []).includes(sName);
+      const pending = r && r.pending && r.pending[sName];
+      if (member || pending) subscribeRoom();   // どのフェーズでも再接続OK
+      else { localStorage.removeItem(LS_ROOM); document.getElementById('nameInput').value = sName; showScreen('lobbyScreen'); }
     }).catch(() => showScreen('lobbyScreen'));
   } else {
     if (sName) document.getElementById('nameInput').value = sName;
