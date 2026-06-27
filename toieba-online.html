@@ -606,7 +606,7 @@ async function aiGroupArr(children) {
   const answers = {};
   children.forEach(c => answers[c] = room.answers[c]);
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 25000);
+  const timer = setTimeout(() => ctrl.abort(), 30000);
   try {
     const res = await fetch(AI_MATCH_URL, {
       method: 'POST',
@@ -614,22 +614,27 @@ async function aiGroupArr(children) {
       body: JSON.stringify({ odai: room.odai, answers }),
       signal: ctrl.signal,
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.log('[AI] 応答エラー status=', res.status); return null; }
     const data = await res.json();
     const aiGroups = data.groups;
+    console.log('[AI] groups=', JSON.stringify(aiGroups), ' children=', JSON.stringify(children));
     if (!Array.isArray(aiGroups)) return null;
-    // 検証：全員がちょうど1回ずつ含まれること
-    const seen = new Set();
-    let ok = true;
+    // AIのグループ分けを採用しつつ、有効な子だけ残す（落とした子は単独グループに補完）
+    const childSet = new Set(children);
+    const used = new Set();
+    const groups = [];
     aiGroups.forEach(g => {
-      if (!Array.isArray(g)) { ok = false; return; }
-      g.forEach(n => { if (!children.includes(n) || seen.has(n)) ok = false; seen.add(n); });
+      if (!Array.isArray(g)) return;
+      const valid = [];
+      g.forEach(n => { if (childSet.has(n) && !used.has(n)) { used.add(n); valid.push(n); } });
+      if (valid.length) groups.push(valid);
     });
-    if (!ok || seen.size !== children.length) return null;
-    return aiGroups.filter(g => g.length > 0)
-      .map(g => ({ rep: room.answers[g[0]], names: g, size: g.length }))
+    children.forEach(c => { if (!used.has(c)) groups.push([c]); });  // AIが触れなかった人は単独
+    if (!groups.length) return null;
+    return groups.map(g => ({ rep: room.answers[g[0]], names: g, size: g.length }))
       .sort((a, b) => b.size - a.size);
-  } catch {
+  } catch (e) {
+    console.log('[AI] 失敗', e && e.name, e && e.message);
     return null;
   } finally {
     clearTimeout(timer);
