@@ -573,12 +573,14 @@ async function hostAutoCompute() {
 
   // AIで同義判定 → 失敗時は文字正規化にフォールバック
   let groupArr = await aiGroupArr(children);
+  const method = groupArr ? 'ai' : 'text';
   if (!groupArr) groupArr = groupArrByNormalize(children);
 
   // 計算中に他イベントで既に確定していないか再確認
   if (room.phase !== 'answering' || room.result) { computingResult = false; return; }
 
   const res = scoreGroups(children, groupArr);
+  res.method = method;
   const newScores = Object.assign({}, room.scores);
   for (const [n, d] of Object.entries(res.delta)) newScores[n] = (newScores[n] || 0) + d;
   roomRef.update({ result: res, scores: newScores, phase: 'result' })
@@ -604,7 +606,7 @@ async function aiGroupArr(children) {
   const answers = {};
   children.forEach(c => answers[c] = room.answers[c]);
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000);
+  const timer = setTimeout(() => ctrl.abort(), 25000);
   try {
     const res = await fetch(AI_MATCH_URL, {
       method: 'POST',
@@ -902,7 +904,8 @@ function renderResult() {
   tEl.className = 'result-type rt-' + (res.type || '');
   void tEl.offsetWidth;
   tEl.classList.add('animate');
-  document.getElementById('rOdai').textContent = `お題：「${res.odai || room.odai}」と言えば？`;
+  document.getElementById('rOdai').innerHTML = escapeHtml(`お題：「${res.odai || room.odai}」と言えば？`)
+    + ` <span style="opacity:0.85;font-size:11px">${res.method === 'ai' ? '🤖 AIで判定' : '🔤 文字で判定'}</span>`;
 
   document.getElementById('rGroups').innerHTML = (res.groups || []).map((g, i) => {
     const matched = g.size >= 2;
