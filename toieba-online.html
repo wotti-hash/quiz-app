@@ -565,16 +565,21 @@ async function hostAutoCompute() {
   if (answered.length < children.length || children.length < 2) return;
   computingResult = true;
 
-  // AI判定中の表示（ホストのみ）
-  if (AI_MATCH_URL && amParent()) {
-    const el = document.getElementById('aProgressParent');
-    if (el) el.textContent = '🤖 AIが回答を判定中…';
+  // 高速化：文字一致だけで全員同じ（1グループ）になるなら AI を呼ばず即決
+  const normGroups = groupArrByNormalize(children);
+  let groupArr, method;
+  if (normGroups.length <= 1) {
+    groupArr = normGroups; method = 'text';
+  } else {
+    if (AI_MATCH_URL && amParent()) {
+      const el = document.getElementById('aProgressParent');
+      if (el) el.textContent = '🤖 AIが回答を判定中…';
+    }
+    // AIで同義判定 → 失敗時は文字正規化にフォールバック
+    groupArr = await aiGroupArr(children);
+    method = groupArr ? 'ai' : 'text';
+    if (!groupArr) groupArr = normGroups;
   }
-
-  // AIで同義判定 → 失敗時は文字正規化にフォールバック
-  let groupArr = await aiGroupArr(children);
-  const method = groupArr ? 'ai' : 'text';
-  if (!groupArr) groupArr = groupArrByNormalize(children);
 
   // 計算中に他イベントで既に確定していないか再確認
   if (room.phase !== 'answering' || room.result) { computingResult = false; return; }
