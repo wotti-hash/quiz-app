@@ -133,7 +133,9 @@ body {
 .group-card.matched { border-color: rgba(68,221,153,0.4); background: rgba(68,221,153,0.07); }
 .gc-answer { font-size: 16px; font-weight: 700; }
 .gc-answer .gc-count { font-size: 12px; color: var(--green); margin-left: 8px; }
-.gc-names { font-size: 12px; color: var(--sub); margin-top: 4px; }
+.gc-names { font-size: 12px; color: var(--sub); margin-top: 4px; line-height: 1.7; }
+.gc-orig { color: #cfc3e6; font-weight: 700; }
+.gc-read { color: var(--green); font-weight: 700; }
 .delta-list { margin-top: 6px; }
 .delta-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); margin-bottom: 6px; font-size: 14px; }
 .delta-pts { font-weight: 900; }
@@ -586,6 +588,9 @@ async function hostAutoCompute() {
 
   const res = scoreGroups(children, groupArr);
   res.method = method;
+  // 各人の元の回答をスナップショット保存（結果画面で「元の回答」を必ず表示できるように）
+  res.answers = {};
+  children.forEach(c => { res.answers[c] = room.answers[c]; });
   const newScores = Object.assign({}, room.scores);
   for (const [n, d] of Object.entries(res.delta)) newScores[n] = (newScores[n] || 0) + d;
   roomRef.update({ result: res, scores: newScores, phase: 'result' })
@@ -917,12 +922,25 @@ function renderResult() {
   document.getElementById('rOdai').innerHTML = escapeHtml(`お題：「${res.odai || room.odai}」と言えば？`)
     + ` <span style="opacity:0.85;font-size:11px">${res.method === 'ai' ? '🤖 AIで判定' : '🔤 文字で判定'}</span>`;
 
+  // 各人の元の回答（スナップショット優先、無ければ現在のroom.answers）
+  const ansOf = n => {
+    const a = (res.answers && res.answers[n] != null) ? res.answers[n]
+            : (room.answers && room.answers[n] != null ? room.answers[n] : '');
+    return '' + a;
+  };
   document.getElementById('rGroups').innerHTML = (res.groups || []).map((g, i) => {
     const matched = g.size >= 2;
     const count = matched ? `<span class="gc-count">${g.size}人一致</span>` : '';
+    // メンバーごとに「名前：元の回答（AIが別の言葉に読み替えた場合は →「代表語」を併記）」
+    const namesHtml = g.names.map(n => {
+      const orig = ansOf(n);
+      const readAs = (g.rep != null && orig !== ('' + g.rep))
+        ? ` <span class="gc-read">→「${escapeHtml('' + g.rep)}」</span>` : '';
+      return `${escapeHtml(n)}<span class="gc-orig">（${escapeHtml(orig)}${readAs}）</span>`;
+    }).join('、');
     return `<div class="group-card ${matched ? 'matched' : ''} gc-animate" style="animation-delay:${(i * 0.12).toFixed(2)}s">
-      <div class="gc-answer">${escapeHtml(g.rep)}${count}</div>
-      <div class="gc-names">${g.names.map(escapeHtml).join('、')}</div>
+      <div class="gc-answer">${escapeHtml('' + g.rep)}${count}</div>
+      <div class="gc-names">${namesHtml}</div>
     </div>`;
   }).join('');
 
