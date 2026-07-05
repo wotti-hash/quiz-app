@@ -217,7 +217,7 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
     <div class="card">
       <div class="section-label">ルームコードで参加する</div>
       <div class="row">
-        <input id="codeInput" class="input" type="text" placeholder="6桁コード" maxlength="6" style="text-transform:uppercase;letter-spacing:3px;text-align:center">
+        <input id="codeInput" class="input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="数字6桁" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="letter-spacing:6px;text-align:center;font-size:22px">
         <button class="btn btn-secondary" style="width:auto;padding:13px 20px;white-space:nowrap" onclick="joinRoom()">参加</button>
       </div>
     </div>
@@ -460,7 +460,7 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 function genCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const chars = '0123456789';  // 入力を簡単にするため数字6桁
   let s = '';
   for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
   return s;
@@ -512,9 +512,9 @@ function createRoom() {
 function joinRoom() {
   if (!fbReady) { toast('Firebase未設定です'); return; }
   const name = document.getElementById('nameInput').value.trim();
-  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  const code = document.getElementById('codeInput').value.trim().replace(/[^0-9]/g, '');
   if (!name) { toast('名前を入力してください'); return; }
-  if (code.length !== 6) { toast('6桁のコードを入力してください'); return; }
+  if (!/^[0-9]{6}$/.test(code)) { toast('数字6桁のコードを入力してください'); return; }
   const ref = db.ref('rooms/' + code);
   ref.get().then(snap => {
     if (!snap.exists()) { toast('そのルームは見つかりません'); return; }
