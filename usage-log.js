@@ -56,15 +56,22 @@
     s.onload = cb; s.onerror = function () {}; document.head.appendChild(s);
   }
   function ensureFirebase(cb) {
-    if (window.firebase && window.firebase.database) return init(cb);
+    if (window.firebase && window.firebase.database && window.firebase.auth) return init(cb);
     loadScript(SDK + 'firebase-app-compat.js', function () {
-      loadScript(SDK + 'firebase-database-compat.js', function () { init(cb); });
+      loadScript(SDK + 'firebase-auth-compat.js', function () {
+        loadScript(SDK + 'firebase-database-compat.js', function () { init(cb); });
+      });
     });
   }
   function init(cb) {
     try {
       if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
-      cb();
+      // 匿名認証が成立してからDBへ書き込む（ルールが auth != null を要求するため）。cbは認証成立後に一度だけ発火。
+      var fired = false;
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user && !fired) { fired = true; cb(); }
+      });
+      firebase.auth().signInAnonymously().catch(function () {});
     } catch (e) {}
   }
 

@@ -384,6 +384,7 @@ code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px;
 
 <!-- Firebase SDK (CDN / compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
@@ -431,12 +432,17 @@ const ODAI_BANK = {
 const ALL_CATS = Object.keys(ODAI_BANK);
 
 // ══ Firebase 初期化 ══
-let db = null, fbReady = false;
+// fbReady はDB操作の可否ゲート。ルールが auth != null を要求するため、匿名認証が成立するまで true にしない。
+let db = null, fbReady = false, domReady = false, appStarted = false;
 try {
   if (firebaseConfig.databaseURL && firebaseConfig.databaseURL.startsWith('http')) {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
-    fbReady = true;
+    // 匿名サインイン → 認証成立後に fbReady を立てて起動処理へ
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (user) { fbReady = true; maybeStart(); }
+    });
+    firebase.auth().signInAnonymously().catch(function (e) { console.error(e); });
   }
 } catch (e) { console.error(e); fbReady = false; }
 
@@ -1047,8 +1053,11 @@ document.getElementById('answerInput').addEventListener('keydown', e => { if (e.
 document.getElementById('oManualInput').addEventListener('keydown', e => { if (e.key === 'Enter') useManualOdai(); });
 
 // ══ 起動 ══
-window.addEventListener('DOMContentLoaded', () => {
-  if (!fbReady) { showScreen('configScreen'); return; }
+// DOM構築完了(domReady)と匿名認証成立(fbReady)の両方が揃ってから startApp() を1回だけ実行する。
+// どちらの順で完了しても maybeStart() が最後の一方で発火する。
+function startApp() {
+  if (appStarted) return;
+  appStarted = true;
   // 再接続（端末を閉じても復帰できるよう localStorage を使用）
   const sName = localStorage.getItem(LS_NAME);
   const sRoom = localStorage.getItem(LS_ROOM);
@@ -1065,7 +1074,19 @@ window.addEventListener('DOMContentLoaded', () => {
     if (sName) document.getElementById('nameInput').value = sName;
     showScreen('lobbyScreen');
   }
-});
+}
+function maybeStart() {
+  if (!domReady) return;
+  if (!db) { showScreen('configScreen'); return; }   // 接続情報未設定/初期化失敗
+  if (!fbReady) {                                     // 認証待ち：ロビーだけ先に見せる（DB操作は各所 fbReady でガード済み）
+    const sName = localStorage.getItem(LS_NAME);
+    if (sName) document.getElementById('nameInput').value = sName;
+    showScreen('lobbyScreen');
+    return;
+  }
+  startApp();
+}
+window.addEventListener('DOMContentLoaded', () => { domReady = true; maybeStart(); });
 </script>
 <script src="usage-log.js"></script>
 </body>

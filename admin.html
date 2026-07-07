@@ -89,6 +89,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 // パスコード（空なら無し）。設定すると開くときに入力を求めます。
@@ -236,7 +237,13 @@ function exportCsv() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quizhub_usage.csv'; a.click();
 }
 
-if (db) reload();
+// 匿名認証が成立してから読み込む（ルールが usage の read に auth != null を要求するため）
+if (db) {
+  firebase.auth().onAuthStateChanged(function (user) { if (user) reload(); });
+  firebase.auth().signInAnonymously().catch(function (e) {
+    document.getElementById('logBody').innerHTML = '<tr><td colspan="4" class="empty">認証エラー（読み込めません）</td></tr>';
+  });
+}
 </script>
 </body>
 </html>
