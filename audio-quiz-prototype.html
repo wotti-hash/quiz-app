@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v6";
+  const APP_VERSION = "v7";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -486,8 +486,6 @@
 
   let micPermissionPrimed = false;
   function primeMicPermission() {
-    // 初回は「マイク許可ダイアログの表示」と「認識開始」のタイミングが重なり
-    // abortedになりやすいため、クイズ開始時点で先に許可を確定させておく
     if (micPermissionPrimed || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
     micPermissionPrimed = true;
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -495,9 +493,29 @@
       .catch(() => { micPermissionPrimed = false; });
   }
 
+  let speechPermissionPrimed = false;
+  function primeSpeechRecognitionPermission() {
+    // iOSは「マイク」とは別に「音声認識」自体の許可ダイアログが独立して存在し、
+    // これが初回の認識開始時に割り込むとabortedになりやすい。
+    // 捨て駒のセッションを先に起動してこの許可を先に消化させておく。
+    if (speechPermissionPrimed || !SpeechRecognitionCtor) return;
+    speechPermissionPrimed = true;
+    try {
+      const primer = createRecognition();
+      primer.onerror = () => {};
+      primer.onend = () => {};
+      primer.onresult = () => {};
+      primer.start();
+      setTimeout(() => { try { primer.abort(); } catch (e) {} }, 300);
+    } catch (e) {
+      speechPermissionPrimed = false;
+    }
+  }
+
   function startQuizVoice() {
     state = STATE.ARMED;
     primeMicPermission();
+    primeSpeechRecognitionPermission();
     currentQ = pickQuestion();
     statusBig.textContent = "出題中…（画面を押し続けると回答）";
     statusSub.textContent = "選択肢の言葉（例：東京）で答えてください。話し終えたら指を離す";
