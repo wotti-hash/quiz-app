@@ -248,6 +248,9 @@
     <button id="micTestBtn" type="button">🎤 マイク許可</button>
   </div>
   <div id="micStatusRow"><span id="micStatus"></span></div>
+  <div id="startQuizRow" style="display:none; padding: 0 20px 10px;">
+    <button id="startQuizBtn" type="button" style="width:100%; background: var(--accent-dim); color: var(--ink); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; font-size: 16px; font-family: var(--sans);">🎯 クイズ開始</button>
+  </div>
 
   <div id="stage">
     <div id="dirlabels">
@@ -444,8 +447,7 @@
       dot.className = "";
       ring1.classList.remove("pulse");
       ring2.classList.remove("pulse");
-      statusBig.textContent = "画面のどこでもいいので長押ししてください";
-      statusSub.textContent = "長押し → 出題開始 → 上下左右にフリックで回答";
+      updateAnswerModeUI();
     }, delay || 0);
   }
 
@@ -476,9 +478,25 @@
       : `問題。${currentQ.q}。 ${optText}`;
     speak(fullText, () => {
       questionStartTime = performance.now();
-      if (answerMode === "voice") startVoiceListening();
     });
   }
+
+  function startQuizVoice() {
+    state = STATE.ARMED;
+    currentQ = pickQuestion();
+    statusBig.textContent = "出題中…（画面を押し続けると回答）";
+    statusSub.textContent = "話し終えたら指を離してください";
+    micStatus.textContent = "";
+    const optText = currentQ.opts.map((o, i) => `${LETTERS[i]}、${o}`).join("。 ");
+    const fullText = readOrder === "opts-first"
+      ? `選択肢。 ${optText}。 問題。${currentQ.q}`
+      : `問題。${currentQ.q}。 ${optText}`;
+    speak(fullText, () => {
+      questionStartTime = performance.now();
+    });
+  }
+  document.getElementById("startQuizBtn").addEventListener("click", startQuizVoice);
+
 
   function judgeDirection(dx, dy) {
     if (Math.abs(dx) > Math.abs(dy)) {
@@ -523,11 +541,30 @@
     }
   }
 
+  const startQuizRow = document.getElementById("startQuizRow");
+  function updateAnswerModeUI() {
+    const isVoice = answerMode === "voice";
+    startQuizRow.style.display = isVoice ? "block" : "none";
+    if (isVoice) {
+      statusBig.textContent = "「クイズ開始」を押してください";
+      statusSub.textContent = "出題中に画面を押し続けると回答を受け付けます（離すと確定）";
+    } else {
+      statusBig.textContent = "画面のどこでもいいので長押ししてください";
+      statusSub.textContent = "長押し → 出題開始 → 上下左右にフリックで回答";
+    }
+  }
+
   answerModeSelect.addEventListener("change", () => {
     answerMode = answerModeSelect.value;
     localStorage.setItem(ANSWER_MODE_KEY, answerMode);
     stopRecognitionIfActive();
+    state = STATE.IDLE;
+    dot.className = "";
+    ring1.classList.remove("pulse");
+    ring2.classList.remove("pulse");
+    updateAnswerModeUI();
   });
+  updateAnswerModeUI();
 
   micTestBtn.addEventListener("click", () => {
     if (!recognition) return;
@@ -592,40 +629,45 @@
     return -1;
   }
 
-  function startVoiceListening() {
-    if (!recognition) return;
-    recognitionActive = true;
+  function startPushToTalk() {
+    if (!recognition || state !== STATE.ARMED) return;
+    window.speechSynthesis.cancel(); // 回答開始で読み上げは即停止
     clearTimeout(voiceListenTimeoutId);
-    voiceListenTimeoutId = setTimeout(() => {
-      if (state === STATE.ARMED) {
-        micStatus.textContent = "20秒応答がなかったためリセットしました";
-        forceReset();
-      }
-    }, 20000);
     recognition.onresult = (e) => {
       let idx = -1;
       for (let r = 0; r < e.results[0].length; r++) {
         idx = matchIndexFromTranscript(e.results[0][r].transcript);
         if (idx !== -1) break;
       }
-      micStatus.textContent = idx !== -1 ? "認識: " + LETTERS[idx] : "聞き取れませんでした（もう一度）";
-      if (idx !== -1 && state === STATE.ARMED) answer(idx);
+      if (idx !== -1 && state === STATE.ARMED) {
+        answer(idx);
+      } else {
+        micStatus.textContent = "聞き取れませんでした。もう一度押して話してください";
+        dot.classList.remove("armed");
+      }
     };
     recognition.onerror = (e) => {
+      recognitionActive = false;
       micStatus.textContent = "音声認識エラー: " + e.error;
+      dot.classList.remove("armed");
     };
     recognition.onend = () => {
-      recognitionActive = false;
-      // 回答が確定していなければ聞き取りを再開する（無音区切りで自動停止する端末があるため）
-      if (state === STATE.ARMED && answerMode === "voice") {
-        try { recognition.start(); recognitionActive = true; } catch (e) {}
-      }
+      recognitionActive = false; // push-to-talkなので自動再開はしない
     };
     try {
       recognition.start();
-      micStatus.textContent = "聞き取り中…（A〜D、または選択肢の言葉を話してください）";
+      recognitionActive = true;
+      micStatus.textContent = "聞き取り中…（指を離すと確定）";
+      dot.classList.add("armed");
     } catch (e) {
       micStatus.textContent = "マイクを開始できません: " + e.message;
+    }
+  }
+
+  function stopPushToTalk() {
+    if (recognition && recognitionActive) {
+      try { recognition.stop(); } catch (e) {}
+      micStatus.textContent = "認識中…";
     }
   }
 
@@ -675,6 +717,20 @@
   stage.addEventListener("touchstart", (e) => {
     if (state === STATE.ANSWERED) return; // 結果読み上げ中は無視
     if (!audioUnlocked) unlockAudio("画面タッチ");
+
+    if (answerMode === "voice") {
+      if (state === STATE.ARMED) {
+        const t = e.touches[0];
+        dot.style.left = t.clientX + "px";
+        dot.style.top = t.clientY + "px";
+        dot.style.transform = "translate(-50%, -50%)";
+        startPushToTalk();
+      } else {
+        micStatus.textContent = "先に「クイズ開始」を押してください";
+      }
+      return;
+    }
+
     window.speechSynthesis.cancel();
     const t = e.touches[0];
     touchStartX = t.clientX;
@@ -697,6 +753,7 @@
   }, { passive: true });
 
   stage.addEventListener("touchmove", (e) => {
+    if (answerMode === "voice") return; // push-to-talkでは移動は見ない
     const t = e.touches[0];
     const dx = t.clientX - touchStartX;
     const dy = t.clientY - touchStartY;
@@ -715,11 +772,16 @@
   }, { passive: true });
 
   stage.addEventListener("touchend", () => {
+    if (answerMode === "voice") {
+      stopPushToTalk();
+      return;
+    }
     clearTimeout(longPressTimer);
     if (state === STATE.ARMING) {
       state = STATE.IDLE; // 離すのが早すぎた
     }
   });
+
 })();
 </script>
 </body>
