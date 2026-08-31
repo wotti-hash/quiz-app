@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v2";
+  const APP_VERSION = "v3";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -570,7 +570,8 @@
   updateAnswerModeUI();
 
   micTestBtn.addEventListener("click", () => {
-    if (!recognition) return;
+    if (!SpeechRecognitionCtor) return;
+    recognition = createRecognition(); // 使い回しによる already started エラーを避ける
     micStatus.textContent = "マイク許可を確認中…";
     let responded = false;
     const stuckTimer = setTimeout(() => {
@@ -633,9 +634,12 @@
   }
 
   function startPushToTalk() {
-    if (!recognition || state !== STATE.ARMED) return;
+    if (!SpeechRecognitionCtor || state !== STATE.ARMED) return;
     window.speechSynthesis.cancel(); // 回答開始で読み上げは即停止
     clearTimeout(voiceListenTimeoutId);
+    // 直前のセッションが内部的に完全終了していない場合に「already started」エラーになるのを
+    // 避けるため、話すたびに新しい認識オブジェクトを作り直す
+    recognition = createRecognition();
     let lastInterim = "";
     let resolved = false;
 
