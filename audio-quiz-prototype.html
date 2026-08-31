@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v9";
+  const APP_VERSION = "v10";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -585,10 +585,9 @@
   });
   updateAnswerModeUI();
 
-  micTestBtn.addEventListener("click", () => {
-    if (!SpeechRecognitionCtor) return;
+  function runMicTest(isRetry) {
     recognition = createRecognition(); // 使い回しによる already started エラーを避ける
-    micStatus.textContent = "マイク許可を確認中…";
+    micStatus.textContent = isRetry ? "マイク許可を確認中…" : "マイク許可を確認中…";
     let responded = false;
     const stuckTimer = setTimeout(() => {
       if (!responded) {
@@ -602,7 +601,17 @@
       speechPermissionPrimed = true;
       localStorage.setItem(SPEECH_PERM_KEY, "1");
     };
-    recognition.onerror = (e) => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "エラー: " + e.error; };
+    recognition.onerror = (e) => {
+      responded = true;
+      clearTimeout(stuckTimer);
+      if (e.error === "aborted" && !isRetry) {
+        // 初回のabortedはOSの許可ダイアログとの衝突でよく起きるため、
+        // ユーザーに見せず裏で自動的にもう一度だけ試す
+        setTimeout(() => runMicTest(true), 400);
+        return;
+      }
+      micStatus.textContent = "エラー: " + e.error;
+    };
     recognition.onresult = (e) => {
       const heard = e.results[0][0].transcript;
       micStatus.textContent = "認識結果: 「" + heard + "」";
@@ -622,6 +631,10 @@
       clearTimeout(stuckTimer);
       micStatus.textContent = "エラー: " + e.message;
     }
+  }
+  micTestBtn.addEventListener("click", () => {
+    if (!SpeechRecognitionCtor) return;
+    runMicTest(false);
   });
 
   function stopRecognitionIfActive() {
@@ -660,9 +673,9 @@
 
   let pendingStartTimer = null;
 
-  function startPushToTalk() {
+  function startPushToTalk(isRetry) {
     if (!SpeechRecognitionCtor || state !== STATE.ARMED) return;
-    window.speechSynthesis.cancel(); // 回答開始で読み上げは即停止
+    if (!isRetry) window.speechSynthesis.cancel(); // 回答開始で読み上げは即停止
     clearTimeout(voiceListenTimeoutId);
     // 直前のセッションが内部的に完全終了していない場合に「already started」エラーになるのを
     // 避けるため、話すたびに新しい認識オブジェクトを作り直す
@@ -715,6 +728,16 @@
     };
     recognition.onerror = (e) => {
       if (resolved) return;
+      if (e.error === "aborted" && !isRetry) {
+        // 初回のabortedはOSの許可ダイアログとの衝突でよく起きるため、
+        // ユーザーに見せず裏で自動的にもう一度だけ試す
+        resolved = true;
+        recognitionActive = false;
+        setTimeout(() => {
+          if (state === STATE.ARMED) startPushToTalk(true);
+        }, 400);
+        return;
+      }
       resolved = true;
       recognitionActive = false;
       clearTimeout(voiceListenTimeoutId);
