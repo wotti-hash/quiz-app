@@ -639,6 +639,11 @@
         idx = matchIndexFromTranscript(e.results[0][r].transcript);
         if (idx !== -1) break;
       }
+      // 認識確定後にonerror/onendが二重発火して結果表示を上書きしないよう、
+      // ここでハンドラを切り離してから後続処理に進む
+      recognitionActive = false;
+      recognition.onerror = null;
+      recognition.onend = null;
       if (idx !== -1 && state === STATE.ARMED) {
         answer(idx);
       } else {
