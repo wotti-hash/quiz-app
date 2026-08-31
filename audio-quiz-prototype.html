@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v5";
+  const APP_VERSION = "v6";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -648,6 +648,8 @@
     return -1;
   }
 
+  let pendingStartTimer = null;
+
   function startPushToTalk() {
     if (!SpeechRecognitionCtor || state !== STATE.ARMED) return;
     window.speechSynthesis.cancel(); // 回答開始で読み上げは即停止
@@ -716,16 +718,33 @@
       finalize(lastInterimIdx, "onend-fallback");
     };
     try {
-      recognition.start();
-      recognitionActive = true;
-      micStatus.textContent = "聞き取り中…（指を離すと確定）";
-      dot.classList.add("armed");
+      micStatus.textContent = "準備中…";
+      pendingStartTimer = setTimeout(() => {
+        pendingStartTimer = null;
+        // クイズがまだ有効なタイミングでのみ開始する（連打等での競合防止）
+        if (state !== STATE.ARMED || resolved) return;
+        try {
+          recognition.start();
+          recognitionActive = true;
+          micStatus.textContent = "聞き取り中…（指を離すと確定）";
+          dot.classList.add("armed");
+        } catch (e2) {
+          micStatus.textContent = "マイクを開始できません: " + e2.message;
+        }
+      }, 200);
     } catch (e) {
       micStatus.textContent = "マイクを開始できません: " + e.message;
     }
   }
 
   function stopPushToTalk() {
+    if (pendingStartTimer) {
+      // まだ実際の認識開始前（準備中の遅延待ち）に離した場合はそのままキャンセル
+      clearTimeout(pendingStartTimer);
+      pendingStartTimer = null;
+      micStatus.textContent = "短すぎたため取り消しました。もう一度押して話してください";
+      return;
+    }
     if (recognition && recognitionActive) {
       try { recognition.stop(); } catch (e) {}
       micStatus.textContent = "認識中…";
