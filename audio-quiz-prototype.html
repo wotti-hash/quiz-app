@@ -644,6 +644,7 @@
       recognitionActive = false;
       recognition.onerror = null;
       recognition.onend = null;
+      clearTimeout(voiceListenTimeoutId);
       if (idx !== -1 && state === STATE.ARMED) {
         answer(idx);
       } else {
@@ -653,11 +654,17 @@
     };
     recognition.onerror = (e) => {
       recognitionActive = false;
+      clearTimeout(voiceListenTimeoutId);
       micStatus.textContent = "音声認識エラー: " + e.error;
       dot.classList.remove("armed");
     };
     recognition.onend = () => {
-      recognitionActive = false; // push-to-talkなので自動再開はしない
+      recognitionActive = false;
+      clearTimeout(voiceListenTimeoutId);
+      // ここに到達するのはonresultが一度も呼ばれなかった場合のみ
+      // （結果が取れた場合はonresult内でonendをnull化して二重処理を防いでいる）
+      micStatus.textContent = "何も聞き取れませんでした。もう一度押して話してください";
+      dot.classList.remove("armed");
     };
     try {
       recognition.start();
@@ -673,6 +680,13 @@
     if (recognition && recognitionActive) {
       try { recognition.stop(); } catch (e) {}
       micStatus.textContent = "認識中…";
+      clearTimeout(voiceListenTimeoutId);
+      voiceListenTimeoutId = setTimeout(() => {
+        if (state === STATE.ARMED && /^認識中/.test(micStatus.textContent)) {
+          micStatus.textContent = "応答がありませんでした。もう一度押して話してください";
+          dot.classList.remove("armed");
+        }
+      }, 8000);
     }
   }
 
