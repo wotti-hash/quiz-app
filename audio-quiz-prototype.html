@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v3";
+  const APP_VERSION = "v4";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -488,7 +488,7 @@
     state = STATE.ARMED;
     currentQ = pickQuestion();
     statusBig.textContent = "出題中…（画面を押し続けると回答）";
-    statusSub.textContent = "話し終えたら指を離してください";
+    statusSub.textContent = "選択肢の言葉（例：東京）で答えてください。話し終えたら指を離す";
     micStatus.textContent = "";
     const optText = currentQ.opts.map((o, i) => `${LETTERS[i]}、${o}`).join("。 ");
     const fullText = readOrder === "opts-first"
@@ -619,16 +619,19 @@
 
   function matchIndexFromTranscript(transcript) {
     const t = transcript.toLowerCase().replace(/\s/g, "");
-    for (let i = 0; i < LETTERS.length; i++) {
-      const letter = LETTERS[i];
-      const keywords = VOICE_LETTER_MAP[letter].map(k => k.toLowerCase());
-      if (keywords.some(k => t.includes(k.toLowerCase()))) return i;
-    }
-    // 選択肢の単語そのものが聞き取れた場合もマッチさせる
+    if (!t) return -1;
+    // 選択肢の単語（情報量が多く誤判定しにくい）を優先してチェック
     if (currentQ) {
       for (let i = 0; i < currentQ.opts.length; i++) {
         if (t.includes(currentQ.opts[i].toLowerCase())) return i;
       }
+    }
+    // 文字/読みは完全一致のみ許可。「あ」等の1文字を部分一致にすると
+    // ほぼ全ての発話が誤って「A」判定されてしまうため
+    for (let i = 0; i < LETTERS.length; i++) {
+      const letter = LETTERS[i];
+      const keywords = VOICE_LETTER_MAP[letter].map(k => k.toLowerCase());
+      if (keywords.some(k => t === k)) return i;
     }
     return -1;
   }
@@ -641,6 +644,7 @@
     // 避けるため、話すたびに新しい認識オブジェクトを作り直す
     recognition = createRecognition();
     let lastInterim = "";
+    let lastInterimIdx = -1;
     let resolved = false;
 
     function finalize(idxCandidate, sourceLabel) {
@@ -661,14 +665,26 @@
       }
     }
 
+    // 1位の候補だけでなく、maxAlternatives分すべての候補をチェックする
+    function bestMatchInResult(result) {
+      let idx = -1;
+      let topTranscript = result[0].transcript;
+      for (let a = 0; a < result.length; a++) {
+        const m = matchIndexFromTranscript(result[a].transcript);
+        if (m !== -1) { idx = m; break; }
+      }
+      return { idx, transcript: topTranscript };
+    }
+
     recognition.onresult = (e) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const transcript = e.results[i][0].transcript;
+        const { idx, transcript } = bestMatchInResult(e.results[i]);
         if (e.results[i].isFinal) {
-          finalize(matchIndexFromTranscript(transcript), "final");
+          finalize(idx, "final");
           return;
         } else {
           lastInterim = transcript;
+          lastInterimIdx = idx;
           micStatus.textContent = "聞き取り中: " + transcript;
         }
       }
@@ -685,7 +701,7 @@
       recognitionActive = false;
       // 確定(isFinal)結果が来ないまま終了した場合は、直前まで拾えていた
       // 中間認識結果（lastInterim）を最後の手段として判定に使う
-      finalize(matchIndexFromTranscript(lastInterim), "onend-fallback");
+      finalize(lastInterimIdx, "onend-fallback");
     };
     try {
       recognition.start();
