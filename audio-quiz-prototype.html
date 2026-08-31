@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v8";
+  const APP_VERSION = "v9";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -493,33 +493,9 @@
       .catch(() => { micPermissionPrimed = false; });
   }
 
-  let speechPermissionPrimed = false;
-  function primeSpeechRecognitionPermission(onDone) {
-    // iOSは「マイク」とは別に「音声認識」自体の許可ダイアログが独立して存在し、
-    // これが初回の認識開始時に割り込むとabortedになりやすい。
-    // 捨て駒のセッションを先に起動してこの許可を先に消化させておく。
-    // また、マイク起動中はTTS音声がダッキング（音量低下）されることがあるため、
-    // 捨て駒セッションが完全に終わってから読み上げを開始する。
-    if (speechPermissionPrimed || !SpeechRecognitionCtor) {
-      onDone();
-      return;
-    }
-    speechPermissionPrimed = true;
-    try {
-      const primer = createRecognition();
-      primer.onerror = () => {};
-      primer.onend = () => {};
-      primer.onresult = () => {};
-      primer.start();
-      setTimeout(() => {
-        try { primer.abort(); } catch (e) {}
-        setTimeout(onDone, 150); // ダッキングが解除されるまで少し待つ
-      }, 300);
-    } catch (e) {
-      speechPermissionPrimed = false;
-      onDone();
-    }
-  }
+  const SPEECH_PERM_KEY = "onsei_quiz_speech_permission_v1";
+  let speechPermissionPrimed = localStorage.getItem(SPEECH_PERM_KEY) === "1";
+
 
   function startQuizVoice() {
     state = STATE.ARMED;
@@ -532,10 +508,8 @@
     const fullText = readOrder === "opts-first"
       ? `選択肢。 ${optText}。 問題。${currentQ.q}`
       : `問題。${currentQ.q}。 ${optText}`;
-    primeSpeechRecognitionPermission(() => {
-      speak(fullText, () => {
-        questionStartTime = performance.now();
-      });
+    speak(fullText, () => {
+      questionStartTime = performance.now();
     });
   }
   document.getElementById("startQuizBtn").addEventListener("click", startQuizVoice);
@@ -590,7 +564,9 @@
     startQuizRow.style.display = isVoice ? "block" : "none";
     if (isVoice) {
       statusBig.textContent = "「クイズ開始」を押してください";
-      statusSub.textContent = "出題中に画面を押し続けると回答を受け付けます（離すと確定）";
+      statusSub.textContent = speechPermissionPrimed
+        ? "出題中に画面を押し続けると回答を受け付けます（離すと確定）"
+        : "初回は先に「🎤 マイク許可」を押しておくとスムーズです";
     } else {
       statusBig.textContent = "画面のどこでもいいので長押ししてください";
       statusSub.textContent = "長押し → 出題開始 → 上下左右にフリックで回答";
@@ -619,7 +595,13 @@
         micStatus.textContent = "応答なし。file://配信の場合はHTTPSでホストして再度お試しください（例: Firebase Hosting等）";
       }
     }, 4000);
-    recognition.onstart = () => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "マイク許可OK。聞き取り中…何か話してください"; };
+    recognition.onstart = () => {
+      responded = true;
+      clearTimeout(stuckTimer);
+      micStatus.textContent = "マイク許可OK。聞き取り中…何か話してください";
+      speechPermissionPrimed = true;
+      localStorage.setItem(SPEECH_PERM_KEY, "1");
+    };
     recognition.onerror = (e) => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "エラー: " + e.error; };
     recognition.onresult = (e) => {
       const heard = e.results[0][0].transcript;
@@ -756,6 +738,8 @@
           recognitionActive = true;
           micStatus.textContent = "聞き取り中…（指を離すと確定）";
           dot.classList.add("armed");
+          speechPermissionPrimed = true;
+          localStorage.setItem(SPEECH_PERM_KEY, "1");
         } catch (e2) {
           micStatus.textContent = "マイクを開始できません: " + e2.message;
         }
