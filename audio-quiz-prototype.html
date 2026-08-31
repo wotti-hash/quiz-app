@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v7";
+  const APP_VERSION = "v8";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -524,7 +524,6 @@
   function startQuizVoice() {
     state = STATE.ARMED;
     primeMicPermission();
-    primeSpeechRecognitionPermission();
     currentQ = pickQuestion();
     statusBig.textContent = "出題中…（画面を押し続けると回答）";
     statusSub.textContent = "選択肢の言葉（例：東京）で答えてください。話し終えたら指を離す";
@@ -533,8 +532,10 @@
     const fullText = readOrder === "opts-first"
       ? `選択肢。 ${optText}。 問題。${currentQ.q}`
       : `問題。${currentQ.q}。 ${optText}`;
-    speak(fullText, () => {
-      questionStartTime = performance.now();
+    primeSpeechRecognitionPermission(() => {
+      speak(fullText, () => {
+        questionStartTime = performance.now();
+      });
     });
   }
   document.getElementById("startQuizBtn").addEventListener("click", startQuizVoice);
