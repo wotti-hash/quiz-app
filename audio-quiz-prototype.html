@@ -494,11 +494,16 @@
   }
 
   let speechPermissionPrimed = false;
-  function primeSpeechRecognitionPermission() {
+  function primeSpeechRecognitionPermission(onDone) {
     // iOSは「マイク」とは別に「音声認識」自体の許可ダイアログが独立して存在し、
     // これが初回の認識開始時に割り込むとabortedになりやすい。
     // 捨て駒のセッションを先に起動してこの許可を先に消化させておく。
-    if (speechPermissionPrimed || !SpeechRecognitionCtor) return;
+    // また、マイク起動中はTTS音声がダッキング（音量低下）されることがあるため、
+    // 捨て駒セッションが完全に終わってから読み上げを開始する。
+    if (speechPermissionPrimed || !SpeechRecognitionCtor) {
+      onDone();
+      return;
+    }
     speechPermissionPrimed = true;
     try {
       const primer = createRecognition();
@@ -506,9 +511,13 @@
       primer.onend = () => {};
       primer.onresult = () => {};
       primer.start();
-      setTimeout(() => { try { primer.abort(); } catch (e) {} }, 300);
+      setTimeout(() => {
+        try { primer.abort(); } catch (e) {}
+        setTimeout(onDone, 150); // ダッキングが解除されるまで少し待つ
+      }, 300);
     } catch (e) {
       speechPermissionPrimed = false;
+      onDone();
     }
   }
 
