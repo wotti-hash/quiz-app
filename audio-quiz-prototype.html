@@ -538,10 +538,22 @@
         micStatus.textContent = "応答なし。file://配信の場合はHTTPSでホストして再度お試しください（例: Firebase Hosting等）";
       }
     }, 4000);
-    recognition.onstart = () => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "マイク許可OK。何か話してみてください"; };
+    recognition.onstart = () => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "マイク許可OK。聞き取り中…何か話してください"; };
     recognition.onerror = (e) => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "エラー: " + e.error; };
+    recognition.onresult = (e) => {
+      const heard = e.results[0][0].transcript;
+      micStatus.textContent = "認識結果: 「" + heard + "」";
+    };
+    recognition.onend = () => {
+      recognitionActive = false;
+      // onresultが呼ばれずに終わった場合（無音のまま終了など）
+      if (!/^認識結果/.test(micStatus.textContent) && responded) {
+        micStatus.textContent = "何も聞き取れませんでした（無音のまま終了）";
+      }
+    };
     try {
       recognition.start();
+      recognitionActive = true;
     } catch (e) {
       responded = true;
       clearTimeout(stuckTimer);
