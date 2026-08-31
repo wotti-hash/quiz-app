@@ -219,7 +219,7 @@
 <body>
 <div id="app">
   <header>
-    <div>音声クイズ / 自己記録</div>
+    <div>音声クイズ / 自己記録 <span id="appVersion" style="opacity:0.6; font-size:11px;"></span></div>
     <div class="stats">正答 <span id="statCorrect">0</span>/<span id="statTotal">0</span> ・ 最速 <span id="statBest">--</span>ms</div>
   </header>
 
@@ -273,6 +273,9 @@
 
 <script>
 (function () {
+  const APP_VERSION = "v1";
+  document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
+
   const stage = document.getElementById('stage');
   const dot = document.getElementById('center-dot');
   const ring1 = document.getElementById('ring1');
