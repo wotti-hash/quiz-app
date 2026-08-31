@@ -273,7 +273,7 @@
 
 <script>
 (function () {
-  const APP_VERSION = "v4";
+  const APP_VERSION = "v5";
   document.getElementById("appVersion").textContent = "(" + APP_VERSION + ")";
 
   const stage = document.getElementById('stage');
@@ -484,8 +484,20 @@
     });
   }
 
+  let micPermissionPrimed = false;
+  function primeMicPermission() {
+    // 初回は「マイク許可ダイアログの表示」と「認識開始」のタイミングが重なり
+    // abortedになりやすいため、クイズ開始時点で先に許可を確定させておく
+    if (micPermissionPrimed || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    micPermissionPrimed = true;
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => { stream.getTracks().forEach((t) => t.stop()); })
+      .catch(() => { micPermissionPrimed = false; });
+  }
+
   function startQuizVoice() {
     state = STATE.ARMED;
+    primeMicPermission();
     currentQ = pickQuestion();
     statusBig.textContent = "出題中…（画面を押し続けると回答）";
     statusSub.textContent = "選択肢の言葉（例：東京）で答えてください。話し終えたら指を離す";
