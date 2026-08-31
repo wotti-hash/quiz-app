@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>音声クイズ プロトタイプ</title>
+<style>
+  :root {
+    --bg: #131319;
+    --bg-soft: #1b1c24;
+    --ink: #ece9f2;
+    --ink-dim: #8b899c;
+    --accent: #7c8cff;
+    --accent-dim: #3d4174;
+    --good: #6fcf97;
+    --bad: #e2604f;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--sans);
+    overscroll-behavior: none;
+    touch-action: none;
+    user-select: none;
+  }
+  #app {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  header {
+    padding: 18px 20px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+  }
+  header .stats span { color: var(--ink); }
+  #stage {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .ring {
+    position: absolute;
+    border: 1px solid var(--accent-dim);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ring.pulse {
+    animation: pulse 1.6s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { width: 60px; height: 60px; opacity: 0.55; }
+    100% { width: 340px; height: 340px; opacity: 0; }
+  }
+  #center-dot {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--ink-dim);
+    transition: background 0.15s, transform 0.15s;
+    pointer-events: none;
+  }
+  #center-dot.armed { background: var(--accent); transform: scale(1.4); }
+  #center-dot.answered.correct { background: var(--good); transform: scale(1.8); }
+  #center-dot.answered.wrong { background: var(--bad); transform: scale(1.8); }
+
+  #status {
+    position: absolute;
+    bottom: 30%;
+    left: 20px; right: 20px;
+    text-align: center;
+    font-size: 15px;
+    color: var(--ink-dim);
+    line-height: 1.6;
+  }
+  #status .big {
+    display: block;
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  #dirlabels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-dim);
+    opacity: 0.5;
+  }
+  #dirlabels span { position: absolute; }
+  .d-up    { top: 14px; left: 50%; transform: translateX(-50%); }
+  .d-down  { bottom: 14px; left: 50%; transform: translateX(-50%); }
+  .d-left  { left: 14px; top: 50%; transform: translateY(-50%); }
+  .d-right { right: 14px; top: 50%; transform: translateY(-50%); }
+
+  footer {
+    padding: 14px 20px 22px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+  #soundcheck {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #testSoundBtn {
+    background: var(--accent-dim);
+    color: var(--ink);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-family: var(--sans);
+  }
+  #soundStatus {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+  #resetBtn {
+    background: var(--bg-soft);
+    color: var(--bad);
+    border: 1px solid var(--bad);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: var(--sans);
+    margin-left: auto;
+  }
+  #voicepicker {
+    padding: 0 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  #voiceSelect {
+    flex: 1;
+    background: var(--bg-soft);
+    color: var(--ink);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  #orderpicker {
+    padding: 0 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  #orderSelect {
+    flex: 1;
+    background: var(--bg-soft);
+    color: var(--ink);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  #answerpicker {
+    padding: 0 20px 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  #answerModeSelect {
+    flex: 1;
+    background: var(--bg-soft);
+    color: var(--ink);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  #micTestBtn {
+    background: var(--accent-dim);
+    color: var(--ink);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: var(--sans);
+    white-space: nowrap;
+  }
+  #micStatusRow {
+    padding: 0 20px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>音声クイズ / 自己記録</div>
+    <div class="stats">正答 <span id="statCorrect">0</span>/<span id="statTotal">0</span> ・ 最速 <span id="statBest">--</span>ms</div>
+  </header>
+
+  <div id="soundcheck">
+    <button id="testSoundBtn" type="button">🔊 音声テスト（まずタップ）</button>
+    <span id="soundStatus">未確認</span>
+    <button id="resetBtn" type="button">🔄 リセット（再読込）</button>
+  </div>
+  <div id="voicepicker">
+    <label for="voiceSelect">声を選択：</label>
+    <select id="voiceSelect"></select>
+  </div>
+  <div id="orderpicker">
+    <label for="orderSelect">読み上げ順：</label>
+    <select id="orderSelect">
+      <option value="q-first">問題 → 選択肢</option>
+      <option value="opts-first">選択肢 → 問題</option>
+    </select>
+  </div>
+  <div id="answerpicker">
+    <label for="answerModeSelect">回答方法：</label>
+    <select id="answerModeSelect">
+      <option value="flick">フリック（無音）</option>
+      <option value="voice">音声入力（実験的）</option>
+    </select>
+    <button id="micTestBtn" type="button">🎤 マイク許可</button>
+  </div>
+  <div id="micStatusRow"><span id="micStatus"></span></div>
+
+  <div id="stage">
+    <div id="dirlabels">
+      <span class="d-up">↑ A</span>
+      <span class="d-right">→ B</span>
+      <span class="d-down">↓ C</span>
+      <span class="d-left">← D</span>
+    </div>
+    <div class="ring" id="ring1"></div>
+    <div class="ring" id="ring2"></div>
+    <div id="center-dot"></div>
+    <div id="status">
+      <span class="big" id="statusBig">画面のどこでもいいので長押ししてください</span>
+      <span id="statusSub">長押し → 出題開始 → 上下左右にフリックで回答</span>
+    </div>
+  </div>
+
+  <footer>プロトタイプ：本番では画面を見ずに操作する想定です</footer>
+</div>
+
+<script>
+(function () {
+  const stage = document.getElementById('stage');
+  const dot = document.getElementById('center-dot');
+  const ring1 = document.getElementById('ring1');
+  const ring2 = document.getElementById('ring2');
+  const statusBig = document.getElementById('statusBig');
+  const statusSub = document.getElementById('statusSub');
+  const statCorrect = document.getElementById('statCorrect');
+  const statTotal = document.getElementById('statTotal');
+  const statBest = document.getElementById('statBest');
+
+  // ---- 問題データ（簡単な一般常識クイズ） ----
+  const QUESTIONS = [
+    { q: "日本の首都は？", opts: ["東京", "大阪", "京都", "名古屋"], correct: 0 },
+    { q: "1週間は何日？", opts: ["5日", "6日", "7日", "8日"], correct: 2 },
+    { q: "富士山がある都道府県は、静岡県ともう一つどこ？", opts: ["山梨県", "長野県", "神奈川県", "愛知県"], correct: 0 },
+    { q: "水の化学式は？", opts: ["CO2", "H2O", "NaCl", "O2"], correct: 1 },
+    { q: "1年は何ヶ月？", opts: ["10ヶ月", "12ヶ月", "13ヶ月", "365ヶ月"], correct: 1 },
+    { q: "太陽が昇る方角は？", opts: ["東", "西", "南", "北"], correct: 0 },
+    { q: "日本で一番大きい湖は？", opts: ["琵琶湖", "霞ヶ浦", "サロマ湖", "浜名湖"], correct: 0 }
+  ];
+  const LETTERS = ["A", "B", "C", "D"];
+  // 方向 → 選択肢インデックスのマッピング
+  const DIR_TO_INDEX = { up: 0, right: 1, down: 2, left: 3 };
+
+  // ---- 記録の保存（読み上げ順ごとに分けて記録） ----
+  const STORAGE_KEY = "onsei_quiz_stats_v2";
+  const ORDER_KEY = "onsei_quiz_order_v1";
+  let readOrder = localStorage.getItem(ORDER_KEY) || "q-first";
+  function defaultStats() { return { total: 0, correct: 0, bestMs: null }; }
+  function loadStats() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return raw || { "q-first": defaultStats(), "opts-first": defaultStats() };
+    } catch (e) {
+      return { "q-first": defaultStats(), "opts-first": defaultStats() };
+    }
+  }
+  function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+  let stats = loadStats();
+  function renderStats() {
+    const s = stats[readOrder] || defaultStats();
+    statCorrect.textContent = s.correct;
+    statTotal.textContent = s.total;
+    statBest.textContent = s.bestMs ? Math.round(s.bestMs) : "--";
+  }
+  renderStats();
+
+  // ---- 音声合成 ----
+  const soundStatus = document.getElementById("soundStatus");
+  const testSoundBtn = document.getElementById("testSoundBtn");
+  const voiceSelect = document.getElementById("voiceSelect");
+  const VOICE_KEY = "onsei_quiz_voice_v1";
+  let audioUnlocked = false;
+  let selectedVoiceURI = localStorage.getItem(VOICE_KEY) || null;
+
+  if (!("speechSynthesis" in window)) {
+    soundStatus.textContent = "非対応ブラウザ";
+  }
+
+  function jaVoices() {
+    return window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.startsWith("ja"));
+  }
+
+  function populateVoiceList() {
+    const voices = jaVoices();
+    if (voices.length === 0) return;
+    voiceSelect.innerHTML = "";
+    voices.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.voiceURI;
+      // "Enhanced" "Premium" "拡張" などが含まれる声は高品質なことが多いので目印をつける
+      const isEnhanced = /enhanced|premium|拡張|プレミアム/i.test(v.name);
+      opt.textContent = v.name + (isEnhanced ? " ★高品質" : "");
+      voiceSelect.appendChild(opt);
+    });
+    // 保存済みの選択があれば復元。なければ★高品質を自動優先
+    if (selectedVoiceURI && voices.some(v => v.voiceURI === selectedVoiceURI)) {
+      voiceSelect.value = selectedVoiceURI;
+    } else {
+      const enhanced = voices.find(v => /enhanced|premium|拡張|プレミアム/i.test(v.name));
+      const pick = enhanced || voices[0];
+      voiceSelect.value = pick.voiceURI;
+      selectedVoiceURI = pick.voiceURI;
+    }
+  }
+
+  voiceSelect.addEventListener("change", () => {
+    selectedVoiceURI = voiceSelect.value;
+    localStorage.setItem(VOICE_KEY, selectedVoiceURI);
+    speak("この声でどうですか");
+  });
+
+  function pickJaVoice() {
+    const voices = jaVoices();
+    if (voices.length === 0) return null;
+    return voices.find(v => v.voiceURI === selectedVoiceURI) || voices[0];
+  }
+
+  function speak(text, onstart, onend) {
+    if (!("speechSynthesis" in window)) {
+      if (onstart) onstart();
+      if (onend) onend();
+      return null;
+    }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 1.05;
+    u.volume = 1;
+    const v = pickJaVoice();
+    if (v) u.voice = v;
+    if (onstart) u.onstart = onstart;
+    if (onend) u.onend = onend;
+    u.onerror = (e) => {
+      soundStatus.textContent = "エラー: " + (e.error || "不明");
+    };
+    window.speechSynthesis.speak(u);
+    return u;
+  }
+
+  // iOS/Android は「ユーザー操作から直接つながった発話」しか許可しないことが多いため、
+  // 画面上のボタンタップ／最初のタッチで一度明示的に鳴らして音声エンジンを起こす。
+  function unlockAudio(sourceLabel) {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    const u = speak("音声を有効化しました", null, () => {
+      soundStatus.textContent = "OK（" + sourceLabel + "）";
+    });
+    if (!u) soundStatus.textContent = "非対応ブラウザ";
+  }
+
+  testSoundBtn.addEventListener("click", () => {
+    audioUnlocked = false; // テストボタンは何度でも試せるようにする
+    unlockAudio("テストボタン");
+  });
+
+  // 一部端末は voiceschanged が発火するまで日本語ボイスが取得できないため先に読み込んでおく
+  if ("speechSynthesis" in window) {
+    populateVoiceList();
+    window.speechSynthesis.onvoiceschanged = populateVoiceList;
+  }
+  function vibrate(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  }
+
+  // ---- 状態管理 ----
+  const STATE = { IDLE: "idle", ARMING: "arming", ARMED: "armed", ANSWERED: "answered" };
+  let state = STATE.IDLE;
+  let currentQ = null;
+  let touchStartX = 0, touchStartY = 0;
+  let longPressTimer = null;
+  let questionStartTime = null;
+  const LONG_PRESS_MS = 500;
+  const MOVE_CANCEL_PX = 15;   // 長押し判定中の許容ブレ
+  const FLICK_THRESHOLD_PX = 55; // フリック確定に必要な距離
+
+  const orderSelect = document.getElementById("orderSelect");
+  orderSelect.value = readOrder;
+  orderSelect.addEventListener("change", () => {
+    readOrder = orderSelect.value;
+    localStorage.setItem(ORDER_KEY, readOrder);
+    renderStats();
+  });
+
+  function pickQuestion() {
+    return QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  }
+
+  function resetToIdle(delay) {
+    setTimeout(() => {
+      state = STATE.IDLE;
+      dot.className = "";
+      ring1.classList.remove("pulse");
+      ring2.classList.remove("pulse");
+      statusBig.textContent = "画面のどこでもいいので長押ししてください";
+      statusSub.textContent = "長押し → 出題開始 → 上下左右にフリックで回答";
+    }, delay || 0);
+  }
+
+  function forceReset() {
+    window.speechSynthesis.cancel();
+    stopRecognitionIfActive();
+    micStatus.textContent = "リセットのため再読み込みします…";
+    // stop()/abort()だけではマイクの内部セッションが解放されないことがあるため、
+    // 確実に切り離すためページ自体をリロードする（記録はlocalStorageに保存済みなので消えない）
+    setTimeout(() => location.reload(), 150);
+  }
+  document.getElementById("resetBtn").addEventListener("click", forceReset);
+
+
+  function armAndAsk() {
+    state = STATE.ARMED;
+    dot.classList.add("armed");
+    ring1.classList.add("pulse");
+    ring2.style.animationDelay = "0.8s";
+    ring2.classList.add("pulse");
+    vibrate(30);
+    currentQ = pickQuestion();
+    statusBig.textContent = "出題中…";
+    statusSub.textContent = "指を離さず、上下左右にフリックして回答";
+    const optText = currentQ.opts.map((o, i) => `${LETTERS[i]}、${o}`).join("。 ");
+    const fullText = readOrder === "opts-first"
+      ? `選択肢。 ${optText}。 問題。${currentQ.q}`
+      : `問題。${currentQ.q}。 ${optText}`;
+    speak(fullText, () => {
+      questionStartTime = performance.now();
+      if (answerMode === "voice") startVoiceListening();
+    });
+  }
+
+  function judgeDirection(dx, dy) {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return dx > 0 ? "right" : "left";
+    } else {
+      return dy > 0 ? "down" : "up";
+    }
+  }
+
+  // ---- 音声認識（実験的：iOS Safari非対応、Chrome系のみ） ----
+  const answerModeSelect = document.getElementById("answerModeSelect");
+  const micTestBtn = document.getElementById("micTestBtn");
+  const micStatus = document.getElementById("micStatus");
+  const ANSWER_MODE_KEY = "onsei_quiz_answermode_v1";
+  let answerMode = localStorage.getItem(ANSWER_MODE_KEY) || "flick";
+  answerModeSelect.value = answerMode;
+
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let recognitionActive = false;
+  let voiceListenTimeoutId = null;
+
+  function createRecognition() {
+    if (!SpeechRecognitionCtor) return null;
+    const r = new SpeechRecognitionCtor();
+    r.lang = "ja-JP";
+    r.continuous = false;
+    r.interimResults = false;
+    r.maxAlternatives = 3;
+    return r;
+  }
+
+  if (!SpeechRecognitionCtor) {
+    const voiceOpt = answerModeSelect.querySelector('option[value="voice"]');
+    if (voiceOpt) voiceOpt.textContent += "（このブラウザは非対応）";
+    micTestBtn.disabled = true;
+    micStatus.textContent = "この端末/ブラウザは音声認識に非対応です（iOS Safari等）";
+  } else {
+    recognition = createRecognition();
+    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+      micStatus.textContent = "注意: file:// で開いているとマイクがブロックされることがあります。反応しない場合はHTTPS配信で試してください";
+    }
+  }
+
+  answerModeSelect.addEventListener("change", () => {
+    answerMode = answerModeSelect.value;
+    localStorage.setItem(ANSWER_MODE_KEY, answerMode);
+    stopRecognitionIfActive();
+  });
+
+  micTestBtn.addEventListener("click", () => {
+    if (!recognition) return;
+    micStatus.textContent = "マイク許可を確認中…";
+    let responded = false;
+    const stuckTimer = setTimeout(() => {
+      if (!responded) {
+        micStatus.textContent = "応答なし。file://配信の場合はHTTPSでホストして再度お試しください（例: Firebase Hosting等）";
+      }
+    }, 4000);
+    recognition.onstart = () => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "マイク許可OK。何か話してみてください"; };
+    recognition.onerror = (e) => { responded = true; clearTimeout(stuckTimer); micStatus.textContent = "エラー: " + e.error; };
+    try {
+      recognition.start();
+    } catch (e) {
+      responded = true;
+      clearTimeout(stuckTimer);
+      micStatus.textContent = "エラー: " + e.message;
+    }
+  });
+
+  function stopRecognitionIfActive() {
+    clearTimeout(voiceListenTimeoutId);
+    if (recognition && recognitionActive) {
+      try { recognition.abort(); } catch (e) {}
+    }
+    recognitionActive = false;
+  }
+
+  const VOICE_LETTER_MAP = {
+    A: ["a", "えー", "エー", "あ"],
+    B: ["b", "びー", "ビー"],
+    C: ["c", "しー", "シー"],
+    D: ["d", "でぃー", "ディー", "ディ"]
+  };
+
+  function matchIndexFromTranscript(transcript) {
+    const t = transcript.toLowerCase().replace(/\s/g, "");
+    for (let i = 0; i < LETTERS.length; i++) {
+      const letter = LETTERS[i];
+      const keywords = VOICE_LETTER_MAP[letter].map(k => k.toLowerCase());
+      if (keywords.some(k => t.includes(k.toLowerCase()))) return i;
+    }
+    // 選択肢の単語そのものが聞き取れた場合もマッチさせる
+    if (currentQ) {
+      for (let i = 0; i < currentQ.opts.length; i++) {
+        if (t.includes(currentQ.opts[i].toLowerCase())) return i;
+      }
+    }
+    return -1;
+  }
+
+  function startVoiceListening() {
+    if (!recognition) return;
+    recognitionActive = true;
+    clearTimeout(voiceListenTimeoutId);
+    voiceListenTimeoutId = setTimeout(() => {
+      if (state === STATE.ARMED) {
+        micStatus.textContent = "20秒応答がなかったためリセットしました";
+        forceReset();
+      }
+    }, 20000);
+    recognition.onresult = (e) => {
+      let idx = -1;
+      for (let r = 0; r < e.results[0].length; r++) {
+        idx = matchIndexFromTranscript(e.results[0][r].transcript);
+        if (idx !== -1) break;
+      }
+      micStatus.textContent = idx !== -1 ? "認識: " + LETTERS[idx] : "聞き取れませんでした（もう一度）";
+      if (idx !== -1 && state === STATE.ARMED) answer(idx);
+    };
+    recognition.onerror = (e) => {
+      micStatus.textContent = "音声認識エラー: " + e.error;
+    };
+    recognition.onend = () => {
+      recognitionActive = false;
+      // 回答が確定していなければ聞き取りを再開する（無音区切りで自動停止する端末があるため）
+      if (state === STATE.ARMED && answerMode === "voice") {
+        try { recognition.start(); recognitionActive = true; } catch (e) {}
+      }
+    };
+    try {
+      recognition.start();
+      micStatus.textContent = "聞き取り中…（A〜D、または選択肢の言葉を話してください）";
+    } catch (e) {
+      micStatus.textContent = "マイクを開始できません: " + e.message;
+    }
+  }
+
+  function answer(idx) {
+    if (state !== STATE.ARMED) return;
+    state = STATE.ANSWERED;
+    stopRecognitionIfActive();
+    const reactionMs = questionStartTime ? (performance.now() - questionStartTime) : null;
+    const isCorrect = idx === currentQ.correct;
+
+    ring1.classList.remove("pulse");
+    ring2.classList.remove("pulse");
+    dot.classList.remove("armed");
+    dot.classList.add("answered", isCorrect ? "correct" : "wrong");
+    vibrate(isCorrect ? [20, 40, 20] : [80]);
+
+    const s = stats[readOrder] || (stats[readOrder] = defaultStats());
+    s.total += 1;
+    if (isCorrect) {
+      s.correct += 1;
+      if (reactionMs !== null && (s.bestMs === null || reactionMs < s.bestMs)) {
+        s.bestMs = reactionMs;
+      }
+    }
+    saveStats(stats);
+    renderStats();
+
+    const chosenText = currentQ.opts[idx];
+    const correctLetter = LETTERS[currentQ.correct];
+    const correctText = currentQ.opts[currentQ.correct];
+    const reactionLabel = reactionMs !== null ? `${(reactionMs / 1000).toFixed(2)}秒` : "";
+
+    statusBig.textContent = `回答: ${LETTERS[idx]}（${chosenText}） ${reactionLabel}`;
+    statusSub.textContent = isCorrect ? "正解！" : `不正解。正解は ${correctLetter}: ${correctText}`;
+
+    speak(`回答は ${LETTERS[idx]}、${chosenText}。`, null, () => {
+      const resultText = isCorrect
+        ? "正解です。"
+        : `不正解。正解は ${correctLetter}、${correctText}です。`;
+      speak(resultText, null, () => {
+        resetToIdle(400);
+      });
+    });
+  }
+
+  // ---- タッチハンドリング ----
+  stage.addEventListener("touchstart", (e) => {
+    if (state === STATE.ANSWERED) return; // 結果読み上げ中は無視
+    if (!audioUnlocked) unlockAudio("画面タッチ");
+    window.speechSynthesis.cancel();
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    dot.style.left = touchStartX + "px";
+    dot.style.top = touchStartY + "px";
+    dot.style.transform = "translate(-50%, -50%)";
+    ring1.style.left = touchStartX + "px";
+    ring1.style.top = touchStartY + "px";
+    ring1.style.transform = "translate(-50%, -50%)";
+    ring2.style.left = touchStartX + "px";
+    ring2.style.top = touchStartY + "px";
+    ring2.style.transform = "translate(-50%, -50%)";
+
+    state = STATE.ARMING;
+    clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => {
+      if (state === STATE.ARMING) armAndAsk();
+    }, LONG_PRESS_MS);
+  }, { passive: true });
+
+  stage.addEventListener("touchmove", (e) => {
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const dist = Math.hypot(dx, dy);
+
+    if (state === STATE.ARMING) {
+      if (dist > MOVE_CANCEL_PX) {
+        clearTimeout(longPressTimer);
+        state = STATE.IDLE;
+      }
+    } else if (state === STATE.ARMED) {
+      if (dist > FLICK_THRESHOLD_PX) {
+        answer(DIR_TO_INDEX[judgeDirection(dx, dy)]);
+      }
+    }
+  }, { passive: true });
+
+  stage.addEventListener("touchend", () => {
+    clearTimeout(longPressTimer);
+    if (state === STATE.ARMING) {
+      state = STATE.IDLE; // 離すのが早すぎた
+    }
+  });
+})();
+</script>
+</body>
+</html>
